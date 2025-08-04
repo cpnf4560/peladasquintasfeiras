@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Peladas das Quintas Feiras</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+</head>
+<body class="main-bg">  <header class="header">
+    <div class="logo-area">
+      <img src="/logo.svg" alt="Logo" class="logo-image">
+      <span class="logo-text">Peladas das Quintas Feiras</span>
+    </div>    <nav class="navbar">
+      <a href="/" class="nav-link">Jogos</a>
+      <a href="/jogadores" class="nav-link">Jogadores</a>
+      <a href="/convocatoria" class="nav-link">Convocatória</a>
+      <a href="/coletes" class="nav-link">Coletes</a>
+      <a href="/jogos/novo" class="nav-link">Novo Jogo</a>
+      <a href="/estatisticas" class="nav-link">Estatísticas</a>
+    </nav>
+  </header>
+  <main class="container">
+    <h2 class="section-title">Estatísticas dos Jogadores</h2>    <div class="stats-filters">
+      <div class="filter-group">
+        <label for="ano">Ano:</label>
+        <select id="ano" onchange="updateEstats()">
+          <option value="2024" <%= anoSelecionado === '2024' ? 'selected' : '' %>>2024</option>
+          <option value="2025" <%= anoSelecionado === '2025' ? 'selected' : '' %>>2025</option>
+          <option value="2026" <%= anoSelecionado === '2026' ? 'selected' : '' %>>2026</option>
+          <option value="2027" <%= anoSelecionado === '2027' ? 'selected' : '' %>>2027</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="mes">Mês:</label>
+        <select id="mes" onchange="updateEstats()">
+          <option value="" <%= mesSelecionado === '' ? 'selected' : '' %>>Todos</option>
+          <option value="1" <%= mesSelecionado === '1' ? 'selected' : '' %>>Janeiro</option>
+          <option value="2" <%= mesSelecionado === '2' ? 'selected' : '' %>>Fevereiro</option>
+          <option value="3" <%= mesSelecionado === '3' ? 'selected' : '' %>>Março</option>
+          <option value="4" <%= mesSelecionado === '4' ? 'selected' : '' %>>Abril</option>
+          <option value="5" <%= mesSelecionado === '5' ? 'selected' : '' %>>Maio</option>
+          <option value="6" <%= mesSelecionado === '6' ? 'selected' : '' %>>Junho</option>
+          <option value="7" <%= mesSelecionado === '7' ? 'selected' : '' %>>Julho</option>
+          <option value="8" <%= mesSelecionado === '8' ? 'selected' : '' %>>Agosto</option>
+          <option value="9" <%= mesSelecionado === '9' ? 'selected' : '' %>>Setembro</option>
+          <option value="10" <%= mesSelecionado === '10' ? 'selected' : '' %>>Outubro</option>
+          <option value="11" <%= mesSelecionado === '11' ? 'selected' : '' %>>Novembro</option>
+          <option value="12" <%= mesSelecionado === '12' ? 'selected' : '' %>>Dezembro</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="ordenacao">Ordenar por:</label>
+        <select id="ordenacao" onchange="updateEstats()">
+          <option value="pontos" <%= ordenacaoSelecionada === 'pontos' ? 'selected' : '' %>>Pontos</option>
+          <option value="percentagem" <%= ordenacaoSelecionada === 'percentagem' ? 'selected' : '' %>>% de Vitórias</option>
+        </select>
+      </div>
+    </div><!-- Curiosidades/Observações -->
+    <% if (curiosidades && curiosidades.length > 0) { %>
+      <div class="curiosidades-section">
+        <h3 class="curiosidades-title">🔍 Curiosidades & Observações</h3>
+        <div class="curiosidades-grid">
+          <% curiosidades.forEach(curiosidade => { %>
+            <div class="curiosidade-card">
+              <div class="curiosidade-icon"><%= curiosidade.icone %></div>
+              <div class="curiosidade-content">
+                <h4><%= curiosidade.titulo %></h4>
+                <p><%= curiosidade.texto %></p>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Análise de Duplas -->
+    <% var duplasSafe = typeof duplas !== 'undefined' && duplas ? duplas : { melhores: [], piores: [], extremas: {} }; %>
+    <% if (duplasSafe.melhores.length > 0 || duplasSafe.piores.length > 0) { %>
+      <div class="duplas-section">
+        <h3 class="duplas-title">👥 Análise de Duplas</h3>
+        <p class="duplas-subtitle"><em>Duplas que jogaram pelo menos 3 jogos juntas</em></p>
+        
+        <!-- Duplas Extremas -->
+        <% if (duplasSafe.extremas && (duplasSafe.extremas.maisJogos || duplasSafe.extremas.menosJogos)) { %>
+          <div class="duplas-extremas-section">
+            <h4 class="duplas-extremas-titulo">🌟 Duplas em Destaque</h4>
+            <div class="duplas-extremas-grid">
+              <% if (duplasSafe.extremas.maisJogos) { %>
+                <div class="dupla-extrema-card">
+                  <span class="dupla-extrema-label">Mais jogos juntos</span>
+                  <span class="dupla-extrema-nome"><%= duplasSafe.extremas.maisJogos.nome %></span>
+                  <span class="dupla-extrema-valor"><%= duplasSafe.extremas.maisJogos.jogos %> jogos</span>
+                </div>
+              <% } %>
+              <% if (duplasSafe.extremas.menosJogos) { %>
+                <div class="dupla-extrema-card">
+                  <span class="dupla-extrema-label">Menos jogos juntos</span>
+                  <span class="dupla-extrema-nome"><%= duplasSafe.extremas.menosJogos.nome %></span>
+                  <span class="dupla-extrema-valor"><%= duplasSafe.extremas.menosJogos.jogos %> jogo<%= duplasSafe.extremas.menosJogos.jogos > 1 ? 's' : '' %></span>
+                </div>
+              <% } %>
+              <% if (duplasSafe.extremas.maisVitorias) { %>
+                <div class="dupla-extrema-card">
+                  <span class="dupla-extrema-label">Mais vitórias juntos</span>
+                  <span class="dupla-extrema-nome"><%= duplasSafe.extremas.maisVitorias.nome %></span>
+                  <span class="dupla-extrema-valor"><%= duplasSafe.extremas.maisVitorias.vitorias %> vitória<%= duplasSafe.extremas.maisVitorias.vitorias > 1 ? 's' : '' %></span>
+                </div>
+              <% } %>
+              <% if (duplasSafe.extremas.maisDerrotas) { %>
+                <div class="dupla-extrema-card">
+                  <span class="dupla-extrema-label">Mais derrotas juntos</span>
+                  <span class="dupla-extrema-nome"><%= duplasSafe.extremas.maisDerrotas.nome %></span>
+                  <span class="dupla-extrema-valor"><%= duplasSafe.extremas.maisDerrotas.derrotas %> derrota<%= duplasSafe.extremas.maisDerrotas.derrotas > 1 ? 's' : '' %></span>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+        <!-- Fim Duplas Extremas -->
+        
+        <div class="duplas-grid">
+          <!-- Melhores Duplas -->
+          <% if (duplasSafe.melhores.length > 0) { %>
+            <div class="duplas-categoria">
+              <h4 class="duplas-categoria-titulo">🏆 Melhores Duplas</h4>
+              <div class="duplas-cards">
+                <% duplasSafe.melhores.forEach((dupla, index) => { %>
+                  <div class="dupla-card melhor">
+                    <div class="dupla-posicao"><%= index + 1 %>º</div>
+                    <div class="dupla-info">
+                      <h5><%= dupla.nome %></h5>
+                      <div class="dupla-stats">
+                        <span class="dupla-stat-principal"><%= dupla.percentagem_vitorias %>% vitórias</span>
+                        <span class="dupla-stat">(<%= dupla.vitorias %>V <%= dupla.empates %>E <%= dupla.derrotas %>D)</span>
+                      </div>
+                      <div class="dupla-detalhes">
+                        <span><%= dupla.jogos %> jogos | +<%= dupla.diferenca_golos %> golos | <%= dupla.pontos %> pts</span>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+          
+          <!-- Piores Duplas -->          <% if (duplasSafe.piores.length > 0) { %>
+            <div class="duplas-categoria">
+              <h4 class="duplas-categoria-titulo">💩 Duplas com Mais Dificuldades</h4>              <div class="duplas-cards">
+                <% duplasSafe.piores.forEach((dupla, index) => { %>
+                  <div class="dupla-card pior">
+                    <div class="dupla-posicao"><%= index + 1 %>º</div>
+                    <div class="dupla-info">
+                      <h5><%= dupla.nome %></h5>
+                      <div class="dupla-stats">
+                        <span class="dupla-stat-principal"><%= dupla.percentagem_vitorias %>% vitórias</span>
+                        <span class="dupla-stat">(<%= dupla.vitorias %>V <%= dupla.empates %>E <%= dupla.derrotas %>D)</span>
+                      </div>
+                      <div class="dupla-detalhes">
+                        <span><%= dupla.jogos %> jogos | <%= dupla.diferenca_golos >= 0 ? '+' : '' %><%= dupla.diferenca_golos %> golos | <%= dupla.pontos %> pts</span>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- MVP Mensal -->
+    <% if (mesSelecionado && mvpMensais && mvpMensais.length > 0) { %>
+      <div class="mvp-section">
+        <h3 class="mvp-title">🏆 MVP<%= mvpMensais.length > 1 ? 's' : '' %> do Mês</h3>
+        <% if (mvpMensais.length > 1) { %>
+          <p class="mvp-empate"><em>Empate no MVP! <%= mvpMensais.length %> jogadores empatados com <%= mvpMensais[0].pontos %> pontos</em></p>
+        <% } %>
+        <div class="mvp-cards">
+          <% mvpMensais.forEach(mvp => { %>
+            <div class="mvp-card">
+              <div class="mvp-info">
+                <h4><%= mvp.nome %></h4>
+                <p><strong><%= mvp.pontos %> pontos</strong> | <%= mvp.jogos %>/<%= totalJogosMes %> jogos (<%= Math.round((mvp.jogos/totalJogosMes)*100) %>%)</p>
+                <p><%= mvp.vitorias %>V <%= mvp.empates %>E <%= mvp.derrotas %>D | +<%= mvp.diferenca_golos %> diferença de golos</p>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+        <p class="mvp-criteria"><em>Critério: Mínimo <%= minimoJogosParaMVP %> jogos (75% dos jogos do mês)</em></p>
+      </div>
+    <% } else if (mesSelecionado && (!mvpMensais || mvpMensais.length === 0)) { %>
+      <div class="mvp-section">
+        <div class="alert alert-warning">
+          <h3>⚠️ MVP do Mês</h3>
+          <p>Nenhum jogador qualificado para MVP (mínimo <%= minimoJogosParaMVP %> jogos de <%= totalJogosMes %> total)</p>
+        </div>
+      </div>
+    <% } %>    <!-- Critérios de Classificação -->
+    <div class="classification-criteria">
+      <h4>📋 Critérios de Classificação <span style="color: #f9b233;">(Ordenação atual: <%= ordenacaoSelecionada === 'percentagem' ? '% de Vitórias' : 'Pontos' %>)</span></h4>
+      <% if (ordenacaoSelecionada === 'percentagem') { %>
+        <ol>
+          <li><strong>% de Vitórias</strong> (critério principal)</li>
+          <li><strong>Diferença de golos</strong> (em caso de empate de %)</li>
+          <li><strong>Golos marcados</strong> (em caso de empate de diferença)</li>
+          <li><strong>Número de presenças</strong> (em caso de empate de golos)</li>
+        </ol>
+      <% } else { %>
+        <ol>
+          <li><strong>Pontos:</strong> Vitória = 3pts, Empate = 1pt, Derrota = 0pts</li>
+          <li><strong>Diferença de golos</strong> (em caso de empate de pontos)</li>
+          <li><strong>Golos marcados</strong> (em caso de empate de diferença)</li>
+          <li><strong>Número de presenças</strong> (em caso de empate de golos)</li>
+        </ol>
+      <% } %>
+      <% if (mesSelecionado) { %>
+        <p><strong>MVP Mensal:</strong> Jogador(es) com mais pontos tendo participado em pelo menos 75% dos jogos do mês</p>
+      <% } %>
+    </div>
+
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>Pos</th>
+          <th>Jogador</th>
+          <th>Pontos</th>
+          <th>Jogos</th>
+          <th>Vitórias</th>
+          <th>Empates</th>
+          <th>Derrotas</th>
+          <th>% Vitórias</th>
+          <th>Golos Marcados</th>
+          <th>Golos Sofridos</th>
+          <th>Diferença</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (estatisticas && estatisticas.length > 0) { %>
+          <% estatisticas.forEach((stat, index) => { %>
+            <tr class="<%= mvpMensais && mvpMensais.some(mvp => mvp.id === stat.id) ? 'mvp-row' : '' %>">
+              <td class="position"><%= index + 1 %>º</td>
+              <td class="player-name">
+                <%= stat.nome %>
+                <% if (mvpMensais && mvpMensais.some(mvp => mvp.id === stat.id)) { %>
+                  <span class="mvp-badge">🏆 MVP</span>
+                <% } %>
+              </td>
+              <td class="stat-points"><strong><%= stat.pontos %></strong></td>
+              <td><%= stat.jogos %></td>
+              <td class="stat-wins"><%= stat.vitorias %></td>
+              <td class="stat-draws"><%= stat.empates %></td>
+              <td class="stat-losses"><%= stat.derrotas %></td>
+              <td class="stat-percentage"><%= stat.percentagem_vitorias %>%</td>
+              <td class="stat-goals-for"><%= stat.golos_marcados %></td>
+              <td class="stat-goals-against"><%= stat.golos_sofridos %></td>
+              <td class="stat-goal-diff <%= stat.diferenca_golos >= 0 ? 'positive' : 'negative' %>">
+                <%= stat.diferenca_golos >= 0 ? '+' : '' %><%= stat.diferenca_golos %>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="11" style="text-align: center;">Nenhuma estatística encontrada para o período selecionado</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </main>
+  <script>
+  function updateEstats() {
+    const ano = document.getElementById('ano').value;
+    const mes = document.getElementById('mes').value;
+    const ordenacao = document.getElementById('ordenacao').value;
+    const url = `/estatisticas?ano=${ano}${mes ? '&mes=' + mes : ''}${ordenacao ? '&ordenacao=' + ordenacao : ''}`;
+    window.location.href = url;
+  }
+  </script>
+</body>
+</html>

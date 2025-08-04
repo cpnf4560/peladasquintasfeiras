@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Peladas das Quintas Feiras</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+</head>
+<body class="main-bg">
+  <header class="header">
+    <div class="logo-area">
+      <img src="/logo.svg" alt="Logo" class="logo-image">
+      <span class="logo-text">Peladas das Quintas Feiras</span>
+    </div>    <nav class="navbar">
+      <a href="/" class="nav-link">Jogos</a>
+      <a href="/jogadores" class="nav-link">Jogadores</a>
+      <a href="/convocatoria" class="nav-link">Convocatória</a>
+      <a href="/coletes" class="nav-link">Coletes</a>
+      <a href="/jogos/novo" class="nav-link">Novo Jogo</a>
+      <a href="/estatisticas" class="nav-link">Estatísticas</a>
+    </nav>
+  </header>
+  <main class="container">
+  <h2 class="section-title">Lista de Jogadores</h2>
+
+  <form method="POST" action="/jogadores" class="form-add-player">
+    <div class="form-group">
+      <label for="nome">Nome do Jogador:</label>
+      <input type="text" id="nome" name="nome" required>
+    </div>
+    <button type="submit" class="btn">Adicionar Jogador</button>
+  </form>
+
+  <div class="players-table-container">
+    <table class="players-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Estado</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (jogadores && jogadores.length > 0) { %>
+          <% jogadores.forEach(jogador => { %>
+            <tr class="<%= jogador.suspenso ? 'player-suspended' : '' %>">
+              <td>
+                <span class="player-name-display" id="name-display-<%= jogador.id %>"><%= jogador.nome %></span>
+                <input type="text" class="player-name-edit" id="name-edit-<%= jogador.id %>" value="<%= jogador.nome %>" style="display: none;">
+              </td>
+              <td>
+                <span class="player-status <%= jogador.suspenso ? 'status-suspended' : 'status-active' %>">
+                  <%= jogador.suspenso ? 'Inativo' : 'Ativo' %>
+                </span>
+              </td>
+              <td class="player-actions">
+                <button class="btn-small btn-edit" onclick="editPlayer(<%= jogador.id %>)">Editar</button>
+                <button class="btn-small btn-save" onclick="savePlayer(<%= jogador.id %>)" style="display: none;">Guardar</button>
+                <button class="btn-small btn-cancel" onclick="cancelEdit(<%= jogador.id %>)" style="display: none;">Cancelar</button>
+                <form method="POST" action="/jogadores/<%= jogador.id %>/toggle-suspension" style="display: inline;">
+                  <button type="submit" class="btn-small <%= jogador.suspenso ? 'btn-activate' : 'btn-suspend' %>">
+                    <%= jogador.suspenso ? 'Ativar' : 'Inativar' %>
+                  </button>
+                </form>
+                <form method="POST" action="/jogadores/<%= jogador.id %>/delete" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja eliminar este jogador?')">
+                  <button type="submit" class="btn-small btn-delete">Eliminar</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="3" style="text-align: center;">Nenhum jogador encontrado</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+  function editPlayer(id) {
+    document.getElementById('name-display-' + id).style.display = 'none';
+    document.getElementById('name-edit-' + id).style.display = 'inline';
+    document.querySelector('.btn-edit').style.display = 'none';
+    document.querySelector('.btn-save').style.display = 'inline';
+    document.querySelector('.btn-cancel').style.display = 'inline';
+  }
+
+  function cancelEdit(id) {
+    document.getElementById('name-display-' + id).style.display = 'inline';
+    document.getElementById('name-edit-' + id).style.display = 'none';
+    document.querySelector('.btn-edit').style.display = 'inline';
+    document.querySelector('.btn-save').style.display = 'none';
+    document.querySelector('.btn-cancel').style.display = 'none';
+  }
+
+  function savePlayer(id) {
+    const newName = document.getElementById('name-edit-' + id).value;
+    fetch('/jogadores/' + id + '/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ nome: newName })
+    }).then(() => {
+      location.reload();
+    });
+  }
+  </script>
+  </main>
+</body>
+</html>

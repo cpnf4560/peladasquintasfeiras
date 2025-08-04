@@ -1,0 +1,42 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer circle with dark teal background -->
+  <circle cx="100" cy="100" r="95" fill="#2c5856" stroke="#f4b942" stroke-width="10"/>
+  
+  <!-- Inner circle background -->
+  <circle cx="100" cy="100" r="70" fill="#1a3d3b"/>
+  
+  <!-- Soccer ball -->
+  <g transform="translate(100, 100)">
+    <!-- Ball base -->
+    <circle cx="0" cy="0" r="25" fill="#ffffff"/>
+    
+    <!-- Ball pattern -->
+    <path d="M-15,-10 L-5,-20 L5,-20 L15,-10 L10,0 L15,10 L5,20 L-5,20 L-15,10 L-10,0 Z" fill="#f4b942"/>
+    <path d="M-8,-15 L0,-22 L8,-15 L5,-5 L-5,-5 Z" fill="#e6a634"/>
+    <path d="M-8,15 L0,22 L8,15 L5,5 L-5,5 Z" fill="#e6a634"/>
+    <path d="M-20,-5 L-25,0 L-20,5 L-10,3 L-10,-3 Z" fill="#e6a634"/>
+    <path d="M20,-5 L25,0 L20,5 L10,3 L10,-3 Z" fill="#e6a634"/>
+  </g>
+  
+  <!-- Text curve top -->
+  <path id="top-curve" d="M 30 100 A 70 70 0 0 1 170 100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#ffffff">
+    <textPath href="#top-curve" startOffset="50%" text-anchor="middle">
+      PELADAS DAS
+    </textPath>
+  </text>
+  
+  <!-- Text curve bottom -->
+  <path id="bottom-curve" d="M 170 100 A 70 70 0 0 1 30 100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#ffffff">
+    <textPath href="#bottom-curve" startOffset="50%" text-anchor="middle">
+      QUINTAS FEIRAS
+    </textPath>
+  </text>
+  
+  <!-- Decorative lines -->
+  <line x1="35" y1="85" x2="50" y2="85" stroke="#f4b942" stroke-width="3"/>
+  <line x1="35" y1="115" x2="50" y2="115" stroke="#f4b942" stroke-width="3"/>
+  <line x1="150" y1="85" x2="165" y2="85" stroke="#f4b942" stroke-width="3"/>
+  <line x1="150" y1="115" x2="165" y2="115" stroke="#f4b942" stroke-width="3"/>
+</svg>

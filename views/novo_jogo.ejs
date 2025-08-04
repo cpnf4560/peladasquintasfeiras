@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registar Novo Jogo - Peladas das Quintas Feiras</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+</head>
+<body class="main-bg">  <header class="header">
+    <div class="logo-area">
+      <img src="/logo.svg" alt="Logo" class="logo-image">
+      <span class="logo-text">Peladas das Quintas Feiras</span>
+    </div>    <nav class="navbar">
+      <a href="/" class="nav-link">Jogos</a>
+      <a href="/jogadores" class="nav-link">Jogadores</a>
+      <a href="/convocatoria" class="nav-link">Convocatória</a>
+      <a href="/coletes" class="nav-link">Coletes</a>
+      <a href="/jogos/novo" class="nav-link">Novo Jogo</a>
+      <a href="/estatisticas" class="nav-link">Estatísticas</a>
+    </nav>
+  </header>
+  <main class="container">
+    <h2 class="section-title">Registar Novo Jogo</h2>
+
+    <form method="POST" action="/jogos" class="game-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="data">Data do Jogo:</label>
+          <input type="date" id="data" name="data" required>
+        </div>
+      </div>
+
+      <div class="teams-section">
+        <div class="team-form">
+          <h3>Equipa 1</h3>
+          <div class="form-group">
+            <label for="equipa1_golos">Golos:</label>
+            <input type="number" id="equipa1_golos" name="equipa1_golos" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="jogadores_equipa1">Jogadores:</label>
+            <div class="players-selection">
+              <% if (jogadores && jogadores.length > 0) { %>
+                <% jogadores.forEach(jogador => { %>
+                  <label class="player-checkbox">
+                    <input type="checkbox" name="equipa1" value="<%= jogador.id %>">
+                    <span><%= jogador.nome %></span>
+                  </label>
+                <% }) %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <div class="team-form">
+          <h3>Equipa 2</h3>
+          <div class="form-group">
+            <label for="equipa2_golos">Golos:</label>
+            <input type="number" id="equipa2_golos" name="equipa2_golos" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="jogadores_equipa2">Jogadores:</label>
+            <div class="players-selection">
+              <% if (jogadores && jogadores.length > 0) { %>
+                <% jogadores.forEach(jogador => { %>
+                  <label class="player-checkbox">
+                    <input type="checkbox" name="equipa2" value="<%= jogador.id %>">
+                    <span><%= jogador.nome %></span>
+                  </label>
+                <% }) %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-large">Registar Jogo</button>
+    </form>
+    
+    <a href="/jogos">Voltar à lista de jogos</a>
+  </main>
+</body>
+</html>
