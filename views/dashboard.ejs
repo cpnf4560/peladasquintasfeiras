@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Futsal Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2a2e44;
+      color: #f5f5f5;
+      padding: 20px;
+    }
+    .header {
+      background: #33384d;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card {
+      background: #33384d;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      color: #f9b233;
+      border-bottom: 2px solid #f9b233;
+      padding-bottom: 10px;
+    }
+    .btn {
+      background: #f9b233;
+      color: #2a2e44;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      margin: 5px;
+    }
+    .btn-logout {
+      background: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header with user info -->
+  <div class="header">
+    <div>
+      <h1>📊 Dashboard - Futsal Manager</h1>
+      <p>Bem-vindo, <strong><%= user.username %></strong> (<%= user.role === 'admin' ? 'Administrador' : 'Utilizador' %>)</p>
+    </div>
+    <div>
+      <% if (user.role === 'admin') { %>
+        <a href="/" class="btn">🏠 Início</a>
+        <a href="/jogadores" class="btn">👥 Jogadores</a>
+      <% } else { %>
+        <a href="/estatisticas" class="btn">📊 Estatísticas</a>
+        <a href="/coletes" class="btn">👕 Coletes</a>
+        <a href="/convocatoria" class="btn">📋 Convocatória</a>
+      <% } %>
+      <form action="/logout" method="POST" style="display: inline;">
+        <button type="submit" class="btn btn-logout">🚪 Sair</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Debug info -->
+  <div class="card">
+    <h2>🔧 Informações de Debug</h2>
+    <p><strong>Usuário:</strong> <%= user.username %> (<%= user.role %>)</p>
+    <p><strong>Convocatória:</strong> <%= convocatoria ? convocatoria.length : 0 %> jogadores</p>
+    <p><strong>Estatísticas:</strong> <%= estatisticas ? estatisticas.length : 0 %> registros</p>
+    <p><strong>Coletes Info:</strong> <%= coletesInfo ? coletesInfo.length : 0 %> registros</p>
+    <p><strong>Últimos Resultados:</strong> <%= ultimosResultados ? ultimosResultados.length : 0 %> jogos</p>
+    <p><strong>Ano Atual:</strong> <%= anoAtual %></p>
+    <p><strong>Ordenação:</strong> <%= ordenacaoSelecionada %></p>
+  </div>
+
+  <!-- Convocatória -->
+  <% if (convocatoria && convocatoria.length > 0) { %>
+    <div class="card">
+      <h2>📋 Convocatória Atual</h2>
+      <p><strong>Total:</strong> <%= convocatoria.length %> jogadores</p>
+      <h3>👥 Convocados</h3>
+      <% convocatoria.filter(j => j.tipo === 'convocado').forEach(jogador => { %>
+        <p><%= jogador.posicao %>. <strong><%= jogador.nome %></strong> - 
+        <%= jogador.confirmado === 1 ? '✅ Confirmado' : (jogador.confirmado === 0 ? '❌ Rejeitado' : '⏳ Pendente') %>
+        </p>
+      <% }); %>
+      
+      <h3>🔄 Reservas</h3>
+      <% convocatoria.filter(j => j.tipo === 'reserva').forEach(jogador => { %>
+        <p>R<%= jogador.posicao %>. <strong><%= jogador.nome %></strong> - 
+        <%= jogador.confirmado === 1 ? '✅ Confirmado' : (jogador.confirmado === 0 ? '❌ Rejeitado' : '⏳ Pendente') %>
+        </p>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- Estatísticas Top 10 -->
+  <% if (estatisticas && estatisticas.length > 0) { %>
+    <div class="card">
+      <h2>📊 Top 10 Estatísticas <%= anoAtual %></h2>
+      <table style="width: 100%; border-collapse: collapse; background: #2a2e44;">
+        <thead>
+          <tr style="background: #181c27; color: #f9b233;">
+            <th style="padding: 8px; border: 1px solid #444;">Pos</th>
+            <th style="padding: 8px; border: 1px solid #444;">Jogador</th>
+            <th style="padding: 8px; border: 1px solid #444;">Jogos</th>
+            <th style="padding: 8px; border: 1px solid #444;">Vitórias</th>
+            <th style="padding: 8px; border: 1px solid #444;">Pontos</th>
+            <th style="padding: 8px; border: 1px solid #444;">%Vitórias</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% estatisticas.slice(0, 10).forEach((stat, index) => { %>
+            <tr style="<%= index % 2 === 0 ? 'background: rgba(51, 56, 77, 0.3);' : '' %>">
+              <td style="padding: 8px; border: 1px solid #444; text-align: center;"><%= index + 1 %></td>
+              <td style="padding: 8px; border: 1px solid #444;"><strong><%= stat.nome %></strong></td>
+              <td style="padding: 8px; border: 1px solid #444; text-align: center;"><%= stat.jogos %></td>
+              <td style="padding: 8px; border: 1px solid #444; text-align: center;"><%= stat.vitorias %></td>
+              <td style="padding: 8px; border: 1px solid #444; text-align: center;"><strong><%= stat.pontos %></strong></td>
+              <td style="padding: 8px; border: 1px solid #444; text-align: center;"><%= stat.percentagem_vitorias %>%</td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <!-- Coletes -->
+  <% if (coletesInfo || proximoColetes) { %>
+    <div class="card">
+      <h2>👕 Gestão de Coletes</h2>
+      <% if (coletesInfo && coletesInfo.length > 0) { %>
+        <h3>🏃 Quem tem coletes:</h3>
+        <% coletesInfo.forEach(colete => { %>
+          <p><strong><%= colete.nome %></strong> - Levou em <%= new Date(colete.data_levou).toLocaleDateString('pt-PT') %></p>
+        <% }); %>
+      <% } %>
+      
+      <% if (proximoColetes) { %>
+        <h3>👤 Próximo a levar coletes:</h3>
+        <p><strong><%= proximoColetes.nome %></strong> (Posição <%= proximoColetes.posicao %>)</p>
+      <% } %>
+    </div>
+  <% } %>
+
+  <!-- Links de navegação -->
+  <div class="card">
+    <h2>🔗 Navegação</h2>
+    <a href="/dashboard?ordenacao=percentagem" class="btn">📈 Ordenar por % Vitórias</a>
+    <a href="/dashboard?ordenacao=pontos" class="btn">🏆 Ordenar por Pontos</a>
+    <% if (user.role === 'user') { %>
+      <a href="/estatisticas" class="btn">📊 Ver Estatísticas Completas</a>
+      <a href="/convocatoria" class="btn">📋 Ver Convocatória</a>
+      <a href="/coletes" class="btn">👕 Ver Coletes</a>
+    <% } %>
+  </div>
+</body>
+</html>

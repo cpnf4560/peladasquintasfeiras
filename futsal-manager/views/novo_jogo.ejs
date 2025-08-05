@@ -2,26 +2,25 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registar Novo Jogo - Peladas das Quintas Feiras</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Registar Resultado - Peladas das Quintas Feiras</title>
   <link rel="stylesheet" href="/style.css">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 </head>
 <body class="main-bg">  <header class="header">
     <div class="logo-area">
       <img src="/logo.svg" alt="Logo" class="logo-image">
-      <span class="logo-text">Peladas das Quintas Feiras</span>
+      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
     </div>    <nav class="navbar">
-      <a href="/" class="nav-link">Jogos</a>
-      <a href="/jogadores" class="nav-link">Jogadores</a>
       <a href="/convocatoria" class="nav-link">Convocatória</a>
       <a href="/coletes" class="nav-link">Coletes</a>
-      <a href="/jogos/novo" class="nav-link">Novo Jogo</a>
+      <a href="/" class="nav-link">Resultados</a>
       <a href="/estatisticas" class="nav-link">Estatísticas</a>
+      <a href="/jogos/novo" class="nav-link active">Registar Resultado</a>
+      <a href="/jogadores" class="nav-link">Admin</a>
     </nav>
   </header>
   <main class="container">
-    <h2 class="section-title">Registar Novo Jogo</h2>
+    <h2 class="section-title">Registar Novo Resultado</h2>
 
     <form method="POST" action="/jogos" class="game-form">
       <div class="form-row">
@@ -73,12 +72,10 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <button type="submit" class="btn btn-large">Registar Jogo</button>
+      </div>      <button type="submit" class="btn btn-large">Registar Resultado</button>
     </form>
     
-    <a href="/jogos">Voltar à lista de jogos</a>
+    <a href="/">Voltar aos Resultados</a>
   </main>
 </body>
 </html>

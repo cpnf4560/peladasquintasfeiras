@@ -1,29 +1,188 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt">
 <head>
-  <title>Detalhe do Jogo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhe do Resultado - Peladas das Quintas Feiras</title>
   <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 </head>
-<body>
-  <h1>Detalhe do Jogo</h1>  <nav>
-    <a href="/">Jogos</a> |
-    <a href="/jogadores">Jogadores</a> |
-    <a href="/coletes">Coletes</a> |
-    <a href="/jogos/novo">Novo Jogo</a> |
-    <a href="/estatisticas">Estatísticas</a>
-  </nav>
-  <p>Data: <%= jogo.data %></p>
-  <p>Equipa 1: <%= jogo.equipa1_golos %> golos</p>
-  <ul>
-    <% equipa1.forEach(j => { %>
-      <li><%= j.nome %></li>
-    <% }) %>
-  </ul>
-  <p>Equipa 2: <%= jogo.equipa2_golos %> golos</p>
-  <ul>
-    <% equipa2.forEach(j => { %>
-      <li><%= j.nome %></li>
-    <% }) %>
-  </ul>
+<body class="main-bg">  <header class="header">
+    <div class="logo-area">
+      <img src="/logo.svg" alt="Logo" class="logo-image">
+      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
+    </div>
+    <nav class="navbar">
+      <a href="/convocatoria" class="nav-link">Convocatória</a>
+      <a href="/coletes" class="nav-link">Coletes</a>
+      <a href="/" class="nav-link active">Resultados</a>
+      <a href="/estatisticas" class="nav-link">Estatísticas</a>
+      <% if (user && user.role === 'admin') { %>
+        <a href="/jogos/novo" class="nav-link">Registar Resultado</a>
+        <a href="/jogadores" class="nav-link">Admin</a>
+      <% } %>
+    </nav>
+    
+    <% if (user) { %>
+      <div class="user-info">
+        <span class="username">👤 <%= user.username %></span>
+        <% if (user.role === 'admin') { %>
+          <span class="user-role">Admin</span>
+        <% } else { %>
+          <a href="/dashboard" class="dashboard-link">📊 Dashboard</a>
+        <% } %>
+        <form method="POST" action="/logout" style="display: inline;">
+          <button type="submit" class="logout-btn">🚪 Logout</button>
+        </form>
+      </div>
+    <% } %>
+  </header>
+
+  <main class="container">
+    <div class="game-detail-header">
+      <h2 class="section-title">Detalhe do Resultado</h2>
+      <div class="game-actions">
+        <button id="edit-result-btn" class="btn btn-primary">✏️ Editar Resultado</button>
+        <a href="/" class="btn btn-secondary">← Voltar aos Resultados</a>
+      </div>
+    </div>
+
+    <div class="game-detail-card">
+      <div class="game-date-info">
+        <h3>📅 <%= new Date(jogo.data).toLocaleDateString('pt-PT', { 
+          weekday: 'long',
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) %></h3>
+      </div>
+
+      <!-- Resultado atual -->
+      <div id="result-display" class="game-result-display">
+        <div class="teams-result">
+          <div class="team-result">
+            <h4 class="team-name">🟢 Equipa 1</h4>
+            <div class="team-score"><%= jogo.equipa1_golos %></div>
+            <div class="team-players">
+              <h5>Jogadores:</h5>
+              <% if (equipa1 && equipa1.length > 0) { %>
+                <ul class="players-list">
+                  <% equipa1.forEach(jogador => { %>
+                    <li class="player-item">👤 <%= jogador.nome %></li>
+                  <% }) %>
+                </ul>
+              <% } else { %>
+                <p class="no-players">Nenhum jogador registado</p>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="vs-separator">
+            <span class="vs-text">VS</span>
+            <div class="match-result">
+              <% if (jogo.equipa1_golos > jogo.equipa2_golos) { %>
+                <span class="result-badge winner">Equipa 1 Venceu</span>
+              <% } else if (jogo.equipa2_golos > jogo.equipa1_golos) { %>
+                <span class="result-badge winner">Equipa 2 Venceu</span>
+              <% } else { %>
+                <span class="result-badge draw">Empate</span>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="team-result">
+            <h4 class="team-name">🔴 Equipa 2</h4>
+            <div class="team-score"><%= jogo.equipa2_golos %></div>
+            <div class="team-players">
+              <h5>Jogadores:</h5>
+              <% if (equipa2 && equipa2.length > 0) { %>
+                <ul class="players-list">
+                  <% equipa2.forEach(jogador => { %>
+                    <li class="player-item">👤 <%= jogador.nome %></li>
+                  <% }) %>
+                </ul>
+              <% } else { %>
+                <p class="no-players">Nenhum jogador registado</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulário de edição (oculto inicialmente) -->
+      <div id="edit-form" class="edit-result-form" style="display: none;">
+        <form method="POST" action="/jogos/<%= jogo.id %>/update">
+          <h3>✏️ Editar Resultado</h3>
+          
+          <div class="edit-teams">
+            <div class="edit-team">
+              <h4>🟢 Equipa 1</h4>
+              <div class="form-group">
+                <label for="equipa1_golos">Golos:</label>
+                <input type="number" id="equipa1_golos" name="equipa1_golos" 
+                       value="<%= jogo.equipa1_golos %>" min="0" required>
+              </div>
+            </div>
+
+            <div class="edit-team">
+              <h4>🔴 Equipa 2</h4>
+              <div class="form-group">
+                <label for="equipa2_golos">Golos:</label>
+                <input type="number" id="equipa2_golos" name="equipa2_golos" 
+                       value="<%= jogo.equipa2_golos %>" min="0" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit-date">
+            <div class="form-group">
+              <label for="data">Data do Jogo:</label>
+              <input type="date" id="data" name="data" 
+                     value="<%= jogo.data.split('T')[0] %>" required>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-success">💾 Guardar Alterações</button>
+            <button type="button" id="cancel-edit-btn" class="btn btn-secondary">❌ Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Estatísticas do jogo -->
+    <div class="game-stats">
+      <h3>📊 Estatísticas do Jogo</h3>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-label">Total de Jogadores</span>
+          <span class="stat-value"><%= (equipa1?.length || 0) + (equipa2?.length || 0) %></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Total de Golos</span>
+          <span class="stat-value"><%= jogo.equipa1_golos + jogo.equipa2_golos %></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Diferença</span>
+          <span class="stat-value"><%= Math.abs(jogo.equipa1_golos - jogo.equipa2_golos) %></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Funcionalidade para alternar entre visualização e edição
+    document.getElementById('edit-result-btn').addEventListener('click', function() {
+      document.getElementById('result-display').style.display = 'none';
+      document.getElementById('edit-form').style.display = 'block';
+      this.style.display = 'none';
+    });
+
+    document.getElementById('cancel-edit-btn').addEventListener('click', function() {
+      document.getElementById('result-display').style.display = 'block';
+      document.getElementById('edit-form').style.display = 'none';
+      document.getElementById('edit-result-btn').style.display = 'inline-block';
+    });
+  </script>
 </body>
 </html>

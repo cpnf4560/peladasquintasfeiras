@@ -1,8 +1,11 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const session = require('express-session');
+const bcrypt = require('bcrypt');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 const db = new sqlite3.Database('./futsal.db');
 
 // Configuração
@@ -14,9 +17,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
+// Configuração de sessões
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'futsal-manager-secret-key-2025',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production' && process.env.COOKIE_SECURE === 'true',
+    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+  }
+}));
+
 // Debug
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  console.log(`${req.method} ${req.url} - User: ${req.session.user ? req.session.user.username : 'Anónimo'}`);
   next();
 });
 
@@ -77,6 +91,8 @@ db.serialize(() => {
     jogador_id INTEGER,
     tipo TEXT CHECK(tipo IN ('convocado', 'reserva')),
     posicao INTEGER,
+    confirmado INTEGER DEFAULT 0,
+    data_confirmacao DATETIME,
     FOREIGN KEY(jogador_id) REFERENCES jogadores(id)
   )`);
 
@@ -87,18 +103,144 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(jogador_id) REFERENCES jogadores(id)
   )`);
+
+  // Tabela de utilizadores
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  // Inserir utilizadores padrão se não existirem
+  db.get('SELECT COUNT(*) as count FROM users', (err, result) => {
+    if (!err && result.count === 0) {
+      console.log('Criando utilizadores padrão...');
+      
+      // Hash das passwords
+      const adminPasswordHash1 = bcrypt.hashSync('admin123', 10);
+      const adminPasswordHash2 = bcrypt.hashSync('admin', 10);
+      const userPasswordHash = bcrypt.hashSync('user', 10);
+      
+      // Inserir admins
+      db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', 
+        ['admin1', adminPasswordHash1, 'admin']);
+      db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', 
+        ['admin2', adminPasswordHash2, 'admin']);
+      
+      // Inserir users (user1 até user19)
+      for (let i = 1; i <= 19; i++) {
+        db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', 
+          [`user${i}`, userPasswordHash, 'user']);
+      }
+      
+      console.log('✅ Utilizadores criados com sucesso!');
+    }
+  });
+});
+
+// MIDDLEWARE DE AUTENTICAÇÃO
+function requireAuth(req, res, next) {
+  if (req.session.user) {
+    next();
+  } else {
+    res.redirect('/login');
+  }
+}
+
+function requireAdmin(req, res, next) {
+  if (req.session.user && req.session.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).render('error', { 
+      message: 'Acesso negado. Apenas administradores podem aceder a esta página.',
+      user: req.session.user 
+    });
+  }
+}
+
+// ROTAS DE AUTENTICAÇÃO
+app.get('/login', (req, res) => {
+  if (req.session.user) {
+    // Se já está logado, redirecionar conforme o role
+    if (req.session.user.role === 'admin') {
+      return res.redirect('/');
+    } else {
+      return res.redirect('/dashboard');
+    }
+  }
+  res.render('login', { error: null });
+});
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.render('login', { error: 'Por favor, preencha todos os campos' });
+  }
+  
+  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+    if (err) {
+      console.error('Erro na base de dados:', err);
+      return res.render('login', { error: 'Erro interno do servidor' });
+    }
+    
+    if (!user) {
+      return res.render('login', { error: 'Utilizador não encontrado' });
+    }
+    
+    // Verificar password
+    bcrypt.compare(password, user.password, (err, isMatch) => {
+      if (err) {
+        console.error('Erro ao verificar password:', err);
+        return res.render('login', { error: 'Erro interno do servidor' });
+      }
+      
+      if (!isMatch) {
+        return res.render('login', { error: 'Password incorreta' });
+      }
+      
+      // Login bem-sucedido
+      req.session.user = {
+        id: user.id,
+        username: user.username,
+        role: user.role
+      };
+      
+      console.log(`✅ Login bem-sucedido: ${user.username} (${user.role})`);
+      
+      // Redirecionar conforme o role
+      if (user.role === 'admin') {
+        res.redirect('/');
+      } else {
+        res.redirect('/dashboard');
+      }
+    });
+  });
+});
+
+app.post('/logout', (req, res) => {
+  const username = req.session.user ? req.session.user.username : 'Desconhecido';
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Erro ao fazer logout:', err);
+    } else {
+      console.log(`🚪 Logout: ${username}`);
+    }
+    res.redirect('/login');
+  });
 });
 
 // ROTAS PRINCIPAIS
-app.get('/', (req, res) => {
-  db.all('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
+app.get('/', requireAuth, (req, res) => {  db.all('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
     if (err) {
       console.error('Erro ao buscar jogos:', err);
-      return res.render('index', { jogos: [] });
+      return res.render('index', { jogos: [], user: req.session.user });
     }
     
     if (!jogos || jogos.length === 0) {
-      return res.render('index', { jogos: [] });
+      return res.render('index', { jogos: [], user: req.session.user });
     }
     
     // Para cada jogo, buscar os jogadores das equipas
@@ -127,7 +269,7 @@ app.get('/', (req, res) => {
           if (processedCount === jogos.length) {
             // Ordenar novamente por data
             jogosComJogadores.sort((a, b) => new Date(b.data) - new Date(a.data));
-            res.render('index', { jogos: jogosComJogadores });
+            res.render('index', { jogos: jogosComJogadores, user: req.session.user });
           }
         }
       );
@@ -136,13 +278,13 @@ app.get('/', (req, res) => {
 });
 
 // ROTAS DE JOGADORES
-app.get('/jogadores', (req, res) => {
+app.get('/jogadores', requireAdmin, (req, res) => {
   db.all('SELECT * FROM jogadores ORDER BY nome', [], (err, jogadores) => {
-    res.render('jogadores', { jogadores: jogadores || [] });
+    res.render('jogadores', { jogadores: jogadores || [], user: req.session.user });
   });
 });
 
-app.post('/jogadores', (req, res) => {
+app.post('/jogadores', requireAdmin, (req, res) => {
   const { nome } = req.body;
   if (!nome) return res.redirect('/jogadores');
   
@@ -151,21 +293,21 @@ app.post('/jogadores', (req, res) => {
   });
 });
 
-app.post('/jogadores/:id/delete', (req, res) => {
+app.post('/jogadores/:id/delete', requireAdmin, (req, res) => {
   const { id } = req.params;
   db.run('DELETE FROM jogadores WHERE id = ?', [id], () => {
     res.redirect('/jogadores');
   });
 });
 
-app.post('/jogadores/:id/toggle-suspension', (req, res) => {
+app.post('/jogadores/:id/toggle-suspension', requireAdmin, (req, res) => {
   const { id } = req.params;
   db.run('UPDATE jogadores SET suspenso = CASE WHEN suspenso = 1 THEN 0 ELSE 1 END WHERE id = ?', [id], () => {
     res.redirect('/jogadores');
   });
 });
 
-app.post('/jogadores/:id/update', (req, res) => {
+app.post('/jogadores/:id/update', requireAdmin, (req, res) => {
   const { id } = req.params;
   const { nome } = req.body;
   db.run('UPDATE jogadores SET nome = ? WHERE id = ?', [nome, id], () => {
@@ -174,17 +316,17 @@ app.post('/jogadores/:id/update', (req, res) => {
 });
 
 // ROTAS DE JOGOS
-app.get('/jogos', (req, res) => {
+app.get('/jogos', requireAuth, (req, res) => {
   res.redirect('/');
 });
 
-app.get('/jogos/novo', (req, res) => {
+app.get('/jogos/novo', requireAdmin, (req, res) => {
   db.all('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', [], (err, jogadores) => {
-    res.render('novo_jogo', { jogadores: jogadores || [] });
+    res.render('novo_jogo', { jogadores: jogadores || [], user: req.session.user });
   });
 });
 
-app.post('/jogos', (req, res) => {
+app.post('/jogos', requireAdmin, (req, res) => {
   const { data, equipa1, equipa2, equipa1_golos, equipa2_golos } = req.body;
   
   db.run(
@@ -223,7 +365,7 @@ app.post('/jogos', (req, res) => {
   );
 });
 
-app.get('/jogos/:id', (req, res) => {
+app.get('/jogos/:id', requireAuth, (req, res) => {
   const jogoId = req.params.id;
   
   console.log(`Buscando jogo com ID: ${jogoId}`);
@@ -257,14 +399,46 @@ app.get('/jogos/:id', (req, res) => {
         const equipa2 = jogadores ? jogadores.filter(j => j.equipa === 2) : [];
         
         console.log('Renderizando detalhe_jogo com:', { jogo, equipa1, equipa2 });
-        res.render('detalhe_jogo', { jogo, equipa1, equipa2 });
+        res.render('detalhe_jogo', { jogo, equipa1, equipa2, user: req.session.user });
       }
     );
   });
 });
 
+// POST route for updating game results
+app.post('/jogos/:id/update', requireAdmin, (req, res) => {
+  const jogoId = req.params.id;
+  const { data, equipa1_golos, equipa2_golos } = req.body;
+  
+  console.log(`Atualizando jogo ${jogoId} com:`, { data, equipa1_golos, equipa2_golos });
+  
+  // Validate input
+  if (!data || equipa1_golos === undefined || equipa2_golos === undefined) {
+    return res.status(400).send('Dados incompletos');
+  }
+  
+  // Update game in database
+  db.run(
+    'UPDATE jogos SET data = ?, equipa1_golos = ?, equipa2_golos = ? WHERE id = ?',
+    [data, parseInt(equipa1_golos), parseInt(equipa2_golos), jogoId],
+    function(err) {
+      if (err) {
+        console.error('Erro ao atualizar jogo:', err);
+        return res.status(500).send('Erro ao atualizar jogo');
+      }
+      
+      if (this.changes === 0) {
+        return res.status(404).send('Jogo não encontrado');
+      }
+      
+      console.log(`Jogo ${jogoId} atualizado com sucesso`);
+      res.redirect(`/jogos/${jogoId}`);
+    }
+  );
+});
+
 // ROTA DE ESTATÍSTICAS
-app.get('/estatisticas', (req, res) => {
+app.get('/estatisticas', requireAuth, (req, res) => {
   const anoSelecionado = req.query.ano || '2025';
   const mesSelecionado = req.query.mes || '';
   const ordenacaoSelecionada = req.query.ordenacao || 'pontos';
@@ -281,12 +455,10 @@ app.get('/estatisticas', (req, res) => {
   const queryEstatisticas = `    SELECT 
       jog.id,
       jog.nome,
-      COUNT(DISTINCT j.id) as jogos,
-      SUM(CASE 
+      COUNT(DISTINCT j.id) as jogos,      SUM(CASE 
         WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
              (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
-        THEN 1 ELSE 0 END) as vitorias,
-      SUM(CASE 
+        THEN 1 ELSE 0 END) as vitorias,      SUM(CASE 
         WHEN j.equipa1_golos = j.equipa2_golos 
         THEN 1 ELSE 0 END) as empates,
       SUM(CASE 
@@ -294,8 +466,7 @@ app.get('/estatisticas', (req, res) => {
              (p.equipa = 2 AND j.equipa2_golos < j.equipa1_golos) 
         THEN 1 ELSE 0 END) as derrotas,
       SUM(CASE WHEN p.equipa = 1 THEN j.equipa1_golos ELSE j.equipa2_golos END) as golos_marcados,
-      SUM(CASE WHEN p.equipa = 1 THEN j.equipa2_golos ELSE j.equipa1_golos END) as golos_sofridos,
-      ROUND(
+      SUM(CASE WHEN p.equipa = 1 THEN j.equipa2_golos ELSE j.equipa1_golos END) as golos_sofridos,      ROUND(
         (SUM(CASE 
           WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
                (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
@@ -312,12 +483,14 @@ app.get('/estatisticas', (req, res) => {
     db.all(queryEstatisticas, [], (err, estatisticas) => {
     if (err) {
       console.error('Erro ao buscar estatísticas:', err);      return res.render('estatisticas', {
+        user: req.session.user,
         estatisticas: [],
         anoSelecionado,
         mesSelecionado,
         ordenacaoSelecionada,
         mvpMensais: [],
         totalJogosMes: 0,
+        minimoJogosParaMVP: 0,
         curiosidades: [],
         duplas: null
       });
@@ -404,6 +577,7 @@ app.get('/estatisticas', (req, res) => {
         if (totalJogosMes >= 3) {
           analisarDuplas(anoSelecionado, mesSelecionado, (duplasResult) => {
             duplas = duplasResult;            res.render('estatisticas', {
+              user: req.session.user,
               estatisticas: estatisticasProcessadas,
               anoSelecionado,
               mesSelecionado,
@@ -416,6 +590,7 @@ app.get('/estatisticas', (req, res) => {
             });
           });
         } else {          res.render('estatisticas', {
+            user: req.session.user,
             estatisticas: estatisticasProcessadas,
             anoSelecionado,
             mesSelecionado,
@@ -432,12 +607,14 @@ app.get('/estatisticas', (req, res) => {
       // Para período anual, também analisar duplas
       analisarDuplas(anoSelecionado, null, (duplasResult) => {
         duplas = duplasResult;        res.render('estatisticas', {
+          user: req.session.user,
           estatisticas: estatisticasProcessadas,
           anoSelecionado,
           mesSelecionado,
           ordenacaoSelecionada,
           mvpMensais: [],
           totalJogosMes: 0,
+          minimoJogosParaMVP: 0,
           curiosidades,
           duplas
         });
@@ -541,7 +718,7 @@ function gerarCuriosidades(estatisticas, ano, mes) {
 }
 
 // ROTAS DE COLETES
-app.get('/coletes', (req, res) => {
+app.get('/coletes', requireAuth, (req, res) => {
   console.log('=== ROTA /coletes CHAMADA ===');
   
   // Primeiro, adicionar a coluna suspenso se não existir
@@ -604,8 +781,8 @@ app.get('/coletes', (req, res) => {
         }
         
         console.log('Próximo convocado:', proximoConvocado);
-        
-        res.render('coletes', { 
+          res.render('coletes', { 
+          user: req.session.user,
           estatisticas: estatisticas || [],
           coletesActuais: coletesActuais || null,
           proximoConvocado: proximoConvocado || null
@@ -615,7 +792,7 @@ app.get('/coletes', (req, res) => {
   });
 });
 
-app.post('/coletes/atribuir', (req, res) => {
+app.post('/coletes/atribuir', requireAdmin, (req, res) => {
   const { jogador_id } = req.body;
   const dataHoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   
@@ -645,7 +822,7 @@ app.post('/coletes/atribuir', (req, res) => {
   });
 });
 
-app.post('/jogos/:id/delete', (req, res) => {
+app.post('/jogos/:id/delete', requireAdmin, (req, res) => {
   const jogoId = req.params.id;
   
   // Primeiro, eliminar todas as presenças do jogo
@@ -668,7 +845,7 @@ app.post('/jogos/:id/delete', (req, res) => {
 });
 
 // Rota para página de convocatória
-app.get('/convocatoria', (req, res) => {
+app.get('/convocatoria', requireAuth, (req, res) => {
   console.log('=== ROTA /convocatoria CHAMADA ===');
   
   // Buscar todos os jogadores ativos
@@ -697,9 +874,9 @@ app.get('/convocatoria', (req, res) => {
         return;
       }
 
-      console.log('Config encontrada:', config);      // Buscar convocados e reservas com contagem de faltas
+      console.log('Config encontrada:', config);      // Buscar convocados e reservas com contagem de faltas e confirmação
       db.all(`
-        SELECT j.*, c.posicao, c.tipo,
+        SELECT j.*, c.posicao, c.tipo, c.confirmado, c.data_confirmacao,
                COALESCE((SELECT COUNT(*) FROM faltas_historico f WHERE f.jogador_id = j.id), 0) as total_faltas
         FROM jogadores j 
         JOIN convocatoria c ON j.id = c.jogador_id 
@@ -714,9 +891,8 @@ app.get('/convocatoria', (req, res) => {
         console.log('Convocatória encontrada:', convocatoria.length);
 
         const convocados = convocatoria.filter(j => j.tipo === 'convocado');
-        const reservas = convocatoria.filter(j => j.tipo === 'reserva');        console.log('Convocados:', convocados.length, 'Reservas:', reservas.length);
-
-        res.render('convocatoria', { 
+        const reservas = convocatoria.filter(j => j.tipo === 'reserva');        console.log('Convocados:', convocados.length, 'Reservas:', reservas.length);        res.render('convocatoria', { 
+          user: req.session.user,
           convocados, 
           reservas, 
           config,
@@ -729,7 +905,7 @@ app.get('/convocatoria', (req, res) => {
 });
 
 // Marcar jogador como faltoso (move para último lugar das reservas)
-app.post('/convocatoria/marcar-falta/:id', (req, res) => {
+app.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
   const jogadorId = req.params.id;
   
   // Verificar se é convocado
@@ -789,7 +965,7 @@ app.post('/convocatoria/marcar-falta/:id', (req, res) => {
 });
 
 // Resetar convocatória (voltar todos para posições originais)
-app.post('/convocatoria/reset', (req, res) => {
+app.post('/convocatoria/reset', requireAdmin, (req, res) => {
   db.all('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', (err, jogadores) => {
     if (err) {
       console.error('Erro ao buscar jogadores:', err);
@@ -810,7 +986,7 @@ app.post('/convocatoria/reset', (req, res) => {
 });
 
 // Rota especial para migrar convocatória para 10 jogadores
-app.post('/convocatoria/migrar-para-10', (req, res) => {
+app.post('/convocatoria/migrar-para-10', requireAdmin, (req, res) => {
   console.log('=== MIGRANDO CONVOCATÓRIA PARA 10 CONVOCADOS ===');
   
   // Buscar todos os convocados atuais ordenados por posição
@@ -868,8 +1044,8 @@ app.post('/convocatoria/migrar-para-10', (req, res) => {
 });
 
 // Rota para configuração personalizada da convocatória
-app.post('/convocatoria/configurar-personalizada', (req, res) => {
-  console.log('=== CONFIGURANDO CONVOCATÓRIA PERSONALIZADA ===');
+app.post('/convocatoria/configurar-personalizada', requireAdmin, (req, res) => {
+  console.log('=== CONFIGURANDO CONVOCATORIA PERSONALIZADA ===');
   
   // Ordem específica dos convocados
   const convocadosOrdem = [
@@ -1015,7 +1191,7 @@ app.post('/convocatoria/configurar-personalizada', (req, res) => {
 });
 
 // Rota para configuração final (limpar faltas e ordem específica)
-app.post('/convocatoria/configuracao-final', (req, res) => {
+app.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
   console.log('=== CONFIGURAÇÃO FINAL ===');
   
   // 1. Limpar todas as faltas de teste
@@ -1129,103 +1305,35 @@ app.post('/convocatoria/configuracao-final', (req, res) => {
   });
 });
 
-// Iniciar servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor a correr em http://localhost:${PORT}`);
-});
-
-// Funções auxiliares para convocatória
-function initConvocatoriaSystem(jogadores, res) {
-  // Criar tabelas se não existirem
-  db.serialize(() => {
-    // Tabela de configuração da convocatória
-    db.run(`CREATE TABLE IF NOT EXISTS convocatoria_config (
-      id INTEGER PRIMARY KEY,
-      max_convocados INTEGER DEFAULT 14,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);    // Tabela da convocatória
-    db.run(`CREATE TABLE IF NOT EXISTS convocatoria (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      jogador_id INTEGER,
-      tipo TEXT CHECK(tipo IN ('convocado', 'reserva')),
-      posicao INTEGER,
-      FOREIGN KEY(jogador_id) REFERENCES jogadores(id)
-    )`);
-
-    // Tabela de histórico de faltas
-    db.run(`CREATE TABLE IF NOT EXISTS faltas_historico (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      jogador_id INTEGER,
-      data_falta DATE,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(jogador_id) REFERENCES jogadores(id)
-    )`);// Inserir configuração padrão com 10 convocados
-    db.run('INSERT OR REPLACE INTO convocatoria_config (id, max_convocados) VALUES (1, 10)');
-
-    // Distribuir jogadores: primeiros 10 como convocados, resto como reservas
-    const maxConvocados = 10;
-    
-    jogadores.forEach((jogador, index) => {
-      const tipo = index < maxConvocados ? 'convocado' : 'reserva';
-      const posicao = tipo === 'convocado' ? index + 1 : index - maxConvocados + 1;
-      
-      db.run('INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, ?, ?)', 
-        [jogador.id, tipo, posicao]);
-    });    // Buscar dados atualizados e renderizar
-    setTimeout(() => {      db.all(`
-        SELECT j.*, c.posicao, c.tipo,
-               COALESCE((SELECT COUNT(*) FROM faltas_historico f WHERE f.jogador_id = j.id), 0) as total_faltas
-        FROM jogadores j 
-        JOIN convocatoria c ON j.id = c.jogador_id 
-        WHERE j.suspenso = 0 
-        ORDER BY c.tipo, c.posicao
-      `, (err, convocatoria) => {
-        if (err) {
-          console.error('Erro ao buscar convocatória:', err);
-          return res.status(500).send('Erro ao buscar convocatória');
-        }
-
-        const convocados = convocatoria.filter(j => j.tipo === 'convocado');
-        const reservas = convocatoria.filter(j => j.tipo === 'reserva');
-        const config = { max_convocados: maxConvocados };        res.render('convocatoria', { 
-          convocados, 
-          reservas, 
-          config,
-          equipas: global.equipasGeradas || null,
-          title: 'Convocatória - Peladas das Quintas Feiras'
-        });
-      });
-    }, 100);
-  });
-}
-
-function reorganizarReservas(callback) {
-  // Buscar todas as reservas ordenadas por posição
-  db.all('SELECT * FROM convocatoria WHERE tipo = "reserva" ORDER BY posicao', (err, reservas) => {
+// Rota para confirmar/desconfirmar presença
+app.post('/convocatoria/confirmar-presenca/:id', requireAuth, (req, res) => {
+  const jogadorId = req.params.id;
+  const dataConfirmacao = new Date().toISOString();
+  
+  // Alternar confirmação
+  db.get('SELECT confirmado FROM convocatoria WHERE jogador_id = ?', [jogadorId], (err, result) => {
     if (err) {
-      console.error('Erro ao buscar reservas:', err);
-      return callback();
+      console.error('Erro ao buscar confirmação:', err);
+      return res.status(500).send('Erro interno');
     }
-
-    // Reorganizar posições sequencialmente
-    let updates = 0;
-    if (reservas.length === 0) return callback();
-
-    reservas.forEach((reserva, index) => {
-      db.run('UPDATE convocatoria SET posicao = ? WHERE id = ?', 
-        [index + 1, reserva.id], (err) => {
-        updates++;
-        if (updates === reservas.length) {
-          callback();
-        }
-      });
+    
+    const novoStatus = result.confirmado ? 0 : 1;
+    const dataParam = novoStatus ? dataConfirmacao : null;
+    
+    db.run('UPDATE convocatoria SET confirmado = ?, data_confirmacao = ? WHERE jogador_id = ?', 
+      [novoStatus, dataParam, jogadorId], (err) => {
+      if (err) {
+        console.error('Erro ao atualizar confirmação:', err);
+        return res.status(500).send('Erro interno');
+      }
+      
+      res.redirect('/convocatoria');
     });
   });
-}
+});
 
-// Mover reserva para cima na lista
-app.post('/convocatoria/mover-reserva/:id/:direcao', (req, res) => {
+// Rota para mover reservas para cima/baixo na lista
+app.post('/convocatoria/mover-reserva/:id/:direcao', requireAuth, (req, res) => {
   const jogadorId = req.params.id;
   const direcao = req.params.direcao; // 'up' ou 'down'
   
@@ -1276,12 +1384,13 @@ app.post('/convocatoria/mover-reserva/:id/:direcao', (req, res) => {
       setTimeout(() => res.redirect('/convocatoria'), 100);
     } else {
       res.redirect('/convocatoria');
-    }  });
+    }
+  });
 });
 
 // ROTAS PARA EQUIPAS EQUILIBRADAS
 // Rota para confirmar convocados e gerar equipas
-app.post('/convocatoria/confirmar-equipas', (req, res) => {
+app.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
   console.log('=== GERANDO EQUIPAS EQUILIBRADAS ===');
   
   // Buscar convocados com suas estatísticas
@@ -1299,25 +1408,21 @@ app.post('/convocatoria/confirmar-equipas', (req, res) => {
     LEFT JOIN (
       SELECT 
         jog.id,
-        COUNT(DISTINCT jg.id) as jogos,
-        SUM(CASE 
+        COUNT(DISTINCT jg.id) as jogos,        SUM(CASE 
           WHEN (p.equipa = 1 AND jg.equipa1_golos > jg.equipa2_golos) OR 
                (p.equipa = 2 AND jg.equipa2_golos > jg.equipa1_golos) 
           THEN 1 ELSE 0 
         END) as vitorias,
-        SUM(CASE WHEN jg.equipa1_golos = jg.equipa2_golos THEN 1 ELSE 0 END) as empates,
-        SUM(CASE 
+        SUM(CASE WHEN jg.equipa1_golos = jg.equipa2_golos THEN 1 ELSE 0 END) as empates,        SUM(CASE 
           WHEN (p.equipa = 1 AND jg.equipa1_golos < jg.equipa2_golos) OR 
                (p.equipa = 2 AND jg.equipa2_golos < jg.equipa1_golos) 
           THEN 1 ELSE 0 
-        END) as derrotas,
-        ((SUM(CASE 
+        END) as derrotas,        ((SUM(CASE 
           WHEN (p.equipa = 1 AND jg.equipa1_golos > jg.equipa2_golos) OR 
                (p.equipa = 2 AND jg.equipa2_golos > jg.equipa1_golos) 
           THEN 1 ELSE 0 
-        END) * 3) + 
-        (SUM(CASE WHEN jg.equipa1_golos = jg.equipa2_golos THEN 1 ELSE 0 END) * 1)) as pontos,
-        ROUND(
+        END) * 3) +
+        (SUM(CASE WHEN jg.equipa1_golos = jg.equipa2_golos THEN 1 ELSE 0 END) * 1)) as pontos,        ROUND(
           (SUM(CASE 
             WHEN (p.equipa = 1 AND jg.equipa1_golos > jg.equipa2_golos) OR 
                  (p.equipa = 2 AND jg.equipa2_golos > jg.equipa1_golos) 
@@ -1354,8 +1459,8 @@ app.post('/convocatoria/confirmar-equipas', (req, res) => {
     global.equipasGeradas = equipas;
     
     // Buscar dados da convocatória novamente para renderizar
-    buscarDadosConvocatoria((convocatoriaData) => {
-      res.render('convocatoria', { 
+    buscarDadosConvocatoria((convocatoriaData) => {      res.render('convocatoria', { 
+        user: req.session.user,
         ...convocatoriaData,
         equipas: equipas
       });
@@ -1364,7 +1469,7 @@ app.post('/convocatoria/confirmar-equipas', (req, res) => {
 });
 
 // Rota para trocar jogadores entre equipas
-app.post('/convocatoria/trocar-jogadores', (req, res) => {
+app.post('/convocatoria/trocar-jogadores', requireAdmin, (req, res) => {
   const { jogador1, jogador2 } = req.body;
   
   console.log('Trocando jogadores:', jogador1, jogador2);
@@ -1413,15 +1518,14 @@ app.post('/convocatoria/trocar-jogadores', (req, res) => {
       const temp = global.equipasGeradas.equipa2.jogadores[jogador1Index];
       global.equipasGeradas.equipa2.jogadores[jogador1Index] = global.equipasGeradas.equipa1.jogadores[jogador2Index];
       global.equipasGeradas.equipa1.jogadores[jogador2Index] = temp;
-    }
-
-    // Recalcular estatísticas das equipas
+    }    // Recalcular estatísticas das equipas
     recalcularEstatisticasEquipas(global.equipasGeradas);
   }
 
   // Buscar dados da convocatória novamente para renderizar
   buscarDadosConvocatoria((convocatoriaData) => {
     res.render('convocatoria', { 
+      user: req.session.user,
       ...convocatoriaData,
       equipas: global.equipasGeradas
     });
@@ -1429,7 +1533,7 @@ app.post('/convocatoria/trocar-jogadores', (req, res) => {
 });
 
 // Rota para reequilibrar equipas automaticamente
-app.post('/convocatoria/reequilibrar-equipas', (req, res) => {
+app.post('/convocatoria/reequilibrar-equipas', requireAdmin, (req, res) => {
   if (!global.equipasGeradas) {
     return res.redirect('/convocatoria');
   }
@@ -1439,13 +1543,13 @@ app.post('/convocatoria/reequilibrar-equipas', (req, res) => {
     ...global.equipasGeradas.equipa1.jogadores,
     ...global.equipasGeradas.equipa2.jogadores
   ];
-
   // Gerar novas equipas equilibradas
   global.equipasGeradas = gerarEquipasEquilibradas(todosJogadores);
 
   // Buscar dados da convocatória novamente para renderizar
   buscarDadosConvocatoria((convocatoriaData) => {
     res.render('convocatoria', { 
+      user: req.session.user,
       ...convocatoriaData,
       equipas: global.equipasGeradas
     });
@@ -1453,7 +1557,7 @@ app.post('/convocatoria/reequilibrar-equipas', (req, res) => {
 });
 
 // Rota para salvar equipas (criar novo jogo)
-app.post('/convocatoria/salvar-equipas', (req, res) => {
+app.post('/convocatoria/salvar-equipas', requireAdmin, (req, res) => {
   if (!global.equipasGeradas) {
     return res.redirect('/convocatoria');
   }
@@ -1852,5 +1956,485 @@ function analisarDuplas(ano, mes, callback) {
   });
 }
 
+// Função para reorganizar posições das reservas
+function reorganizarReservas(callback) {
+  // Buscar todas as reservas ordenadas por posição
+  db.all('SELECT * FROM convocatoria WHERE tipo = "reserva" ORDER BY posicao', (err, reservas) => {
+    if (err) {
+      console.error('Erro ao buscar reservas:', err);
+      return callback();
+    }
+
+    // Reorganizar posições sequencialmente
+    let updates = 0;
+    if (reservas.length === 0) return callback();
+
+    reservas.forEach((reserva, index) => {
+      db.run('UPDATE convocatoria SET posicao = ? WHERE id = ?', 
+        [index + 1, reserva.id], (err) => {
+        updates++;
+        if (updates === reservas.length) {
+          callback();
+        }
+      });
+    });
+  });
+}
+
 // Migração: Atualizar configuração para 10 convocados
 db.run('UPDATE convocatoria_config SET max_convocados = 10 WHERE id = 1');
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor a correr na porta ${PORT}`);
+  console.log(`📱 Aceda a: http://localhost:${PORT}`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`🌐 Produção: Aplicação online!`);
+  }
+});
+
+// ROTA DASHBOARD (Para utilizadores normais)
+app.get('/dashboard', requireAuth, async (req, res) => {
+  try {
+    // Parâmetro de ordenação (percentagem por defeito)
+    const ordenacaoSelecionada = req.query.ordenacao || 'percentagem';
+      // 1. CONVOCATÓRIA ATUAL (sempre mostrar)
+    const convocatoria = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT j.*, c.posicao, c.tipo, c.confirmado, c.data_confirmacao,
+         COALESCE((SELECT COUNT(*) FROM faltas_historico f WHERE f.jogador_id = j.id), 0) as total_faltas
+         FROM jogadores j 
+         JOIN convocatoria c ON j.id = c.jogador_id 
+         WHERE j.suspenso = 0 
+         ORDER BY c.tipo, c.posicao`,
+        [],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });
+
+    // 2. LÓGICA DAS EQUIPAS (quinta-feira seguinte ao último jogo às 18h30)
+    const ultimoJogo = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT * FROM jogos 
+         WHERE equipa1_golos IS NOT NULL AND equipa2_golos IS NOT NULL
+         ORDER BY data DESC LIMIT 1`,
+        [],
+        (err, jogo) => {
+          if (err) reject(err);
+          else resolve(jogo);
+        }
+      );
+    });    let equipasFormadas = { 
+      equipa1: { 
+        jogadores: [], 
+        percentagem_vitorias_media: 0, 
+        pontos_totais: 0 
+      }, 
+      equipa2: { 
+        jogadores: [], 
+        percentagem_vitorias_media: 0, 
+        pontos_totais: 0 
+      } 
+    };
+    let mostrarEquipas = false;
+    let proximaQuintaFeira = null;if (ultimoJogo) {
+      // Calcular a próxima quinta-feira após o último jogo
+      const dataUltimoJogo = new Date(ultimoJogo.data);
+      proximaQuintaFeira = new Date(dataUltimoJogo);
+      
+      // Encontrar a próxima quinta-feira (dia 4 da semana, 0=domingo)
+      const diasAteQuinta = (4 - proximaQuintaFeira.getDay() + 7) % 7;
+      if (diasAteQuinta === 0) {
+        // Se o último jogo foi numa quinta-feira, próxima quinta é daqui a 7 dias
+        proximaQuintaFeira.setDate(proximaQuintaFeira.getDate() + 7);
+      } else {
+        proximaQuintaFeira.setDate(proximaQuintaFeira.getDate() + diasAteQuinta);
+      }
+      
+      // Verificar se é quinta-feira às 18h30 ou depois
+      const agora = new Date();
+      const quintaFeiraAs1830 = new Date(proximaQuintaFeira);
+      quintaFeiraAs1830.setHours(18, 30, 0, 0);
+      
+      mostrarEquipas = agora >= quintaFeiraAs1830;
+
+      if (mostrarEquipas && global.equipasGeradas) {
+        // Se há equipas geradas globalmente, usar essas
+        equipasFormadas = global.equipasGeradas;
+      }
+    }
+
+    // 2. INFORMAÇÃO DE COLETES
+    const coletesInfo = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT c.*, j.nome, c.data_levou
+         FROM coletes c
+         JOIN jogadores j ON c.jogador_id = j.id
+         WHERE c.data_devolveu IS NULL
+         ORDER BY c.data_levou DESC`,
+        [],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });    // Próximo a levar coletes
+    const proximoColetes = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT j.*, c.posicao
+         FROM jogadores j
+         JOIN convocatoria c ON j.id = c.jogador_id
+         WHERE c.tipo = 'convocado'
+         AND j.id NOT IN (
+           SELECT jogador_id FROM coletes WHERE data_devolveu IS NULL
+         )
+         ORDER BY c.posicao
+         LIMIT 1`,
+        [],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    // 3. ÚLTIMOS 20 RESULTADOS
+    const ultimosResultados = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT * FROM jogos 
+         WHERE equipa1_golos IS NOT NULL AND equipa2_golos IS NOT NULL
+         ORDER BY data DESC LIMIT 20`,
+        [],
+        (err, jogos) => {
+          if (err) reject(err);
+          else resolve(jogos || []);
+        }
+      );
+    });
+
+    // Para cada resultado, buscar jogadores das equipas
+    const resultadosComJogadores = await Promise.all(
+      ultimosResultados.map(async (jogo) => {
+        const jogadores = await new Promise((resolve, reject) => {
+          db.all(
+            `SELECT j.nome, p.equipa
+             FROM presencas p 
+             JOIN jogadores j ON p.jogador_id = j.id
+             WHERE p.jogo_id = ?
+             ORDER BY j.nome`,
+            [jogo.id],
+            (err, rows) => {
+              if (err) reject(err);
+              else resolve(rows || []);
+            }
+          );
+        });
+
+        return {
+          ...jogo,
+          jogadores_equipa1: jogadores.filter(j => j.equipa === 1),
+          jogadores_equipa2: jogadores.filter(j => j.equipa === 2)
+        };
+      })
+    );    // 4. ESTATÍSTICAS COMPLETAS com ANÁLISE DE DUPLAS E CURIOSIDADES
+    const anoAtual = new Date().getFullYear().toString();
+    const queryEstatisticas = `
+      SELECT 
+        jog.id,
+        jog.nome,
+        COUNT(DISTINCT j.id) as jogos,
+        SUM(CASE 
+          WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
+               (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
+          THEN 1 ELSE 0 END) as vitorias,
+        SUM(CASE 
+          WHEN j.equipa1_golos = j.equipa2_golos 
+          THEN 1 ELSE 0 END) as empates,
+        SUM(CASE 
+          WHEN (p.equipa = 1 AND j.equipa1_golos < j.equipa2_golos) OR 
+               (p.equipa = 2 AND j.equipa2_golos < j.equipa1_golos) 
+          THEN 1 ELSE 0 END) as derrotas,
+        SUM(CASE WHEN p.equipa = 1 THEN j.equipa1_golos ELSE j.equipa2_golos END) as golos_marcados,
+        SUM(CASE WHEN p.equipa = 1 THEN j.equipa2_golos ELSE j.equipa1_golos END) as golos_sofridos,
+        ROUND(
+          (SUM(CASE 
+            WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
+                 (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
+            THEN 1 ELSE 0 END) * 100.0) / COUNT(DISTINCT j.id), 1
+        ) as percentagem_vitorias,
+        MAX(j.data) as ultimo_jogo
+      FROM jogadores jog
+      LEFT JOIN presencas p ON jog.id = p.jogador_id
+      LEFT JOIN jogos j ON p.jogo_id = j.id
+      WHERE jog.suspenso = 0 AND strftime('%Y', j.data) = '${anoAtual}'
+      GROUP BY jog.id, jog.nome
+      HAVING COUNT(DISTINCT j.id) > 0
+    `;
+
+    const estatisticas = await new Promise((resolve, reject) => {
+      db.all(queryEstatisticas, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+
+    // Processar estatísticas (calcular pontos e ordenar)
+    const estatisticasProcessadas = estatisticas.map(stat => ({
+      ...stat,
+      pontos: (stat.vitorias * 3) + (stat.empates * 1),
+      diferenca_golos: stat.golos_marcados - stat.golos_sofridos
+    }));
+
+    // Ordenar conforme a opção selecionada
+    if (ordenacaoSelecionada === 'percentagem') {
+      // Ordenar por % de vitórias, diferença de golos, golos marcados, presenças
+      estatisticasProcessadas.sort((a, b) => {
+        if (a.percentagem_vitorias !== b.percentagem_vitorias) return b.percentagem_vitorias - a.percentagem_vitorias;
+        if (a.diferenca_golos !== b.diferenca_golos) return b.diferenca_golos - a.diferenca_golos;
+        if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
+        return b.jogos - a.jogos;
+      });
+    } else {
+      // Ordenar por pontos (padrão), diferença de golos, golos marcados, presenças
+      estatisticasProcessadas.sort((a, b) => {
+        if (a.pontos !== b.pontos) return b.pontos - a.pontos;
+        if (a.diferenca_golos !== b.diferenca_golos) return b.diferenca_golos - a.diferenca_golos;
+        if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
+        return b.jogos - a.jogos;      });
+    }    // 5. CURIOSIDADES E ANÁLISES ESPECIAIS
+    const curiosidades = [];
+    
+    if (estatisticasProcessadas.length > 0) {
+      // MVP do ano
+      const mvp = estatisticasProcessadas[0];
+      curiosidades.push({
+        tipo: 'mvp',
+        titulo: '🏆 MVP do Ano',
+        descricao: `${mvp.nome} lidera com ${mvp.pontos} pontos (${mvp.vitorias}V-${mvp.empates}E-${mvp.derrotas}D)`,
+        valor: mvp.pontos
+      });
+
+      // Melhor percentagem de vitórias
+      const melhorPercentagem = [...estatisticasProcessadas].sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)[0];
+      if (melhorPercentagem.percentagem_vitorias > 0) {
+        curiosidades.push({
+          tipo: 'percentagem',
+          titulo: '📈 Melhor % de Vitórias',
+          descricao: `${melhorPercentagem.nome} com ${melhorPercentagem.percentagem_vitorias}% de vitórias`,
+          valor: melhorPercentagem.percentagem_vitorias
+        });
+      }
+
+      // Mais golos marcados
+      const artilheiro = [...estatisticasProcessadas].sort((a, b) => b.golos_marcados - a.golos_marcados)[0];
+      curiosidades.push({
+        tipo: 'golos',
+        titulo: '⚽ Maior Artilheiro',
+        descricao: `${artilheiro.nome} marcou ${artilheiro.golos_marcados} golos`,
+        valor: artilheiro.golos_marcados
+      });
+
+      // Melhor defesa (menos golos sofridos)
+      const melhorDefesa = [...estatisticasProcessadas].sort((a, b) => a.golos_sofridos - b.golos_sofridos)[0];
+      curiosidades.push({
+        tipo: 'defesa',
+        titulo: '🛡️ Melhor Defesa',
+        descricao: `${melhorDefesa.nome} sofreu apenas ${melhorDefesa.golos_sofridos} golos`,
+        valor: melhorDefesa.golos_sofridos
+      });
+
+      // Mais jogos
+      const maisPresente = [...estatisticasProcessadas].sort((a, b) => b.jogos - a.jogos)[0];
+      curiosidades.push({
+        tipo: 'presenca',
+        titulo: '👥 Mais Presente',
+        descricao: `${maisPresente.nome} jogou ${maisPresente.jogos} jogos`,
+        valor: maisPresente.jogos
+      });
+    }
+
+    // 6. ANÁLISE DE DUPLAS
+    const duplas = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT 
+          j1.nome as jogador1,
+          j2.nome as jogador2,
+          COUNT(DISTINCT jogo.id) as jogos_juntos,
+          SUM(CASE 
+            WHEN (p1.equipa = p2.equipa AND p1.equipa = 1 AND jogo.equipa1_golos > jogo.equipa2_golos) OR 
+                 (p1.equipa = p2.equipa AND p1.equipa = 2 AND jogo.equipa2_golos > jogo.equipa1_golos) 
+            THEN 1 ELSE 0 END) as vitorias_juntos,
+          ROUND(
+            (SUM(CASE 
+              WHEN (p1.equipa = p2.equipa AND p1.equipa = 1 AND jogo.equipa1_golos > jogo.equipa2_golos) OR 
+                   (p1.equipa = p2.equipa AND p1.equipa = 2 AND jogo.equipa2_golos > jogo.equipa1_golos) 
+              THEN 1 ELSE 0 END) * 100.0) / COUNT(DISTINCT jogo.id), 1
+          ) as percentagem_vitorias
+        FROM presencas p1
+        JOIN presencas p2 ON p1.jogo_id = p2.jogo_id AND p1.equipa = p2.equipa AND p1.jogador_id < p2.jogador_id
+        JOIN jogadores j1 ON p1.jogador_id = j1.id
+        JOIN jogadores j2 ON p2.jogador_id = j2.id
+        JOIN jogos jogo ON p1.jogo_id = jogo.id
+        WHERE strftime('%Y', jogo.data) = '${anoAtual}' 
+          AND jogo.equipa1_golos IS NOT NULL 
+          AND jogo.equipa2_golos IS NOT NULL
+        GROUP BY j1.id, j2.id, j1.nome, j2.nome
+        HAVING COUNT(DISTINCT jogo.id) >= 3
+        ORDER BY percentagem_vitorias DESC, jogos_juntos DESC
+      `, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+
+    const duplasProcessadas = {
+      melhores: duplas.slice(0, 5),
+      piores: duplas.slice(-3).reverse(),
+      extremas: {}
+    };
+
+    if (duplas.length > 0) {
+      const maisJogos = [...duplas].sort((a, b) => b.jogos_juntos - a.jogos_juntos)[0];
+      const menosJogos = [...duplas].sort((a, b) => a.jogos_juntos - b.jogos_juntos)[0];
+      
+      duplasProcessadas.extremas = {
+        maisJogos: maisJogos,
+        menosJogos: menosJogos
+      };
+    }
+
+    // Calcular countdown para mostrar equipas
+    let countdown = null;
+    if (proximaQuintaFeira && !mostrarEquipas) {
+      const agora = new Date();
+      const quintaFeiraAs1830 = new Date(proximaQuintaFeira);
+      quintaFeiraAs1830.setHours(18, 30, 0, 0);
+      const diff = quintaFeiraAs1830.getTime() - agora.getTime();
+        if (diff > 0) {
+        const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        countdown = { dias, horas, minutos };
+      }
+    }    res.render('dashboard', {
+      proximaQuintaFeira,
+      convocatoria,
+      equipasGlobais: equipasFormadas, // Corrigir nome da variável
+      tempoRestante: countdown ? 
+        (countdown.dias * 24 * 60 * 60 * 1000) + 
+        (countdown.horas * 60 * 60 * 1000) + 
+        (countdown.minutos * 60 * 1000) : null,
+      countdown: countdown, // Passar o countdown diretamente também
+      coletesInfo,
+      proximoColetes,
+      ultimosResultados: resultadosComJogadores,
+      estatisticas: estatisticasProcessadas,
+      curiosidades: curiosidades,
+      duplas: duplasProcessadas,
+      anoAtual,
+      ordenacaoSelecionada,
+      user: req.session.user
+    });  } catch (error) {
+    console.error('Erro no dashboard:', error);
+    res.render('dashboard', {
+      proximaQuintaFeira: null,
+      convocatoria: [],
+      equipasGlobais: { 
+        equipa1: { 
+          jogadores: [], 
+          percentagem_vitorias_media: 0, 
+          pontos_totais: 0 
+        }, 
+        equipa2: { 
+          jogadores: [], 
+          percentagem_vitorias_media: 0, 
+          pontos_totais: 0 
+        } 
+      },
+      tempoRestante: 0,
+      countdown: null,
+      coletesInfo: [],
+      proximoColetes: null,
+      ultimosResultados: [],
+      estatisticas: [],
+      curiosidades: [],
+      duplas: { melhores: [], piores: [], extremas: {} },
+      anoAtual: new Date().getFullYear().toString(),
+      ordenacaoSelecionada: 'percentagem',
+      user: req.session.user
+    });
+  }
+});
+
+// ROTA DE TESTE DO DASHBOARD
+app.get('/dashboard-test', async (req, res) => {
+  try {
+    const ordenacaoSelecionada = req.query.ordenacao || 'percentagem';
+    const anoAtual = new Date().getFullYear().toString();
+    
+    const queryEstatisticas = `
+      SELECT 
+        jog.id,
+        jog.nome,
+        COUNT(DISTINCT j.id) as jogos,
+        SUM(CASE 
+          WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
+               (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
+          THEN 1 ELSE 0 END) as vitorias,
+        SUM(CASE 
+          WHEN j.equipa1_golos = j.equipa2_golos 
+          THEN 1 ELSE 0 END) as empates,
+        SUM(CASE 
+          WHEN (p.equipa = 1 AND j.equipa1_golos < j.equipa2_golos) OR 
+               (p.equipa = 2 AND j.equipa2_golos < j.equipa1_golos) 
+          THEN 1 ELSE 0 END) as derrotas,
+        ROUND(
+          (SUM(CASE 
+            WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
+                 (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
+            THEN 1 ELSE 0 END) * 100.0) / COUNT(DISTINCT j.id), 1
+        ) as percentagem_vitorias
+      FROM jogadores jog
+      LEFT JOIN presencas p ON jog.id = p.jogador_id
+      LEFT JOIN jogos j ON p.jogo_id = j.id
+      WHERE jog.suspenso = 0 AND strftime('%Y', j.data) = '${anoAtual}'
+      GROUP BY jog.id, jog.nome
+      HAVING COUNT(DISTINCT j.id) > 0
+    `;
+
+    const estatisticas = await new Promise((resolve, reject) => {
+      db.all(queryEstatisticas, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+
+    const estatisticasProcessadas = estatisticas.map(stat => ({
+      ...stat,
+      pontos: (stat.vitorias * 3) + (stat.empates * 1)
+    }));
+
+    if (ordenacaoSelecionada === 'percentagem') {
+      estatisticasProcessadas.sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias);
+    } else {
+      estatisticasProcessadas.sort((a, b) => b.pontos - a.pontos);
+    }
+
+    res.render('dashboard_test', {
+      estatisticas: estatisticasProcessadas,
+      ordenacaoSelecionada,
+      anoAtual
+    });
+
+  } catch (error) {
+    console.error('Erro no dashboard-test:', error);
+    res.render('dashboard_test', {
+      estatisticas: [],
+      ordenacaoSelecionada: 'percentagem',
+      anoAtual: new Date().getFullYear().toString()
+    });
+  }
+});

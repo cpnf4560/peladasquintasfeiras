@@ -4,8 +4,24 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Database (opcional - remover se quiser versionar a base de dados)
+# Environment variables
+.env
+
+# Database (manter comentado para manter dados em produção)
 # futsal.db
+
+# Development/Test files
+test_*.js
+debug_*.js
+check_*.js
+fix_*.js
+teste_*.js
+*_test.js
+*_backup.ejs
+*_corrupted.ejs
+*_simple.ejs
+*_complex.ejs
+*_new.ejs
 
 # Logs
 *.log

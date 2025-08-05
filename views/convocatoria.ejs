@@ -5,20 +5,35 @@
   <link rel="stylesheet" href="/style.css">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 </head>
-<body class="main-bg">
-  <header class="header">
+<body class="main-bg">  <header class="header">
     <div class="logo-area">
       <img src="/logo.svg" alt="Logo" class="logo-image">
-      <span class="logo-text">Peladas das Quintas Feiras</span>
+      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
     </div>
     <nav class="navbar">
-      <a href="/" class="nav-link">Jogos</a>
-      <a href="/jogadores" class="nav-link">Jogadores</a>
       <a href="/convocatoria" class="nav-link active">Convocatória</a>
       <a href="/coletes" class="nav-link">Coletes</a>
-      <a href="/jogos/novo" class="nav-link">Novo Jogo</a>
+      <a href="/" class="nav-link">Resultados</a>
       <a href="/estatisticas" class="nav-link">Estatísticas</a>
+      <% if (user && user.role === 'admin') { %>
+        <a href="/jogos/novo" class="nav-link">Registar Resultado</a>
+        <a href="/jogadores" class="nav-link">Admin</a>
+      <% } %>
     </nav>
+    
+    <% if (user) { %>
+      <div class="user-info">
+        <span class="username">👤 <%= user.username %></span>
+        <% if (user.role === 'admin') { %>
+          <span class="user-role">Admin</span>
+        <% } else { %>
+          <a href="/dashboard" class="dashboard-link">📊 Dashboard</a>
+        <% } %>
+        <form method="POST" action="/logout" style="display: inline;">
+          <button type="submit" class="logout-btn">🚪 Logout</button>
+        </form>
+      </div>
+    <% } %>
   </header>
 
   <main class="container">
@@ -63,25 +78,43 @@
       <div class="convocados-section">
         <h3 class="table-title">🏆 Convocados (<%= convocados.length %>/<%= config.max_convocados || 10 %>)</h3>
         <div class="table-container">
-          <table class="convocatoria-table">
-            <thead>
+          <table class="convocatoria-table">            <thead>
               <tr>
                 <th>#</th>
                 <th>Nome</th>
                 <th>Faltas</th>
+                <th>Confirmação</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               <% if (convocados && convocados.length > 0) { %>
-                <% convocados.forEach((jogador, index) => { %>
-                  <tr class="convocado-row">
+                <% convocados.forEach((jogador, index) => { %>                  <tr class="convocado-row">
                     <td class="posicao-number"><%= jogador.posicao %></td>
                     <td class="jogador-nome">
                       <span class="nome-convocado">🟢 <%= jogador.nome %></span>
                     </td>
                     <td class="faltas-count">
                       <span class="badge-faltas"><%= jogador.total_faltas || 0 %></span>
+                    </td>
+                    <td class="confirmacao-status">
+                      <% if (jogador.confirmado) { %>
+                        <span class="status-confirmado">✅ Confirmado</span>
+                        <% if (jogador.data_confirmacao) { %>
+                          <small class="data-confirmacao">
+                            <%= new Date(jogador.data_confirmacao).toLocaleDateString('pt-PT') %> 
+                            <%= new Date(jogador.data_confirmacao).toLocaleTimeString('pt-PT', {hour: '2-digit', minute: '2-digit'}) %>
+                          </small>
+                        <% } %>
+                      <% } else { %>
+                        <span class="status-pendente">⏳ Pendente</span>
+                      <% } %>
+                      <form method="POST" action="/convocatoria/confirmar-presenca/<%= jogador.id %>" style="display: inline; margin-left: 10px;">
+                        <button type="submit" class="btn-toggle-confirmacao <%= jogador.confirmado ? 'btn-desconfirmar' : 'btn-confirmar' %>" 
+                                title="<%= jogador.confirmado ? 'Desconfirmar presença' : 'Confirmar presença' %>">
+                          <%= jogador.confirmado ? '❌' : '✅' %>
+                        </button>
+                      </form>
                     </td>
                     <td class="acoes-convocado">
                       <form method="POST" action="/convocatoria/marcar-falta/<%= jogador.id %>" 
@@ -94,9 +127,8 @@
                     </td>
                   </tr>
                 <% }) %>
-              <% } else { %>
-                <tr>
-                  <td colspan="4" class="no-data">Nenhum jogador convocado</td>
+              <% } else { %>                <tr>
+                  <td colspan="5" class="no-data">Nenhum jogador convocado</td>
                 </tr>
               <% } %>
             </tbody>

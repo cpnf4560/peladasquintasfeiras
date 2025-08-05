@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acesso Negado - Peladas das Quintas Feiras</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #2a2e44 0%, #1a1d2e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f5f5f5;
+    }
+
+    .error-container {
+      background: rgba(51, 56, 77, 0.9);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 500px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(220, 53, 69, 0.3);
+      text-align: center;
+    }
+
+    .error-icon {
+      font-size: 64px;
+      color: #dc3545;
+      margin-bottom: 20px;
+    }
+
+    .error-title {
+      color: #dc3545;
+      font-size: 24px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    .error-message {
+      color: #f5f5f5;
+      font-size: 16px;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+
+    .user-info {
+      background: rgba(42, 46, 68, 0.5);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      border-left: 4px solid #f9b233;
+    }
+
+    .user-info p {
+      margin: 0;
+      color: #ccc;
+      font-size: 14px;
+    }
+
+    .user-info .username {
+      color: #f9b233;
+      font-weight: 600;
+    }
+
+    .actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #f9b233 0%, #e09d2a 100%);
+      color: #2a2e44;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(249, 178, 51, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(51, 56, 77, 0.8);
+      color: #f5f5f5;
+      border: 2px solid rgba(249, 178, 51, 0.3);
+    }
+
+    .btn-secondary:hover {
+      border-color: #f9b233;
+      background: rgba(51, 56, 77, 1);
+    }
+
+    @media (max-width: 480px) {
+      .error-container {
+        margin: 20px;
+        padding: 30px 25px;
+      }
+      
+      .actions {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <div class="error-icon">🚫</div>
+    <h1 class="error-title">Acesso Negado</h1>
+    <p class="error-message"><%= message %></p>
+
+    <% if (user) { %>
+      <div class="user-info">
+        <p>Sessão atual: <span class="username"><%= user.username %></span> (<%= user.role === 'admin' ? 'Administrador' : 'Utilizador' %>)</p>
+      </div>
+    <% } %>
+
+    <div class="actions">
+      <% if (user) { %>
+        <% if (user.role === 'user') { %>
+          <a href="/dashboard" class="btn btn-primary">Ir para Dashboard</a>
+        <% } else { %>
+          <a href="/" class="btn btn-primary">Voltar ao Início</a>
+        <% } %>
+        <form method="POST" action="/logout" style="display: inline;">
+          <button type="submit" class="btn btn-secondary">Fazer Logout</button>
+        </form>
+      <% } else { %>
+        <a href="/login" class="btn btn-primary">Fazer Login</a>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>

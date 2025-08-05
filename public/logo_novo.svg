@@ -1,0 +1,57 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer circle with dark teal background -->
+  <circle cx="100" cy="100" r="95" fill="#2c5856" stroke="#f4b942" stroke-width="10"/>
+  
+  <!-- Inner circle background -->
+  <circle cx="100" cy="100" r="70" fill="#1a3d3b"/>
+  
+  <!-- Nova bola de futsal moderna -->
+  <g transform="translate(100, 100)">
+    <!-- Ball base com gradiente -->
+    <defs>
+      <radialGradient id="ballGradient" cx="0.3" cy="0.3">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="70%" stop-color="#f0f0f0"/>
+        <stop offset="100%" stop-color="#e0e0e0"/>
+      </radialGradient>
+    </defs>
+    
+    <circle cx="0" cy="0" r="28" fill="url(#ballGradient)" stroke="#ccc" stroke-width="1"/>
+    
+    <!-- Padrão de futsal moderno -->
+    <path d="M0,-15 L-12,-4.5 L-7.4,12.1 L7.4,12.1 L12,-4.5 Z" fill="#ff6600" stroke="#cc4400" stroke-width="1.5"/>
+    
+    <!-- Hexágonos ao redor -->
+    <path d="M0,-28 L-9.7,-23.2 L-9.7,-18.2 L0,-15 L9.7,-18.2 L9.7,-23.2 Z" fill="#0066ff" stroke="#003399" stroke-width="1"/>
+    <path d="M-24.2,-14 L-28,0 L-24.2,14 L-12,-4.5 L-21.6,-8.1 L-21.6,-5.9 Z" fill="#0066ff" stroke="#003399" stroke-width="1"/>
+    <path d="M24.2,-14 L28,0 L24.2,14 L12,-4.5 L21.6,-8.1 L21.6,-5.9 Z" fill="#0066ff" stroke="#003399" stroke-width="1"/>
+    <path d="M-21.6,8.1 L-24.2,14 L-9.7,23.2 L-7.4,12.1 L-12,4.5 L-21.6,5.9 Z" fill="#0066ff" stroke="#003399" stroke-width="1"/>
+    <path d="M21.6,8.1 L24.2,14 L9.7,23.2 L7.4,12.1 L12,4.5 L21.6,5.9 Z" fill="#0066ff" stroke="#003399" stroke-width="1"/>
+    <path d="M0,28 L9.7,23.2 L9.7,18.2 L0,15 L-9.7,18.2 L-9.7,23.2 Z" fill="#0066ff" stroke="#003399" stroke-width="1"/>
+    
+    <!-- Highlight realista -->
+    <ellipse cx="-10" cy="-10" rx="8" ry="5" fill="#ffffff" opacity="0.8" transform="rotate(-30 -10 -10)"/>
+    <ellipse cx="-8" cy="-8" rx="4" ry="2" fill="#ffffff" opacity="0.6" transform="rotate(-30 -8 -8)"/>
+  </g>
+  
+  <!-- Texto com estilo moderno -->
+  <path id="top-curve" d="M 25 100 A 75 75 0 0 1 175 100" fill="none"/>
+  <text font-family="'Segoe UI', 'Roboto', sans-serif" font-size="18" font-weight="800" fill="#ffffff" stroke="#000" stroke-width="0.5">
+    <textPath href="#top-curve" startOffset="50%" text-anchor="middle">
+      PELADAS DAS
+    </textPath>
+  </text>
+  
+  <path id="bottom-curve" d="M 175 100 A 75 75 0 0 1 25 100" fill="none"/>
+  <text font-family="'Segoe UI', 'Roboto', sans-serif" font-size="18" font-weight="800" fill="#ffffff" stroke="#000" stroke-width="0.5">
+    <textPath href="#bottom-curve" startOffset="50%" text-anchor="middle">
+      QUINTAS FEIRAS
+    </textPath>
+  </text>
+  
+  <!-- Linhas decorativas melhoradas -->
+  <line x1="30" y1="80" x2="55" y2="80" stroke="#f4b942" stroke-width="4" stroke-linecap="round"/>
+  <line x1="30" y1="120" x2="55" y2="120" stroke="#f4b942" stroke-width="4" stroke-linecap="round"/>
+  <line x1="145" y1="80" x2="170" y2="80" stroke="#f4b942" stroke-width="4" stroke-linecap="round"/>
+  <line x1="145" y1="120" x2="170" y2="120" stroke="#f4b942" stroke-width="4" stroke-linecap="round"/>
+</svg>

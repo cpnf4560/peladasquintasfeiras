@@ -182,11 +182,15 @@ body.main-bg {
 }
 
 .logo-text {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #f9b233;
   letter-spacing: 1px;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  line-height: 1.1;
   white-space: nowrap;
+  text-align: center;
 }
 
 .navbar {

@@ -5,22 +5,36 @@
   <link rel="stylesheet" href="/style.css">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 </head>
-<body class="main-bg">
-  <header class="header">
-    <div class="logo-area">
+<body class="main-bg">  <header class="header">    <div class="logo-area">
       <img src="/logo.svg" alt="Logo" class="logo-image">
-      <span class="logo-text">Peladas das Quintas Feiras</span>
+      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
     </div>    <nav class="navbar">
-      <a href="/" class="nav-link">Jogos</a>
-      <a href="/jogadores" class="nav-link">Jogadores</a>
       <a href="/convocatoria" class="nav-link">Convocatória</a>
       <a href="/coletes" class="nav-link">Coletes</a>
-      <a href="/jogos/novo" class="nav-link">Novo Jogo</a>
+      <a href="/" class="nav-link">Resultados</a>
       <a href="/estatisticas" class="nav-link">Estatísticas</a>
+      <% if (user && user.role === 'admin') { %>
+        <a href="/jogos/novo" class="nav-link">Registar Resultado</a>
+        <a href="/jogadores" class="nav-link active">Admin</a>
+      <% } %>
     </nav>
+    
+    <% if (user) { %>
+      <div class="user-info">
+        <span class="username">👤 <%= user.username %></span>
+        <% if (user.role === 'admin') { %>
+          <span class="user-role">Admin</span>
+        <% } else { %>
+          <a href="/dashboard" class="dashboard-link">📊 Dashboard</a>
+        <% } %>
+        <form method="POST" action="/logout" style="display: inline;">
+          <button type="submit" class="logout-btn">🚪 Logout</button>
+        </form>
+      </div>
+    <% } %>
   </header>
   <main class="container">
-  <h2 class="section-title">Lista de Jogadores</h2>
+  <h2 class="section-title">Administração de Jogadores</h2>
 
   <form method="POST" action="/jogadores" class="form-add-player">
     <div class="form-group">

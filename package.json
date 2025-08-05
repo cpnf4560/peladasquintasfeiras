@@ -5,11 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
-  },
-  "dependencies": {
+  },  "dependencies": {
     "express": "^4.19.2",
     "sqlite3": "^5.1.6",
     "body-parser": "^1.20.2",
-    "ejs": "^3.1.10"
+    "ejs": "^3.1.10",
+    "express-session": "^1.17.3",
+    "bcrypt": "^5.1.1"
   }
 }
