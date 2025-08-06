@@ -1,16 +1,25 @@
 {
-  "name": "peladas-quintas-feiras",
-  "version": "1.0.0",
-  "description": "Gestão simples de futsal: jogadores, jogos, equipas e estatísticas coletivas.",
+  "name": "futsal-manager",
+  "version": "2.0.0",
+  "description": "Sistema completo de gestão de futsal com autenticação e dashboard personalizado",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
-  },  "dependencies": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
     "express": "^4.19.2",
     "sqlite3": "^5.1.6",
     "body-parser": "^1.20.2",
     "ejs": "^3.1.10",
     "express-session": "^1.17.3",
     "bcrypt": "^5.1.1"
-  }
+  },
+  "keywords": ["futsal", "gestão", "desporto", "nodejs", "sqlite"],
+  "author": "Futsal Manager Team",
+  "license": "MIT"
 }
