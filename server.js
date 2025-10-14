@@ -1,12 +1,11 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const { db, USE_POSTGRES } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const db = new sqlite3.Database('./futsal.db');
 
 // Configuração
 app.set('view engine', 'ejs');
@@ -35,109 +34,105 @@ app.use((req, res, next) => {
 });
 
 // Inicializar base de dados
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS jogadores (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT NOT NULL,
-    suspenso INTEGER DEFAULT 0
-  )`);
-  
-  db.run(`CREATE TABLE IF NOT EXISTS jogos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    data TEXT NOT NULL,
-    equipa1_golos INTEGER,
-    equipa2_golos INTEGER
-  )`);
-    db.run(`CREATE TABLE IF NOT EXISTS presencas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    jogo_id INTEGER,
-    jogador_id INTEGER,
-    equipa INTEGER,
-    FOREIGN KEY (jogo_id) REFERENCES jogos(id),
-    FOREIGN KEY (jogador_id) REFERENCES jogadores(id)
-  )`);
-  
-  db.run(`CREATE TABLE IF NOT EXISTS coletes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    jogador_id INTEGER,
-    data_levou TEXT NOT NULL,
-    data_devolveu TEXT,
-    FOREIGN KEY (jogador_id) REFERENCES jogadores(id)
-  )`);
-  
-  db.run(`CREATE TABLE IF NOT EXISTS convocatoria (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    jogador_id INTEGER,
-    posicao INTEGER,
-    tipo TEXT,
-    FOREIGN KEY (jogador_id) REFERENCES jogadores(id)
-  )`);
-  
-  db.run(`CREATE TABLE IF NOT EXISTS convocatoria_config (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    max_convocados INTEGER DEFAULT 10,
-    max_reservas INTEGER DEFAULT 5
-  )`);
-  
-  // Tabelas para sistema de convocatória
-  db.run(`CREATE TABLE IF NOT EXISTS convocatoria_config (
-    id INTEGER PRIMARY KEY,
-    max_convocados INTEGER DEFAULT 10,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+const initDatabase = async () => {
+  const queries = [
+    `CREATE TABLE IF NOT EXISTS jogadores (
+      id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
+      nome TEXT NOT NULL,
+      suspenso INTEGER DEFAULT 0
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS jogos (
+      id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
+      data TEXT NOT NULL,
+      equipa1_golos INTEGER,
+      equipa2_golos INTEGER
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS presencas (
+      id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
+      jogo_id INTEGER,
+      jogador_id INTEGER,
+      equipa INTEGER
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS coletes (
+      id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
+      jogador_id INTEGER,
+      data_levou TEXT NOT NULL,
+      data_devolveu TEXT
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS convocatoria_config (
+      id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
+      max_convocados INTEGER DEFAULT 10,
+      created_at ${USE_POSTGRES ? 'TIMESTAMP DEFAULT NOW()' : "DATETIME DEFAULT CURRENT_TIMESTAMP"}
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS convocatoria (
+      id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
+      jogador_id INTEGER,
+      tipo TEXT CHECK(tipo IN ('convocado', 'reserva')),
+      posicao INTEGER,
+      confirmado INTEGER DEFAULT 0,
+      data_confirmacao ${USE_POSTGRES ? 'TIMESTAMP' : 'DATETIME'}
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS faltas_historico (
+      id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
+      jogador_id INTEGER,
+      data_falta DATE,
+      created_at ${USE_POSTGRES ? 'TIMESTAMP DEFAULT NOW()' : "DATETIME DEFAULT CURRENT_TIMESTAMP"}
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS users (
+      id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
+      created_at ${USE_POSTGRES ? 'TIMESTAMP DEFAULT NOW()' : "DATETIME DEFAULT CURRENT_TIMESTAMP"}
+    )`
+  ];
 
-  db.run(`CREATE TABLE IF NOT EXISTS convocatoria (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    jogador_id INTEGER,
-    tipo TEXT CHECK(tipo IN ('convocado', 'reserva')),
-    posicao INTEGER,
-    confirmado INTEGER DEFAULT 0,
-    data_confirmacao DATETIME,
-    FOREIGN KEY(jogador_id) REFERENCES jogadores(id)
-  )`);
+  for (const query of queries) {
+    await new Promise((resolve, reject) => {
+      db.query(query, [], (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  }
 
-  db.run(`CREATE TABLE IF NOT EXISTS faltas_historico (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    jogador_id INTEGER,
-    data_falta DATE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(jogador_id) REFERENCES jogadores(id)
-  )`);
-
-  // Tabela de utilizadores
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'user',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  // Inserir utilizadores padrão se não existirem
-  db.get('SELECT COUNT(*) as count FROM users', (err, result) => {
-    if (!err && result.count === 0) {
+  // Criar utilizadores padrão se não existirem
+  const checkUsers = 'SELECT COUNT(*) as count FROM users';
+  db.query(checkUsers, [], async (err, result) => {
+    const count = USE_POSTGRES ? result.rows[0].count : result.rows[0].count;
+    
+    if (!err && count == 0) {
       console.log('Criando utilizadores padrão...');
       
-      // Hash das passwords
       const adminPasswordHash1 = bcrypt.hashSync('admin123', 10);
       const adminPasswordHash2 = bcrypt.hashSync('admin', 10);
       const userPasswordHash = bcrypt.hashSync('user', 10);
       
-      // Inserir admins
-      db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', 
-        ['admin1', adminPasswordHash1, 'admin']);
-      db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', 
-        ['admin2', adminPasswordHash2, 'admin']);
+      const insertUser = 'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)';
       
-      // Inserir users (user1 até user19)
+      db.query(insertUser, ['admin1', adminPasswordHash1, 'admin'], () => {});
+      db.query(insertUser, ['admin2', adminPasswordHash2, 'admin'], () => {});
+      
       for (let i = 1; i <= 19; i++) {
-        db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', 
-          [`user${i}`, userPasswordHash, 'user']);
+        db.query(insertUser, [`user${i}`, userPasswordHash, 'user'], () => {});
       }
       
       console.log('✅ Utilizadores criados com sucesso!');
     }
   });
+  
+  console.log('✅ Database initialized');
+};
+
+initDatabase().catch(err => {
+  console.error('❌ Database initialization error:', err);
 });
 
 // MIDDLEWARE DE AUTENTICAÇÃO
@@ -180,7 +175,7 @@ app.post('/login', (req, res) => {
     return res.render('login', { error: 'Por favor, preencha todos os campos' });
   }
   
-  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+  db.query('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
     if (err) {
       console.error('Erro na base de dados:', err);
       return res.render('login', { error: 'Erro interno do servidor' });
@@ -233,7 +228,7 @@ app.post('/logout', (req, res) => {
 });
 
 // ROTAS PRINCIPAIS
-app.get('/', requireAuth, (req, res) => {  db.all('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
+app.get('/', requireAuth, (req, res) => {  db.query('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
     if (err) {
       console.error('Erro ao buscar jogos:', err);
       return res.render('index', { jogos: [], user: req.session.user });
@@ -246,7 +241,7 @@ app.get('/', requireAuth, (req, res) => {  db.all('SELECT * FROM jogos ORDER BY 
     // Para cada jogo, buscar os jogadores das equipas
     const jogosComJogadores = [];
     let processedCount = 0;    jogos.forEach((jogo) => {
-      db.all(
+      db.query(
         `SELECT j.id, j.nome, p.equipa
          FROM presencas p 
          JOIN jogadores j ON p.jogador_id = j.id
@@ -279,7 +274,7 @@ app.get('/', requireAuth, (req, res) => {  db.all('SELECT * FROM jogos ORDER BY 
 
 // ROTAS DE JOGADORES
 app.get('/jogadores', requireAdmin, (req, res) => {
-  db.all('SELECT * FROM jogadores ORDER BY nome', [], (err, jogadores) => {
+  db.query('SELECT * FROM jogadores ORDER BY nome', [], (err, jogadores) => {
     res.render('jogadores', { jogadores: jogadores || [], user: req.session.user });
   });
 });
@@ -288,21 +283,21 @@ app.post('/jogadores', requireAdmin, (req, res) => {
   const { nome } = req.body;
   if (!nome) return res.redirect('/jogadores');
   
-  db.run('INSERT INTO jogadores (nome) VALUES (?)', [nome], () => {
+  db.query('INSERT INTO jogadores (nome) VALUES (?)', [nome], () => {
     res.redirect('/jogadores');
   });
 });
 
 app.post('/jogadores/:id/delete', requireAdmin, (req, res) => {
   const { id } = req.params;
-  db.run('DELETE FROM jogadores WHERE id = ?', [id], () => {
+  db.query('DELETE FROM jogadores WHERE id = ?', [id], () => {
     res.redirect('/jogadores');
   });
 });
 
 app.post('/jogadores/:id/toggle-suspension', requireAdmin, (req, res) => {
   const { id } = req.params;
-  db.run('UPDATE jogadores SET suspenso = CASE WHEN suspenso = 1 THEN 0 ELSE 1 END WHERE id = ?', [id], () => {
+  db.query('UPDATE jogadores SET suspenso = CASE WHEN suspenso = 1 THEN 0 ELSE 1 END WHERE id = ?', [id], () => {
     res.redirect('/jogadores');
   });
 });
@@ -310,7 +305,7 @@ app.post('/jogadores/:id/toggle-suspension', requireAdmin, (req, res) => {
 app.post('/jogadores/:id/update', requireAdmin, (req, res) => {
   const { id } = req.params;
   const { nome } = req.body;
-  db.run('UPDATE jogadores SET nome = ? WHERE id = ?', [nome, id], () => {
+  db.query('UPDATE jogadores SET nome = ? WHERE id = ?', [nome, id], () => {
     res.json({ sucesso: true });
   });
 });
@@ -321,7 +316,7 @@ app.get('/jogos', requireAuth, (req, res) => {
 });
 
 app.get('/jogos/novo', requireAdmin, (req, res) => {
-  db.all('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', [], (err, jogadores) => {
+  db.query('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', [], (err, jogadores) => {
     res.render('novo_jogo', { jogadores: jogadores || [], user: req.session.user });
   });
 });
@@ -329,7 +324,7 @@ app.get('/jogos/novo', requireAdmin, (req, res) => {
 app.post('/jogos', requireAdmin, (req, res) => {
   const { data, equipa1, equipa2, equipa1_golos, equipa2_golos } = req.body;
   
-  db.run(
+  db.query(
     'INSERT INTO jogos (data, equipa1_golos, equipa2_golos) VALUES (?, ?, ?)',
     [data, equipa1_golos, equipa2_golos],
     function (err) {
@@ -344,7 +339,7 @@ app.post('/jogos', requireAdmin, (req, res) => {
       const equipa1Arr = Array.isArray(equipa1) ? equipa1 : (equipa1 ? [equipa1] : []);
       equipa1Arr.forEach((jogadorId) => {
         if (jogadorId) {
-          db.run('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 1)', [jogoId, jogadorId], (err) => {
+          db.query('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 1)', [jogoId, jogadorId], (err) => {
             if (err) console.error('Erro ao inserir presença equipa1:', err);
           });
         }
@@ -354,7 +349,7 @@ app.post('/jogos', requireAdmin, (req, res) => {
       const equipa2Arr = Array.isArray(equipa2) ? equipa2 : (equipa2 ? [equipa2] : []);
       equipa2Arr.forEach((jogadorId) => {
         if (jogadorId) {
-          db.run('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 2)', [jogoId, jogadorId], (err) => {
+          db.query('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 2)', [jogoId, jogadorId], (err) => {
             if (err) console.error('Erro ao inserir presença equipa2:', err);
           });
         }
@@ -370,7 +365,7 @@ app.get('/jogos/:id', requireAuth, (req, res) => {
   
   console.log(`Buscando jogo com ID: ${jogoId}`);
   
-  db.get('SELECT * FROM jogos WHERE id = ?', [jogoId], (err, jogo) => {
+  db.query('SELECT * FROM jogos WHERE id = ?', [jogoId], (err, jogo) => {
     if (err) {
       console.error('Erro na base de dados:', err);
       return res.status(500).send('Erro na base de dados');
@@ -383,7 +378,7 @@ app.get('/jogos/:id', requireAuth, (req, res) => {
     
     console.log('Jogo encontrado:', jogo);
     
-    db.all(
+    db.query(
       `SELECT j.id, j.nome, p.equipa
        FROM presencas p 
        JOIN jogadores j ON p.jogador_id = j.id
@@ -418,7 +413,7 @@ app.post('/jogos/:id/update', requireAdmin, (req, res) => {
   }
   
   // Update game in database
-  db.run(
+  db.query(
     'UPDATE jogos SET data = ?, equipa1_golos = ?, equipa2_golos = ? WHERE id = ?',
     [data, parseInt(equipa1_golos), parseInt(equipa2_golos), jogoId],
     function(err) {
@@ -480,7 +475,7 @@ app.get('/estatisticas', requireAuth, (req, res) => {
     GROUP BY jog.id, jog.nome
     HAVING COUNT(DISTINCT j.id) > 0
   `;
-    db.all(queryEstatisticas, [], (err, estatisticas) => {
+    db.query(queryEstatisticas, [], (err, estatisticas) => {
     if (err) {
       console.error('Erro ao buscar estatísticas:', err);      return res.render('estatisticas', {
         user: req.session.user,
@@ -530,7 +525,7 @@ app.get('/estatisticas', requireAuth, (req, res) => {
     
     if (mesSelecionado) {
       // Contar total de jogos no mês
-      db.get(`
+      db.query(`
         SELECT COUNT(*) as total 
         FROM jogos j 
         WHERE strftime('%Y', j.data) = ? AND strftime('%m', j.data) = ?
@@ -722,7 +717,7 @@ app.get('/coletes', requireAuth, (req, res) => {
   console.log('=== ROTA /coletes CHAMADA ===');
   
   // Primeiro, adicionar a coluna suspenso se não existir
-  db.run("ALTER TABLE jogadores ADD COLUMN suspenso INTEGER DEFAULT 0", (err) => {
+  db.query("ALTER TABLE jogadores ADD COLUMN suspenso INTEGER DEFAULT 0", (err) => {
     if (err && !err.message.includes('duplicate column name')) {
       console.error('Erro ao adicionar coluna suspenso:', err);
     } else {
@@ -730,7 +725,7 @@ app.get('/coletes', requireAuth, (req, res) => {
     }
     
     // Buscar estatísticas dos convocados apenas (os 10 da convocatória)
-    db.all(`
+    db.query(`
       SELECT 
         j.id,
         j.nome,
@@ -753,7 +748,7 @@ app.get('/coletes', requireAuth, (req, res) => {
       console.log('Estatísticas encontradas:', estatisticas);
       
       // Buscar quem tem os coletes actualmente
-      db.get(`
+      db.query(`
         SELECT c.*, j.nome as jogador_nome, c.data_levou
         FROM coletes c
         JOIN jogadores j ON c.jogador_id = j.id
@@ -797,7 +792,7 @@ app.post('/coletes/atribuir', requireAdmin, (req, res) => {
   const dataHoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   
   // Primeiro, marcar os coletes actuais como devolvidos
-  db.run(`
+  db.query(`
     UPDATE coletes 
     SET data_devolveu = ? 
     WHERE data_devolveu IS NULL
@@ -808,7 +803,7 @@ app.post('/coletes/atribuir', requireAdmin, (req, res) => {
     }
     
     // Depois, atribuir os coletes ao novo jogador
-    db.run(`
+    db.query(`
       INSERT INTO coletes (jogador_id, data_levou) 
       VALUES (?, ?)
     `, [jogador_id, dataHoje], (err) => {
@@ -826,14 +821,14 @@ app.post('/jogos/:id/delete', requireAdmin, (req, res) => {
   const jogoId = req.params.id;
   
   // Primeiro, eliminar todas as presenças do jogo
-  db.run('DELETE FROM presencas WHERE jogo_id = ?', [jogoId], (err) => {
+  db.query('DELETE FROM presencas WHERE jogo_id = ?', [jogoId], (err) => {
     if (err) {
       console.error('Erro ao eliminar presenças:', err);
       return res.status(500).send('Erro ao eliminar presenças do jogo');
     }
     
     // Depois, eliminar o jogo
-    db.run('DELETE FROM jogos WHERE id = ?', [jogoId], (err) => {
+    db.query('DELETE FROM jogos WHERE id = ?', [jogoId], (err) => {
       if (err) {
         console.error('Erro ao eliminar jogo:', err);
         return res.status(500).send('Erro ao eliminar jogo');
@@ -849,7 +844,7 @@ app.get('/convocatoria', requireAuth, (req, res) => {
   console.log('=== ROTA /convocatoria CHAMADA ===');
   
   // Buscar todos os jogadores ativos
-  db.all('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', (err, jogadores) => {
+  db.query('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', (err, jogadores) => {
     if (err) {
       console.error('Erro ao buscar jogadores:', err);
       return res.status(500).send('Erro ao buscar jogadores');
@@ -858,7 +853,7 @@ app.get('/convocatoria', requireAuth, (req, res) => {
     console.log('Jogadores encontrados:', jogadores.length);
 
     // Buscar configuração da convocatória (se existir)
-    db.get('SELECT * FROM convocatoria_config LIMIT 1', (err, config) => {
+    db.query('SELECT * FROM convocatoria_config LIMIT 1', (err, config) => {
       if (err) {
         console.error('Erro ao buscar configuração:', err);
         // Se não existe tabela, criar com configuração padrão
@@ -875,7 +870,7 @@ app.get('/convocatoria', requireAuth, (req, res) => {
       }
 
       console.log('Config encontrada:', config);      // Buscar convocados e reservas com contagem de faltas e confirmação
-      db.all(`
+      db.query(`
         SELECT j.*, c.posicao, c.tipo, c.confirmado, c.data_confirmacao,
                COALESCE((SELECT COUNT(*) FROM faltas_historico f WHERE f.jogador_id = j.id), 0) as total_faltas
         FROM jogadores j 
@@ -909,13 +904,13 @@ app.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
   const jogadorId = req.params.id;
   
   // Verificar se é convocado
-  db.get('SELECT * FROM convocatoria WHERE jogador_id = ? AND tipo = "convocado"', [jogadorId], (err, convocado) => {
+  db.query('SELECT * FROM convocatoria WHERE jogador_id = ? AND tipo = "convocado"', [jogadorId], (err, convocado) => {
     if (err || !convocado) {
       return res.status(400).send('Jogador não é convocado');
     }
 
     // Buscar último número de posição das reservas
-    db.get('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', (err, result) => {
+    db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', (err, result) => {
       if (err) {
         console.error('Erro ao buscar posição:', err);
         return res.status(500).send('Erro interno');
@@ -924,7 +919,7 @@ app.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
       const novaPosicaoReserva = (result.max_pos || 0) + 1;
 
       // Mover convocado para reservas
-      db.run('UPDATE convocatoria SET tipo = "reserva", posicao = ? WHERE jogador_id = ?', 
+      db.query('UPDATE convocatoria SET tipo = "reserva", posicao = ? WHERE jogador_id = ?', 
         [novaPosicaoReserva, jogadorId], (err) => {
         if (err) {
           console.error('Erro ao mover para reservas:', err);
@@ -932,10 +927,10 @@ app.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
         }
 
         // Registrar falta no histórico
-        db.run('INSERT INTO faltas_historico (jogador_id, data_falta) VALUES (?, date("now"))', [jogadorId]);
+        db.query('INSERT INTO faltas_historico (jogador_id, data_falta) VALUES (?, date("now"))', [jogadorId]);
 
         // Promover primeiro reserva para convocado
-        db.get('SELECT * FROM convocatoria WHERE tipo = "reserva" ORDER BY posicao LIMIT 1', (err, primeiroReserva) => {
+        db.query('SELECT * FROM convocatoria WHERE tipo = "reserva" ORDER BY posicao LIMIT 1', (err, primeiroReserva) => {
           if (err) {
             console.error('Erro ao buscar primeiro reserva:', err);
             return res.status(500).send('Erro interno');
@@ -943,7 +938,7 @@ app.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
 
           if (primeiroReserva && primeiroReserva.jogador_id !== parseInt(jogadorId)) {
             // Mover primeiro reserva para convocado na posição do faltoso
-            db.run('UPDATE convocatoria SET tipo = "convocado", posicao = ? WHERE jogador_id = ?', 
+            db.query('UPDATE convocatoria SET tipo = "convocado", posicao = ? WHERE jogador_id = ?', 
               [convocado.posicao, primeiroReserva.jogador_id], (err) => {
               if (err) {
                 console.error('Erro ao promover reserva:', err);
@@ -966,14 +961,14 @@ app.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
 
 // Resetar convocatória (voltar todos para posições originais)
 app.post('/convocatoria/reset', requireAdmin, (req, res) => {
-  db.all('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', (err, jogadores) => {
+  db.query('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', (err, jogadores) => {
     if (err) {
       console.error('Erro ao buscar jogadores:', err);
       return res.status(500).send('Erro ao buscar jogadores');
     }
 
     // Limpar convocatória atual
-    db.run('DELETE FROM convocatoria', (err) => {
+    db.query('DELETE FROM convocatoria', (err) => {
       if (err) {
         console.error('Erro ao limpar convocatória:', err);
         return res.status(500).send('Erro ao resetar');
@@ -990,7 +985,7 @@ app.post('/convocatoria/migrar-para-10', requireAdmin, (req, res) => {
   console.log('=== MIGRANDO CONVOCATÓRIA PARA 10 CONVOCADOS ===');
   
   // Buscar todos os convocados atuais ordenados por posição
-  db.all('SELECT * FROM convocatoria WHERE tipo = "convocado" ORDER BY posicao', (err, convocados) => {
+  db.query('SELECT * FROM convocatoria WHERE tipo = "convocado" ORDER BY posicao', (err, convocados) => {
     if (err) {
       console.error('Erro ao buscar convocados:', err);
       return res.status(500).send('Erro na migração');
@@ -1009,7 +1004,7 @@ app.post('/convocatoria/migrar-para-10', requireAdmin, (req, res) => {
     console.log('Movendo para reservas:', convocadosParaMover.map(c => c.jogador_id));
     
     // Buscar a última posição das reservas
-    db.get('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', (err, result) => {
+    db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', (err, result) => {
       if (err) {
         console.error('Erro ao buscar max posição reservas:', err);
         return res.status(500).send('Erro na migração');
@@ -1021,7 +1016,7 @@ app.post('/convocatoria/migrar-para-10', requireAdmin, (req, res) => {
       let movimentos = 0;
       
       convocadosParaMover.forEach((convocado) => {
-        db.run('UPDATE convocatoria SET tipo = "reserva", posicao = ? WHERE id = ?', 
+        db.query('UPDATE convocatoria SET tipo = "reserva", posicao = ? WHERE id = ?', 
           [proximaPosicaoReserva, convocado.id], (err) => {
           if (err) {
             console.error('Erro ao mover convocado:', err);
@@ -1072,7 +1067,7 @@ app.post('/convocatoria/configurar-personalizada', requireAdmin, (req, res) => {
   ];
   
   // Primeiro, limpar faltas históricas
-  db.run('DELETE FROM faltas_historico', (err) => {
+  db.query('DELETE FROM faltas_historico', (err) => {
     if (err) {
       console.error('Erro ao limpar faltas:', err);
     } else {
@@ -1080,7 +1075,7 @@ app.post('/convocatoria/configurar-personalizada', requireAdmin, (req, res) => {
     }
     
     // Buscar todos os jogadores ativos
-    db.all('SELECT * FROM jogadores WHERE suspenso = 0', (err, jogadores) => {
+    db.query('SELECT * FROM jogadores WHERE suspenso = 0', (err, jogadores) => {
       if (err) {
         console.error('Erro ao buscar jogadores:', err);
         return res.status(500).send('Erro ao buscar jogadores');
@@ -1093,7 +1088,7 @@ app.post('/convocatoria/configurar-personalizada', requireAdmin, (req, res) => {
       });
       
       // Limpar convocatória atual
-      db.run('DELETE FROM convocatoria', (err) => {
+      db.query('DELETE FROM convocatoria', (err) => {
         if (err) {
           console.error('Erro ao limpar convocatória:', err);
           return res.status(500).send('Erro ao limpar convocatória');
@@ -1108,7 +1103,7 @@ app.post('/convocatoria/configurar-personalizada', requireAdmin, (req, res) => {
         convocadosOrdem.forEach((nome, index) => {
           const jogador = jogadoresPorNome[nome];
           if (jogador) {
-            db.run('INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, ?, ?)', 
+            db.query('INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, ?, ?)', 
               [jogador.id, 'convocado', index + 1], (err) => {
               if (err) {
                 console.error(`Erro ao inserir convocado ${nome}:`, err);
@@ -1134,7 +1129,7 @@ app.post('/convocatoria/configurar-personalizada', requireAdmin, (req, res) => {
         reservasOrdem.forEach((nome, index) => {
           const jogador = jogadoresPorNome[nome];
           if (jogador) {
-            db.run('INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, ?, ?)', 
+            db.query('INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, ?, ?)', 
               [jogador.id, 'reserva', index + 1], (err) => {
               if (err) {
                 console.error(`Erro ao inserir reserva ${nome}:`, err);
@@ -1164,7 +1159,7 @@ app.post('/convocatoria/configurar-personalizada', requireAdmin, (req, res) => {
         
         let posicaoReservaExtra = reservasOrdem.length + 1;
         jogadoresRestantes.forEach(jogador => {
-          db.run('INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, ?, ?)', 
+          db.query('INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, ?, ?)', 
             [jogador.id, 'reserva', posicaoReservaExtra], (err) => {
             if (err) {
               console.error(`Erro ao inserir reserva extra ${jogador.nome}:`, err);
@@ -1195,7 +1190,7 @@ app.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
   console.log('=== CONFIGURAÇÃO FINAL ===');
   
   // 1. Limpar todas as faltas de teste
-  db.run('DELETE FROM faltas_historico', (err) => {
+  db.query('DELETE FROM faltas_historico', (err) => {
     if (err) {
       console.error('Erro ao limpar faltas:', err);
     } else {
@@ -1204,7 +1199,7 @@ app.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
   });
 
   // 2. Limpar convocatória atual
-  db.run('DELETE FROM convocatoria', (err) => {
+  db.query('DELETE FROM convocatoria', (err) => {
     if (err) {
       console.error('Erro ao limpar convocatória:', err);
       return res.status(500).send('Erro ao limpar convocatória');
@@ -1238,7 +1233,7 @@ app.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
     ];
 
     // Buscar jogadores para obter os IDs
-    db.all('SELECT id, nome FROM jogadores WHERE suspenso = 0', (err, jogadores) => {
+    db.query('SELECT id, nome FROM jogadores WHERE suspenso = 0', (err, jogadores) => {
       if (err) {
         console.error('Erro ao buscar jogadores:', err);
         return res.status(500).send('Erro ao buscar jogadores');
@@ -1255,7 +1250,7 @@ app.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
       // Inserir convocados
       convocadosOrdem.forEach((nome, index) => {
         if (jogadoresMap[nome]) {
-          db.run(`INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, 'convocado', ?)`,
+          db.query(`INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, 'convocado', ?)`,
             [jogadoresMap[nome], index + 1], (err) => {
               if (err) {
                 console.error(`Erro ao inserir convocado ${nome}:`, err);
@@ -1280,7 +1275,7 @@ app.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
       // Inserir reservas
       reservasOrdem.forEach((nome, index) => {
         if (jogadoresMap[nome]) {
-          db.run(`INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, 'reserva', ?)`,
+          db.query(`INSERT INTO convocatoria (jogador_id, tipo, posicao) VALUES (?, 'reserva', ?)`,
             [jogadoresMap[nome], index + 1], (err) => {
               if (err) {
                 console.error(`Erro ao inserir reserva ${nome}:`, err);
@@ -1311,7 +1306,7 @@ app.post('/convocatoria/confirmar-presenca/:id', requireAuth, (req, res) => {
   const dataConfirmacao = new Date().toISOString();
   
   // Alternar confirmação
-  db.get('SELECT confirmado FROM convocatoria WHERE jogador_id = ?', [jogadorId], (err, result) => {
+  db.query('SELECT confirmado FROM convocatoria WHERE jogador_id = ?', [jogadorId], (err, result) => {
     if (err) {
       console.error('Erro ao buscar confirmação:', err);
       return res.status(500).send('Erro interno');
@@ -1320,7 +1315,7 @@ app.post('/convocatoria/confirmar-presenca/:id', requireAuth, (req, res) => {
     const novoStatus = result.confirmado ? 0 : 1;
     const dataParam = novoStatus ? dataConfirmacao : null;
     
-    db.run('UPDATE convocatoria SET confirmado = ?, data_confirmacao = ? WHERE jogador_id = ?', 
+    db.query('UPDATE convocatoria SET confirmado = ?, data_confirmacao = ? WHERE jogador_id = ?', 
       [novoStatus, dataParam, jogadorId], (err) => {
       if (err) {
         console.error('Erro ao atualizar confirmação:', err);
@@ -1338,7 +1333,7 @@ app.post('/convocatoria/mover-reserva/:id/:direcao', requireAuth, (req, res) => 
   const direcao = req.params.direcao; // 'up' ou 'down'
   
   // Buscar posição atual do jogador
-  db.get('SELECT * FROM convocatoria WHERE jogador_id = ? AND tipo = "reserva"', [jogadorId], (err, jogador) => {
+  db.query('SELECT * FROM convocatoria WHERE jogador_id = ? AND tipo = "reserva"', [jogadorId], (err, jogador) => {
     if (err || !jogador) {
       return res.status(400).send('Jogador não encontrado nas reservas');
     }
@@ -1350,7 +1345,7 @@ app.post('/convocatoria/mover-reserva/:id/:direcao', requireAuth, (req, res) => 
       novaPosicao = posicaoAtual - 1;
     } else if (direcao === 'down') {
       // Verificar se não é o último
-      db.get('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', (err, result) => {
+      db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', (err, result) => {
         if (err) return res.status(500).send('Erro interno');
         
         if (posicaoAtual < result.max_pos) {
@@ -1358,9 +1353,9 @@ app.post('/convocatoria/mover-reserva/:id/:direcao', requireAuth, (req, res) => 
           
           // Trocar posições
           db.serialize(() => {
-            db.run('UPDATE convocatoria SET posicao = -1 WHERE posicao = ? AND tipo = "reserva"', [novaPosicao]);
-            db.run('UPDATE convocatoria SET posicao = ? WHERE jogador_id = ?', [novaPosicao, jogadorId]);
-            db.run('UPDATE convocatoria SET posicao = ? WHERE posicao = -1', [posicaoAtual]);
+            db.query('UPDATE convocatoria SET posicao = -1 WHERE posicao = ? AND tipo = "reserva"', [novaPosicao]);
+            db.query('UPDATE convocatoria SET posicao = ? WHERE jogador_id = ?', [novaPosicao, jogadorId]);
+            db.query('UPDATE convocatoria SET posicao = ? WHERE posicao = -1', [posicaoAtual]);
           });
           
           setTimeout(() => res.redirect('/convocatoria'), 100);
@@ -1376,9 +1371,9 @@ app.post('/convocatoria/mover-reserva/:id/:direcao', requireAuth, (req, res) => 
     // Para movimento para cima
     if (novaPosicao) {
       db.serialize(() => {
-        db.run('UPDATE convocatoria SET posicao = -1 WHERE posicao = ? AND tipo = "reserva"', [novaPosicao]);
-        db.run('UPDATE convocatoria SET posicao = ? WHERE jogador_id = ?', [novaPosicao, jogadorId]);
-        db.run('UPDATE convocatoria SET posicao = ? WHERE posicao = -1', [posicaoAtual]);
+        db.query('UPDATE convocatoria SET posicao = -1 WHERE posicao = ? AND tipo = "reserva"', [novaPosicao]);
+        db.query('UPDATE convocatoria SET posicao = ? WHERE jogador_id = ?', [novaPosicao, jogadorId]);
+        db.query('UPDATE convocatoria SET posicao = ? WHERE posicao = -1', [posicaoAtual]);
       });
       
       setTimeout(() => res.redirect('/convocatoria'), 100);
@@ -1394,7 +1389,7 @@ app.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
   console.log('=== GERANDO EQUIPAS EQUILIBRADAS ===');
   
   // Buscar convocados com suas estatísticas
-  db.all(`
+  db.query(`
     SELECT 
       j.id,
       j.nome,
@@ -1565,7 +1560,7 @@ app.post('/convocatoria/salvar-equipas', requireAdmin, (req, res) => {
   const dataHoje = new Date().toISOString().split('T')[0];
   
   // Criar novo jogo com as equipas
-  db.run(
+  db.query(
     'INSERT INTO jogos (data, equipa1_golos, equipa2_golos) VALUES (?, ?, ?)',
     [dataHoje, 0, 0], // Golos iniciais em 0
     function (err) {
@@ -1578,7 +1573,7 @@ app.post('/convocatoria/salvar-equipas', requireAdmin, (req, res) => {
       
       // Inserir presenças equipa 1
       global.equipasGeradas.equipa1.jogadores.forEach((jogador) => {
-        db.run('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 1)', 
+        db.query('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 1)', 
           [jogoId, jogador.id], (err) => {
           if (err) console.error('Erro ao inserir presença equipa1:', err);
         });
@@ -1586,7 +1581,7 @@ app.post('/convocatoria/salvar-equipas', requireAdmin, (req, res) => {
       
       // Inserir presenças equipa 2
       global.equipasGeradas.equipa2.jogadores.forEach((jogador) => {
-        db.run('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 2)', 
+        db.query('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 2)', 
           [jogoId, jogador.id], (err) => {
           if (err) console.error('Erro ao inserir presença equipa2:', err);
         });
@@ -1602,12 +1597,12 @@ app.post('/convocatoria/salvar-equipas', requireAdmin, (req, res) => {
 
 // Função auxiliar para buscar dados da convocatória
 function buscarDadosConvocatoria(callback) {
-  db.get('SELECT * FROM convocatoria_config LIMIT 1', (err, config) => {
+  db.query('SELECT * FROM convocatoria_config LIMIT 1', (err, config) => {
     if (err || !config) {
       config = { max_convocados: 10 };
     }
 
-    db.all(`
+    db.query(`
       SELECT j.*, c.posicao, c.tipo,
              COALESCE((SELECT COUNT(*) FROM faltas_historico f WHERE f.jogador_id = j.id), 0) as total_faltas
       FROM jogadores j 
@@ -1772,7 +1767,7 @@ function analisarDuplas(ano, mes, callback) {
   }
 
   // Buscar todos os jogos com os jogadores
-  db.all(`
+  db.query(`
     SELECT 
       j.id as jogo_id,
       j.data,
@@ -1959,7 +1954,7 @@ function analisarDuplas(ano, mes, callback) {
 // Função para reorganizar posições das reservas
 function reorganizarReservas(callback) {
   // Buscar todas as reservas ordenadas por posição
-  db.all('SELECT * FROM convocatoria WHERE tipo = "reserva" ORDER BY posicao', (err, reservas) => {
+  db.query('SELECT * FROM convocatoria WHERE tipo = "reserva" ORDER BY posicao', (err, reservas) => {
     if (err) {
       console.error('Erro ao buscar reservas:', err);
       return callback();
@@ -1970,7 +1965,7 @@ function reorganizarReservas(callback) {
     if (reservas.length === 0) return callback();
 
     reservas.forEach((reserva, index) => {
-      db.run('UPDATE convocatoria SET posicao = ? WHERE id = ?', 
+      db.query('UPDATE convocatoria SET posicao = ? WHERE id = ?', 
         [index + 1, reserva.id], (err) => {
         updates++;
         if (updates === reservas.length) {
@@ -1982,7 +1977,7 @@ function reorganizarReservas(callback) {
 }
 
 // Migração: Atualizar configuração para 10 convocados
-db.run('UPDATE convocatoria_config SET max_convocados = 10 WHERE id = 1');
+db.query('UPDATE convocatoria_config SET max_convocados = 10 WHERE id = 1');
 
 // Iniciar servidor
 app.listen(PORT, () => {
@@ -2000,7 +1995,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
     const ordenacaoSelecionada = req.query.ordenacao || 'percentagem';
       // 1. CONVOCATÓRIA ATUAL (sempre mostrar)
     const convocatoria = await new Promise((resolve, reject) => {
-      db.all(
+      db.query(
         `SELECT j.*, c.posicao, c.tipo, c.confirmado, c.data_confirmacao,
          COALESCE((SELECT COUNT(*) FROM faltas_historico f WHERE f.jogador_id = j.id), 0) as total_faltas
          FROM jogadores j 
@@ -2017,7 +2012,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
     // 2. LÓGICA DAS EQUIPAS (quinta-feira seguinte ao último jogo às 18h30)
     const ultimoJogo = await new Promise((resolve, reject) => {
-      db.get(
+      db.query(
         `SELECT * FROM jogos 
          WHERE equipa1_golos IS NOT NULL AND equipa2_golos IS NOT NULL
          ORDER BY data DESC LIMIT 1`,
@@ -2069,7 +2064,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
     // 2. INFORMAÇÃO DE COLETES
     const coletesInfo = await new Promise((resolve, reject) => {
-      db.all(
+      db.query(
         `SELECT c.*, j.nome, c.data_levou
          FROM coletes c
          JOIN jogadores j ON c.jogador_id = j.id
@@ -2083,7 +2078,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
       );
     });    // Próximo a levar coletes
     const proximoColetes = await new Promise((resolve, reject) => {
-      db.get(
+      db.query(
         `SELECT j.*, c.posicao
          FROM jogadores j
          JOIN convocatoria c ON j.id = c.jogador_id
@@ -2103,7 +2098,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
     // 3. ÚLTIMOS 20 RESULTADOS
     const ultimosResultados = await new Promise((resolve, reject) => {
-      db.all(
+      db.query(
         `SELECT * FROM jogos 
          WHERE equipa1_golos IS NOT NULL AND equipa2_golos IS NOT NULL
          ORDER BY data DESC LIMIT 20`,
@@ -2119,7 +2114,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
     const resultadosComJogadores = await Promise.all(
       ultimosResultados.map(async (jogo) => {
         const jogadores = await new Promise((resolve, reject) => {
-          db.all(
+          db.query(
             `SELECT j.nome, p.equipa
              FROM presencas p 
              JOIN jogadores j ON p.jogador_id = j.id
@@ -2175,7 +2170,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
     `;
 
     const estatisticas = await new Promise((resolve, reject) => {
-      db.all(queryEstatisticas, [], (err, rows) => {
+      db.query(queryEstatisticas, [], (err, rows) => {
         if (err) reject(err);
         else resolve(rows || []);
       });
@@ -2258,7 +2253,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
     // 6. ANÁLISE DE DUPLAS
     const duplas = await new Promise((resolve, reject) => {
-      db.all(`
+      db.query(`
         SELECT 
           j1.nome as jogador1,
           j2.nome as jogador2,
@@ -2406,7 +2401,7 @@ app.get('/dashboard-test', async (req, res) => {
     `;
 
     const estatisticas = await new Promise((resolve, reject) => {
-      db.all(queryEstatisticas, [], (err, rows) => {
+      db.query(queryEstatisticas, [], (err, rows) => {
         if (err) reject(err);
         else resolve(rows || []);
       });
