@@ -175,11 +175,13 @@ app.post('/login', (req, res) => {
     return res.render('login', { error: 'Por favor, preencha todos os campos' });
   }
   
-  db.query('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+  db.query('SELECT * FROM users WHERE username = ?', [username], (err, result) => {
     if (err) {
       console.error('Erro na base de dados:', err);
       return res.render('login', { error: 'Erro interno do servidor' });
     }
+    
+    const user = result.rows && result.rows.length > 0 ? result.rows[0] : null;
     
     if (!user) {
       return res.render('login', { error: 'Utilizador não encontrado' });
@@ -195,8 +197,7 @@ app.post('/login', (req, res) => {
       if (!isMatch) {
         return res.render('login', { error: 'Password incorreta' });
       }
-      
-      // Login bem-sucedido
+        // Login bem-sucedido
       req.session.user = {
         id: user.id,
         username: user.username,
@@ -205,12 +206,20 @@ app.post('/login', (req, res) => {
       
       console.log(`✅ Login bem-sucedido: ${user.username} (${user.role})`);
       
-      // Redirecionar conforme o role
-      if (user.role === 'admin') {
-        res.redirect('/');
-      } else {
-        res.redirect('/dashboard');
-      }
+      // Salvar sessão antes de redirecionar
+      req.session.save((err) => {
+        if (err) {
+          console.error('Erro ao salvar sessão:', err);
+          return res.render('login', { error: 'Erro ao salvar sessão' });
+        }
+        
+        // Redirecionar conforme o role
+        if (user.role === 'admin') {
+          res.redirect('/');
+        } else {
+          res.redirect('/dashboard');
+        }
+      });
     });
   });
 });
@@ -228,7 +237,10 @@ app.post('/logout', (req, res) => {
 });
 
 // ROTAS PRINCIPAIS
-app.get('/', requireAuth, (req, res) => {  db.query('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
+app.get('/', requireAuth, (req, res) => {  
+  db.query('SELECT * FROM jogos ORDER BY data DESC', [], (err, result) => {
+    const jogos = result?.rows || [];
+    
     if (err) {
       console.error('Erro ao buscar jogos:', err);
       return res.render('index', { jogos: [], user: req.session.user });
@@ -274,8 +286,9 @@ app.get('/', requireAuth, (req, res) => {  db.query('SELECT * FROM jogos ORDER B
 
 // ROTAS DE JOGADORES
 app.get('/jogadores', requireAdmin, (req, res) => {
-  db.query('SELECT * FROM jogadores ORDER BY nome', [], (err, jogadores) => {
-    res.render('jogadores', { jogadores: jogadores || [], user: req.session.user });
+  db.query('SELECT * FROM jogadores ORDER BY nome', [], (err, result) => {
+    const jogadores = result?.rows || [];
+    res.render('jogadores', { jogadores: jogadores, user: req.session.user });
   });
 });
 
