@@ -201,7 +201,17 @@ app.post('/login', (req, res) => {
       return res.render('login', { error: 'Erro interno do servidor' });
     }
     
-    const user = result.rows && result.rows.length > 0 ? result.rows[0] : null;
+    // Normalizar diferentes shapes retornadas pelo wrapper DB
+    let rows = [];
+    if (Array.isArray(result)) {
+      rows = result;
+    } else if (result && Array.isArray(result.rows)) {
+      rows = result.rows;
+    } else if (result && result[0]) {
+      rows = result;
+    }
+
+    const user = rows.length > 0 ? rows[0] : null;
     
     if (!user) {
       return res.render('login', { error: 'Utilizador não encontrado' });
