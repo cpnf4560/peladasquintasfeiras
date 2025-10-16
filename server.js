@@ -106,24 +106,44 @@ const initDatabase = async () => {
   // Criar utilizadores padrão se não existirem
   const checkUsers = 'SELECT COUNT(*) as count FROM users';
   db.query(checkUsers, [], async (err, result) => {
-    const count = USE_POSTGRES ? result.rows[0].count : result.rows[0].count;
-    
-    if (!err && count == 0) {
+    if (err) {
+      console.error('Erro ao verificar utilizadores:', err);
+      return;
+    }
+
+    // O wrapper db pode retornar várias shapes:
+    // - um array de rows (SQLite wrapper)
+    // - um objeto { rows: [...] } (pg wrapper)
+    // - ou outros formatos em casos inesperados
+    // Normalizar e extrair a primeira linha com segurança
+    let firstRow = null;
+
+    if (Array.isArray(result)) {
+      firstRow = result[0] || null;
+    } else if (result && Array.isArray(result.rows)) {
+      firstRow = result.rows[0] || null;
+    } else if (result && result[0]) {
+      firstRow = result[0] || null;
+    }
+
+    const count = firstRow ? parseInt(firstRow.count || firstRow.COUNT || 0, 10) : 0;
+
+    if (count === 0) {
       console.log('Criando utilizadores padrão...');
-      
+
       const adminPasswordHash1 = bcrypt.hashSync('admin123', 10);
       const adminPasswordHash2 = bcrypt.hashSync('admin', 10);
       const userPasswordHash = bcrypt.hashSync('user', 10);
-      
+
       const insertUser = 'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)';
-      
+
       db.query(insertUser, ['admin1', adminPasswordHash1, 'admin'], () => {});
       db.query(insertUser, ['admin2', adminPasswordHash2, 'admin'], () => {});
-      
+
       for (let i = 1; i <= 19; i++) {
         db.query(insertUser, [`user${i}`, userPasswordHash, 'user'], () => {});
       }
-      
+
       console.log('✅ Utilizadores criados com sucesso!');
     }
   });
