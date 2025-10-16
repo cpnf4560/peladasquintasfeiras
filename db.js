@@ -38,7 +38,16 @@ if (USE_POSTGRES) {
       const { text: q, values } = convertPlaceholders(text, params || []);
       // Use pool.query and keep callback API compatible
       pool.query(q, values, (err, res) => {
-        if (callback) callback(err, res);
+        if (callback) {
+          const isSelect = /^\s*SELECT/i.test(text);
+          if (isSelect) {
+            // pass rows array for SELECT queries
+            callback(err, res ? res.rows : []);
+          } else {
+            // pass full result for non-select (INSERT/UPDATE/DELETE)
+            callback(err, res);
+          }
+        }
       });
     },
     end: async () => {
