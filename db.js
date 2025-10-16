@@ -13,7 +13,7 @@ if (USE_POSTGRES) {
     host: 'aws-0-us-east-1.pooler.supabase.com',
     port: 6543,
     database: 'postgres',
-    user: 'postgres.xhguarvtblwlgkzgaoee',
+    user: 'postgres',
     password: 'HoqT3WV0OHJZP5xT',
     ssl: {
       rejectUnauthorized: false
