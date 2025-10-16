@@ -6,14 +6,9 @@ let db;
 
 if (USE_POSTGRES) {
   console.log('🐘 Using PostgreSQL (production)');
-  const { Pool } = require('pg');  // Use Supabase Connection Pooler to force IPv4 (Render doesn't support IPv6)
-  // Connection pooler uses port 6543 instead of 5432
+  const { Pool } = require('pg');  // Try direct connection with IPv4 DNS resolution
   const pool = new Pool({
-    host: 'aws-0-us-east-1.pooler.supabase.com',
-    port: 6543,
-    database: 'postgres',
-    user: 'postgres.xhguarvtblwlgkzgaoee',
-    password: 'Rzq7xgq8+',
+    connectionString: DATABASE_URL,
     ssl: {
       rejectUnauthorized: false
     }
