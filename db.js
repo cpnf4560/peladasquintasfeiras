@@ -14,7 +14,7 @@ if (USE_POSTGRES) {
     port: 6543,
     database: 'postgres',
     user: 'postgres.xhguarvtblwlgkzgaoee',
-    password: 'Rzq7xgq8+',
+    password: 'HoqT3WV0OHJZP5xT',
     ssl: {
       rejectUnauthorized: false
     }
