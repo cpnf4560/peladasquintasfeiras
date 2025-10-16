@@ -95,19 +95,17 @@ if (USE_POSTGRES) {
           }
         });
         return;
-      }
-
-      // Handle SELECT queries
+      }      // Handle SELECT queries - return array directly like PostgreSQL wrapper
       if (/LIMIT 1|WHERE.*=/.test(text) && !/COUNT\(\*\)|MAX\(|MIN\(|SUM\(/i.test(text)) {
         sqliteDb.get(text, params || [], (err, row) => {
           if (callback) {
-            callback(err, { rows: row ? [row] : [], rowCount: row ? 1 : 0 });
+            callback(err, row ? [row] : []);
           }
         });
       } else {
         sqliteDb.all(text, params || [], (err, rows) => {
           if (callback) {
-            callback(err, { rows: rows || [], rowCount: rows?.length || 0 });
+            callback(err, rows || []);
           }
         });
       }

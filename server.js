@@ -238,9 +238,7 @@ app.post('/logout', (req, res) => {
 
 // ROTAS PRINCIPAIS
 app.get('/', requireAuth, (req, res) => {  
-  db.query('SELECT * FROM jogos ORDER BY data DESC', [], (err, result) => {
-    const jogos = result?.rows || [];
-    
+  db.query('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
     if (err) {
       console.error('Erro ao buscar jogos:', err);
       return res.render('index', { jogos: [], user: req.session.user });
@@ -252,7 +250,9 @@ app.get('/', requireAuth, (req, res) => {
     
     // Para cada jogo, buscar os jogadores das equipas
     const jogosComJogadores = [];
-    let processedCount = 0;    jogos.forEach((jogo) => {
+    let processedCount = 0;    
+    
+    jogos.forEach((jogo) => {
       db.query(
         `SELECT j.id, j.nome, p.equipa
          FROM presencas p 
@@ -286,9 +286,8 @@ app.get('/', requireAuth, (req, res) => {
 
 // ROTAS DE JOGADORES
 app.get('/jogadores', requireAdmin, (req, res) => {
-  db.query('SELECT * FROM jogadores ORDER BY nome', [], (err, result) => {
-    const jogadores = result?.rows || [];
-    res.render('jogadores', { jogadores: jogadores, user: req.session.user });
+  db.query('SELECT * FROM jogadores ORDER BY nome', [], (err, jogadores) => {
+    res.render('jogadores', { jogadores: jogadores || [], user: req.session.user });
   });
 });
 
