@@ -10,17 +10,12 @@ if (USE_POSTGRES) {
 
   // Parse connection string and ensure SSL
   const connectionString = DATABASE_URL.replace(/^postgres:/, 'postgresql:');
+  
   const pool = new Pool({
     connectionString,
     ssl: {
       rejectUnauthorized: false // Supabase requires this
-    },
-    // Force IPv4 to avoid IPv6 network unreachable errors on Render
-    host: 'db.xhguarvtblwlgkzgaoee.supabase.co',
-    port: 5432,
-    database: 'postgres',
-    user: 'postgres',
-    password: 'Rzq7xgq8+'
+    }
   });
 
   // Helper: convert '?' placeholders to $1, $2... for pg
