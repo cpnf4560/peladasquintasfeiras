@@ -482,12 +482,15 @@ app.get('/estatisticas', requireAuth, (req, res) => {
   
   // Construir filtro de data
   let filtroData = '';
-  if (mesSelecionado) {
-    filtroData = `AND strftime('%Y', j.data) = '${anoSelecionado}' AND strftime('%m', j.data) = '${mesSelecionado.padStart(2, '0')}'`;
+  const mesPad = mesSelecionado ? mesSelecionado.padStart(2, '0') : null;
+  if (mesPad) {
+    // j.data is stored as 'YYYY-MM-DD' in both SQLite and Postgres after migration
+    // Use LIKE which works in both engines instead of SQLite-specific strftime()
+    filtroData = `AND j.data LIKE '${anoSelecionado}-${mesPad}-%'`;
   } else {
-    filtroData = `AND strftime('%Y', j.data) = '${anoSelecionado}'`;
+    filtroData = `AND j.data LIKE '${anoSelecionado}-%'`;
   }
-  
+
   // Query para calcular estatísticas detalhadas de cada jogador
   const queryEstatisticas = `    SELECT 
       jog.id,
@@ -567,37 +570,44 @@ app.get('/estatisticas', requireAuth, (req, res) => {
     
     if (mesSelecionado) {
       // Contar total de jogos no mês
+      const monthLike = `${anoSelecionado}-${mesSelecionado.padStart(2, '0')}-%`;
       db.query(`
         SELECT COUNT(*) as total 
         FROM jogos j 
-        WHERE strftime('%Y', j.data) = ? AND strftime('%m', j.data) = ?
-      `, [anoSelecionado, mesSelecionado.padStart(2, '0')], (err, result) => {
+        WHERE j.data LIKE ?
+      `, [monthLike], (err, result) => {
         if (!err && result) {
-          totalJogosMes = result.total;
-          
+          // result can be rows array or object with rows
+          let totalRow = null;
+          if (Array.isArray(result)) totalRow = result[0];
+          else if (result && Array.isArray(result.rows)) totalRow = result.rows[0];
+          else if (result && result[0]) totalRow = result[0];
+
+          totalJogosMes = totalRow ? parseInt(totalRow.total || 0, 10) : 0;
+
           // Determinar MVP(s) - usando critérios de desempate corretos
           const minimoJogos = Math.ceil(totalJogosMes * 0.75);
           const candidatos = estatisticasProcessadas.filter(stat => stat.jogos >= minimoJogos);
-          
+
           if (candidatos.length > 0) {
             // Aplicar critérios de desempate: pontos -> diferença golos -> golos marcados -> presenças
             const maxPontos = candidatos[0].pontos;
             const candidatosPontos = candidatos.filter(c => c.pontos === maxPontos);
-            
+
             if (candidatosPontos.length === 1) {
               mvpMensais = candidatosPontos;
             } else {
               // Empate em pontos, verificar diferença de golos
               const maxDiferenca = Math.max(...candidatosPontos.map(c => c.diferenca_golos));
               const candidatosDiferenca = candidatosPontos.filter(c => c.diferenca_golos === maxDiferenca);
-              
+
               if (candidatosDiferenca.length === 1) {
                 mvpMensais = candidatosDiferenca;
               } else {
                 // Empate em diferença, verificar golos marcados
                 const maxGolos = Math.max(...candidatosDiferenca.map(c => c.golos_marcados));
                 const candidatosGolos = candidatosDiferenca.filter(c => c.golos_marcados === maxGolos);
-                
+
                 if (candidatosGolos.length === 1) {
                   mvpMensais = candidatosGolos;
                 } else {
@@ -609,7 +619,7 @@ app.get('/estatisticas', requireAuth, (req, res) => {
             }
           }
         }
-        
+
         // Analisar duplas se temos jogos suficientes
         if (totalJogosMes >= 3) {
           analisarDuplas(anoSelecionado, mesSelecionado, (duplasResult) => {
@@ -1803,9 +1813,9 @@ function analisarDuplas(ano, mes, callback) {
   // Construir filtro de data
   let filtroData = '';
   if (mes) {
-    filtroData = `AND strftime('%Y', j.data) = '${ano}' AND strftime('%m', j.data) = '${mes.padStart(2, '0')}'`;
+    filtroData = `AND j.data LIKE '${ano}-${mes.padStart(2, '0')}-%'`;
   } else {
-    filtroData = `AND strftime('%Y', j.data) = '${ano}'`;
+    filtroData = `AND j.data LIKE '${ano}-%'`;
   }
 
   // Buscar todos os jogos com os jogadores
@@ -2206,7 +2216,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
       FROM jogadores jog
       LEFT JOIN presencas p ON jog.id = p.jogador_id
       LEFT JOIN jogos j ON p.jogo_id = j.id
-      WHERE jog.suspenso = 0 AND strftime('%Y', j.data) = '${anoAtual}'
+      WHERE jog.suspenso = 0 AND j.data LIKE '${anoAtual}-%'
       GROUP BY jog.id, jog.nome
       HAVING COUNT(DISTINCT j.id) > 0
     `;
@@ -2315,7 +2325,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
         JOIN jogadores j1 ON p1.jogador_id = j1.id
         JOIN jogadores j2 ON p2.jogador_id = j2.id
         JOIN jogos jogo ON p1.jogo_id = jogo.id
-        WHERE strftime('%Y', jogo.data) = '${anoAtual}' 
+        WHERE j.data LIKE '${anoAtual}-%' 
           AND jogo.equipa1_golos IS NOT NULL 
           AND jogo.equipa2_golos IS NOT NULL
         GROUP BY j1.id, j2.id, j1.nome, j2.nome
@@ -2437,7 +2447,7 @@ app.get('/dashboard-test', async (req, res) => {
       FROM jogadores jog
       LEFT JOIN presencas p ON jog.id = p.jogador_id
       LEFT JOIN jogos j ON p.jogo_id = j.id
-      WHERE jog.suspenso = 0 AND strftime('%Y', j.data) = '${anoAtual}'
+      WHERE jog.suspenso = 0 AND j.data LIKE '${anoAtual}-%'
       GROUP BY jog.id, jog.nome
       HAVING COUNT(DISTINCT j.id) > 0
     `;
