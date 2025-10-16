@@ -7,19 +7,47 @@ let db;
 if (USE_POSTGRES) {
   console.log('🐘 Using PostgreSQL (production)');
   const { Pool } = require('pg');
-  
+
   // Parse connection string and ensure SSL
   const connectionString = DATABASE_URL.replace(/^postgres:/, 'postgresql:');
-  
-  db = new Pool({
+
+  const pool = new Pool({
     connectionString,
     ssl: {
       rejectUnauthorized: false // Supabase requires this
     }
   });
 
-  // Test connection
-  db.query('SELECT NOW()', (err, res) => {
+  // Helper: convert '?' placeholders to $1, $2... for pg
+  function convertPlaceholders(text, params) {
+    if (!params || params.length === 0) return { text, values: params || [] };
+    let i = 0;
+    const newText = text.replace(/\?/g, () => `$${++i}`);
+    return { text: newText, values: params };
+  }
+
+  // Expose a db-like interface with query(text, params, cb)
+  db = {
+    query: (text, params, callback) => {
+      // Allow calling without params: query(text, callback)
+      if (typeof params === 'function') {
+        callback = params;
+        params = [];
+      }
+
+      const { text: q, values } = convertPlaceholders(text, params || []);
+      // Use pool.query and keep callback API compatible
+      pool.query(q, values, (err, res) => {
+        if (callback) callback(err, res);
+      });
+    },
+    end: async () => {
+      await pool.end();
+    }
+  };
+
+  // Test connection using the wrapper
+  db.query('SELECT NOW()', [], (err, res) => {
     if (err) {
       console.error('❌ PostgreSQL connection error:', err);
     } else {
@@ -31,10 +59,11 @@ if (USE_POSTGRES) {
   console.log('📁 Using SQLite (local development)');
   const sqlite3 = require('sqlite3').verbose();
   const path = require('path');
-  
+
   const dbPath = path.join(__dirname, 'futsal.db');
   const sqliteDb = new sqlite3.Database(dbPath);
-    // Wrapper to make SQLite compatible with PostgreSQL-style queries
+
+  // Wrapper to make SQLite compatible with PostgreSQL-style queries
   db = {
     query: (text, params, callback) => {
       // Handle CREATE/DROP/ALTER commands
@@ -44,7 +73,7 @@ if (USE_POSTGRES) {
         });
         return;
       }
-      
+
       // Handle INSERT/UPDATE/DELETE
       if (/^(INSERT|UPDATE|DELETE)/i.test(text.trim())) {
         sqliteDb.run(text, params || [], function(err) {
@@ -58,7 +87,7 @@ if (USE_POSTGRES) {
         });
         return;
       }
-      
+
       // Handle SELECT queries
       if (/LIMIT 1|WHERE.*=/.test(text) && !/COUNT\(\*\)|MAX\(|MIN\(|SUM\(/i.test(text)) {
         sqliteDb.get(text, params || [], (err, row) => {
@@ -74,7 +103,7 @@ if (USE_POSTGRES) {
         });
       }
     },
-    
+
     end: () => {
       sqliteDb.close();
     }
