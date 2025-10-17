@@ -5,13 +5,18 @@ const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 // Rota para listar jogos (usada em /jogos)
 router.get('/', requireAuth, (req, res) => {
+  console.log('📋 Buscando lista de jogos...');
+  
   db.query('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
     if (err) {
-      console.error('Erro ao buscar jogos:', err);
+      console.error('❌ Erro ao buscar jogos:', err);
       return res.render('index', { jogos: [], user: req.session.user });
     }
 
+    console.log(`✅ Jogos encontrados: ${jogos?.length || 0}`);
+
     if (!jogos || jogos.length === 0) {
+      console.log('⚠️  Nenhum jogo encontrado');
       return res.render('index', { jogos: [], user: req.session.user });
     }
 
@@ -82,7 +87,7 @@ router.post('/', requireAdmin, async (req, res) => {
   console.log('👥 Equipa 2 raw:', equipa2);
 
   db.query(
-    'INSERT INTO jogos (data, equipa1_golos, equipa2_golos) VALUES (?, ?, ?)',
+    'INSERT INTO jogos (data, equipa1_golos, equipa2_golos) VALUES (?, ?, ?) RETURNING id',
     [data, equipa1_golos, equipa2_golos],
     function (err, result) {
       if (err) {
@@ -90,7 +95,8 @@ router.post('/', requireAdmin, async (req, res) => {
         return res.status(500).send('Erro ao registar jogo');
       }
 
-      const jogoId = this?.lastID || result?.lastID;
+      // PostgreSQL returns array with RETURNING, SQLite uses this.lastID
+      const jogoId = result?.rows?.[0]?.id || result?.[0]?.id || this?.lastID || result?.lastID;
       console.log('✅ Jogo inserido com ID:', jogoId);
 
       if (!jogoId) {

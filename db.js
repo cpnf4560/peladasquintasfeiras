@@ -20,7 +20,6 @@ if (USE_POSTGRES) {
     const newText = text.replace(/\?/g, () => `$${++i}`);
     return { text: newText, values: params };
   }
-
   // Expose a db-like interface with query(text, params, cb)
   db = {
     query: (text, params, callback) => {
@@ -35,12 +34,14 @@ if (USE_POSTGRES) {
       pool.query(q, values, (err, res) => {
         if (callback) {
           const isSelect = /^\s*SELECT/i.test(text);
-          if (isSelect) {
-            // pass rows array for SELECT queries
+          const isReturning = /RETURNING/i.test(text);
+          
+          if (isSelect || isReturning) {
+            // pass rows array for SELECT queries and INSERT...RETURNING
             callback(err, res ? res.rows : []);
           } else {
-            // pass full result for non-select (INSERT/UPDATE/DELETE)
-            callback(err, res);
+            // For INSERT/UPDATE/DELETE without RETURNING, pass result object with rowCount
+            callback(err, res ? { rowCount: res.rowCount, rows: [] } : { rowCount: 0, rows: [] });
           }
         }
       });

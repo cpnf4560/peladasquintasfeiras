@@ -9,10 +9,14 @@ router.get('/estatisticas', requireAuth, (req, res) => {
   const mesSelecionado = req.query.mes || '';
   const ordenacaoSelecionada = req.query.ordenacao || 'percentagem';
 
+  console.log('📊 Estatísticas solicitadas:', { anoSelecionado, mesSelecionado, ordenacaoSelecionada });
+
   let filtroData = '';
   const mesPad = mesSelecionado ? mesSelecionado.padStart(2, '0') : null;
   if (mesPad) filtroData = `AND j.data LIKE '${anoSelecionado}-${mesPad}-%'`;
   else filtroData = `AND j.data LIKE '${anoSelecionado}-%'`;
+
+  console.log('🔍 Filtro de data:', filtroData);
 
   const queryEstatisticas = `SELECT 
       jog.id,
@@ -31,10 +35,9 @@ router.get('/estatisticas', requireAuth, (req, res) => {
     WHERE jog.suspenso = 0 ${filtroData}
     GROUP BY jog.id, jog.nome
     HAVING COUNT(DISTINCT j.id) > 0`;
-
   db.query(queryEstatisticas, [], (err, estatisticas) => {
     if (err) {
-      console.error('Erro ao buscar estatísticas:', err);
+      console.error('❌ Erro ao buscar estatísticas:', err);
       return res.render('estatisticas', {
         user: req.session.user,
         estatisticas: [],
@@ -48,6 +51,8 @@ router.get('/estatisticas', requireAuth, (req, res) => {
         duplas: null
       });
     }
+
+    console.log(`✅ Estatísticas encontradas: ${estatisticas?.length || 0} jogadores`);
 
     const estatisticasProcessadas = estatisticas.map(stat => ({
       ...stat,
