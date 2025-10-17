@@ -2799,3 +2799,308 @@ p, span, div, label {
   }
 }
 
+/* Remove/override legacy dark theme blocks that may have been appended later in the file.
+   Final light-theme overrides to ensure consistent white background, neutral colors and accents.
+   These rules use !important sparingly to override duplicated dark rules that appear later.
+*/
+
+/* Global box-sizing */
+* { box-sizing: border-box; }
+
+/* Ensure base layers are light */
+body, body.main-bg {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Header / nav */
+.header {
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,250,0.98)) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.nav-link {
+  color: var(--text) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.nav-link.active {
+  color: var(--accent) !important;
+  background: linear-gradient(90deg, rgba(31,111,235,0.06), rgba(14,165,164,0.03)) !important;
+  border-color: rgba(31,111,235,0.08) !important;
+}
+
+/* Cards, tables and common containers */
+.game-card,
+.players-table,
+.player-card,
+.game-detail-card,
+.team-form,
+.stats-filters,
+.convocatoria-table,
+.table,
+.table th,
+.table td,
+.players-grid,
+.confirmar-convocados-section,
+.equipas-section,
+.curiosidade-card,
+.info-card {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--card-shadow) !important;
+}
+
+.section-title { color: var(--text) !important; }
+
+/* Player names and lists */
+.player-names, .player-list, .player-name, .player-more {
+  color: var(--text) !important;
+}
+
+/* Buttons */
+.btn, button, .btn-small, .btn-large {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.btn-delete-game {
+  background: transparent !important;
+  color: var(--muted) !important;
+  border: 1px solid transparent !important;
+  padding: 6px 8px !important;
+}
+
+.btn-delete-game:hover { color: #ef4444 !important; }
+
+/* Ensure form controls show on light background */
+input, textarea, select {
+  background: #ffffff !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Generic text elements should inherit the theme */
+p, span, div, label, th, td, li {
+  color: inherit !important;
+}
+
+/* Keep responsive rules as-is; no changes below this comment */
+
+/* FINAL OVERRIDES: enforce light theme regardless of earlier dark rules */
+html, body, body.main-bg {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+.container, .game-card, .players-table, .player-card, .game-detail-card, .team-form, .stats-filters, .curiosidades-section, .classification-criteria, .info-card, .curiosidade-card, .duplas-section, .duplas-categoria, .convocatoria-table, .confirmar-convocados-section, .equipas-section {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 8px 24px rgba(17,24,39,0.06) !important;
+}
+
+.header, .navbar, .logo-area, .user-info {
+  background: transparent !important;
+  color: #111827 !important;
+  border: 0 !important;
+}
+
+.nav-link, .dashboard-link, .username, .logo-text {
+  color: #0f172a !important;
+}
+
+.nav-link.active {
+  background: rgba(31,111,235,0.06) !important;
+  color: var(--accent) !important;
+  border-color: rgba(31,111,235,0.08) !important;
+}
+
+.section-title, .duplas-title, .curiosidades-title, .table-title, .mvp-title {
+  color: #0f172a !important;
+}
+
+.player-names, .player-name, .player-more, .player-list, td, th, p, span, label, div {
+  color: #0f172a !important;
+}
+
+.team-score, .stat-points {
+  color: var(--accent) !important;
+}
+
+.btn, button, .btn-small, .btn-large, .btn-primary, .btn-success, .btn-delete, .btn-delete-game, .logout-btn {
+  color: #ffffff !important;
+  background: var(--accent) !important;
+  border: none !important;
+}
+
+.btn-delete-game {
+  background: transparent !important;
+  color: #ef4444 !important;
+  border: 1px solid rgba(239,68,68,0.12) !important;
+}
+
+input, textarea, select {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* tables: light stripes */
+.stats-table, .players-table, table {
+  background: #ffffff !important;
+  border: 1px solid var(--border) !important;
+}
+
+.stats-table tbody tr:nth-child(odd) { background: #ffffff !important; }
+.stats-table tbody tr:nth-child(even) { background: #f8fafc !important; }
+
+/* ensure no dark text-shadows remain */
+* { text-shadow: none !important; }
+
+/* Table header & cell clarity improvements with class and elegance */
+.stats-table {
+  border-collapse: collapse !important;
+  border: 2px solid #c0c5d0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(17,24,39,0.1) !important;
+  background: #ffffff !important;
+}
+
+.stats-table thead {
+  background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%) !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.stats-table thead th {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border-bottom: 3px solid #1a202c !important;
+  padding: 15px 12px !important;
+  text-align: center !important;
+  letter-spacing: 0.4px;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+.stats-table tbody tr {
+  border-bottom: 1px solid #cbd5e0 !important;
+  transition: background 0.2s ease !important;
+}
+
+.stats-table tbody tr:last-child {
+  border-bottom: none !important;
+}
+
+.stats-table tbody td {
+  padding: 13px 12px !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border-right: 1px solid #e2e8f0 !important;
+  text-align: center !important;
+}
+
+.stats-table tbody td:last-child {
+  border-right: none !important;
+}
+
+/* Zebra striping with soft colors */
+.stats-table tbody tr:nth-child(even) {
+  background: #f7fafc !important;
+}
+
+.stats-table tbody tr:hover {
+  background: #edf2f7 !important;
+  box-shadow: inset 0 2px 6px rgba(31,111,235,0.04) !important;
+}
+
+/* Position column (1st) — accent color */
+.stats-table tbody td:first-child {
+  font-weight: 800 !important;
+  color: #1f6feb !important;
+  background: #f1f5f9 !important;
+  width: 50px !important;
+}
+
+/* Player name column (2nd) — left-align + bold */
+.stats-table td.player-name {
+  text-align: left !important;
+  font-weight: 700 !important;
+  padding-left: 15px !important;
+}
+
+/* Statistics columns with semantic colors */
+.stats-table td.stat-points {
+  font-weight: 900 !important;
+  color: #1f6feb !important;
+  font-size: 1.1em !important;
+}
+
+.stats-table td.stat-wins {
+  color: #059669 !important;
+  font-weight: 800 !important;
+}
+
+.stats-table td.stat-draws {
+  color: #d97706 !important;
+  font-weight: 800 !important;
+}
+
+.stats-table td.stat-losses {
+  color: #dc2626 !important;
+  font-weight: 800 !important;
+}
+
+.stats-table td.stat-percentage {
+  color: #1f6feb !important;
+  font-weight: 800 !important;
+}
+
+.stats-table td.stat-goals-for {
+  color: #059669 !important;
+  font-weight: 700 !important;
+}
+
+.stats-table td.stat-goals-against {
+  color: #dc2626 !important;
+  font-weight: 700 !important;
+}
+
+.stats-table td.stat-goal-diff {
+  font-weight: 800 !important;
+}
+
+.stats-table td.stat-goal-diff.positive {
+  color: #059669 !important;
+}
+
+.stats-table td.stat-goal-diff.negative {
+  color: #dc2626 !important;
+}
+
+/* MVP row highlight — golden accent */
+.stats-table tbody tr.mvp-row {
+  background: linear-gradient(90deg, #fffaeb 0%, #ffffff 100%) !important;
+  border-left: 5px solid #f59e0b !important;
+  border-bottom: 2px solid #f59e0b !important;
+}
+
+.stats-table tbody tr.mvp-row:hover {
+  background: linear-gradient(90deg, #fff8dc 0%, #ffffff 100%) !important;
+}
+
+/* Ensure container doesn't overflow */
+.container {
+  overflow: visible !important;
+}
+
+/* End of improvements */
+
+/* End of final overrides */
+
