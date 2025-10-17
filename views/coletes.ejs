@@ -11,39 +11,12 @@
   <link rel="stylesheet" href="/style.forms.css">
   <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
 </head>
-<body class="main-bg">  <header class="header">
-    <div class="logo-area">
-      <img src="/logo.svg" alt="Logo" class="logo-image">
-      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
-    </div>    <nav class="navbar">
-      <a href="/convocatoria" class="nav-link">Convocatória</a>
-      <a href="/coletes" class="nav-link active">Coletes</a>
-      <a href="/" class="nav-link">Resultados</a>
-      <a href="/estatisticas" class="nav-link">Estatísticas</a>
-      <% if (user && user.role === 'admin') { %>
-        <a href="/jogos/novo" class="nav-link">Registar Resultado</a>
-        <a href="/jogadores" class="nav-link">Admin</a>
-      <% } %>
-    </nav>
-    
-    <% if (user) { %>
-      <div class="user-info">
-        <span class="username">👤 <%= user.username %></span>
-        <% if (user.role === 'admin') { %>
-          <span class="user-role">Admin</span>
-        <% } else { %>
-          <a href="/dashboard" class="dashboard-link">📊 Dashboard</a>
-        <% } %>
-        <form method="POST" action="/logout" style="display: inline;">
-          <button type="submit" class="logout-btn">🚪 Logout</button>
-        </form>
-      </div>
-    <% } %>
-  </header>
+<body class="main-bg">
+  <%- include('partials/header', { user: user }) %>
 
   <main class="container">
     <h2>Gestão de Coletes</h2>
-      <!-- Estado actual dos coletes -->
+    <!-- Estado actual dos coletes -->
     <div class="coletes-status">
       <% if (coletesActuais) { %>
         <div class="alert alert-info">
@@ -161,5 +134,7 @@
         </form>
       </div>    <% } %>
   </main>
+
+  <%- include('partials/footer') %>
 </body>
 </html>

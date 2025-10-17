@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 :root {
-  --bg: #ffffff;
+  --bg: #f8f9fa;
   --muted: #6c757d;
   --text: #212529;
   --accent: #007bff;
@@ -13,7 +13,7 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: var(--bg);
+  background-color: var(--bg) !important;
   color: var(--text);
   margin: 0;
   -webkit-font-smoothing: antialiased;
@@ -28,7 +28,7 @@ body {
 
 /* Header */
 .header {
-  background: #f1f3f5;
+  background: #ffffff !important;
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
@@ -88,17 +88,18 @@ body {
 }
 
 .game-card {
-  background: #f1f3f5;
+  background: #ffffff !important;
   border-radius: 0.5rem;
   padding: 1.5rem;
   border: 1px solid var(--border);
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .game-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--card-shadow);
+  transform: translateY(-6px) !important;
+  box-shadow: 0 12px 28px rgba(17,24,39,0.06) !important;
+  border-color: rgba(16, 52, 102, 0.06) !important;
 }
 
 .game-date {
@@ -126,9 +127,11 @@ body {
 }
 
 .team-score {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--accent);
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  background: transparent !important;
+  text-shadow: none !important;
 }
 
 .vs {
@@ -142,7 +145,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 2rem;
-  background: #f1f3f5;
+  background: #ffffff !important;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   overflow: hidden;
@@ -155,12 +158,12 @@ th, td {
 }
 
 th {
-  background-color: #dee2e6;
+  background-color: #e9ecef !important;
   font-weight: 700;
 }
 
 tbody tr:hover {
-  background-color: #e9ecef;
+  background-color: #f1f3f5 !important;
 }
 
 /* Forms */
@@ -244,9 +247,71 @@ button:hover {
 }
 
 .curiosidade-card {
-  background: #f1f3f5;
-  border-radius: 0.5rem;
+  background: #ffffff !important;
+  border-radius: 10px !important;
   padding: 1rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border) !important;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.curiosidade-card:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 12px 28px rgba(17,24,39,0.06) !important;
+  border-color: rgba(16, 52, 102, 0.06) !important;
+}
+
+.curiosidade-card .curiosidade-icon { font-size: 1.1rem !important; }
+.curiosidade-card .curiosidade-content p { color: var(--muted) !important; }
+
+.dupla-card,
+.dupla-extrema-card,
+.info-card,
+.card-visual,
+.stat-item,
+.confirmar-convocados-section {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+}
+
+.dupla-card:hover,
+.dupla-extrema-card:hover,
+.info-card:hover,
+.card-visual:hover,
+.stat-item:hover,
+.confirmar-convocados-section:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 12px 28px rgba(17,24,39,0.06) !important;
+  border-color: rgba(16, 52, 102, 0.06) !important;
+}
+
+/* Delete button: smaller, less prominent, clear affordance */
+.btn-delete-game {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  padding: 4px !important;
+  font-size: 0.95rem !important;
+  line-height: 1 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--muted) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition: all 0.16s ease !important;
+}
+
+.btn-delete-game:hover {
+  background: rgba(239,68,68,0.06) !important; /* subtle red tint */
+  color: #b91c1c !important;
+  transform: translateY(-2px) !important;
+  border-color: rgba(239,68,68,0.08) !important;
+}
+
+/* keep buttons harmonious */
+.btn, .btn-primary, .btn-success, .btn-secondary {
+  transition: transform 0.12s ease, box-shadow 0.12s ease !important;
 }
