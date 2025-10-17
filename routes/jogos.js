@@ -1,94 +1,203 @@
 const express = require('express');
 const router = express.Router();
+const { db } = require('../db');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 
-// Rota de teste para verificar se o módulo está a funcionar
-router.get('/teste', (req, res) => {
-  res.json({ 
-    mensagem: 'Rotas dos jogos estão a funcionar!',
-    timestamp: new Date().toISOString()
+// Rota para listar jogos (usada em /jogos)
+router.get('/', requireAuth, (req, res) => {
+  db.query('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
+    if (err) {
+      console.error('Erro ao buscar jogos:', err);
+      return res.render('index', { jogos: [], user: req.session.user });
+    }
+
+    if (!jogos || jogos.length === 0) {
+      return res.render('index', { jogos: [], user: req.session.user });
+    }
+
+    const jogosComJogadores = [];
+    let processedCount = 0;
+
+    jogos.forEach((jogo) => {
+      db.query(
+        `SELECT j.id, j.nome, p.equipa
+         FROM presencas p
+         JOIN jogadores j ON p.jogador_id = j.id
+         WHERE p.jogo_id = ?
+         ORDER BY p.equipa, j.nome`,
+        [jogo.id],
+        (err, jogadores) => {
+          if (!err && jogadores) {
+            let rows = [];
+            if (Array.isArray(jogadores)) rows = jogadores;
+            else if (jogadores && Array.isArray(jogadores.rows)) rows = jogadores.rows;
+            else if (jogadores && jogadores[0]) rows = jogadores;
+
+            const seen = new Set();
+            const clean = [];
+            for (const r of rows) {
+              const pid = r.id || r.ID || r.Id;
+              const nome = r.nome || r.NOME || r.Nome || '';
+              const equipa = Number(r.equipa);
+              if (!pid) continue;
+              const key = `${pid}-${equipa}`;
+              if (seen.has(key)) continue;
+              seen.add(key);
+              clean.push({ id: Number(pid), nome, equipa });
+            }
+
+            jogo.jogadores_equipa1 = clean.filter(j => j.equipa === 1);
+            jogo.jogadores_equipa2 = clean.filter(j => j.equipa === 2);
+          } else {
+            jogo.jogadores_equipa1 = [];
+            jogo.jogadores_equipa2 = [];
+          }
+
+          jogosComJogadores.push(jogo);
+          processedCount++;
+
+          if (processedCount === jogos.length) {
+            jogosComJogadores.sort((a, b) => new Date(b.data) - new Date(a.data));
+            res.render('index', { jogos: jogosComJogadores, user: req.session.user });
+          }
+        }
+      );
+    });
   });
 });
 
-// Middleware para log das requisições
-router.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`, req.body);
-  next();
+// Formulário para novo jogo
+router.get('/novo', requireAdmin, (req, res) => {
+  db.query('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', [], (err, jogadores) => {
+    res.render('novo_jogo', { jogadores: jogadores || [], user: req.session.user });
+  });
 });
 
-// Rota POST para registar um novo jogo
-router.post('/', (req, res) => {
-  console.log('POST /jogos recebido');
-  console.log('Body:', req.body);
-  console.log('Headers:', req.headers);
-  
-  try {
-    // Verificar se req.body existe
-    if (!req.body) {
-      return res.status(400).json({ erro: 'Dados do formulário não recebidos' });
+// Inserir novo jogo (via form)
+router.post('/', requireAdmin, (req, res) => {
+  const { data, equipa1, equipa2, equipa1_golos, equipa2_golos } = req.body;
+
+  db.query(
+    'INSERT INTO jogos (data, equipa1_golos, equipa2_golos) VALUES (?, ?, ?)',
+    [data, equipa1_golos, equipa2_golos],
+    function (err) {
+      if (err) {
+        console.error('Erro ao inserir jogo:', err);
+        return res.status(500).send('Erro ao registar jogo');
+      }
+
+      const jogoId = this.lastID;
+
+      const equipa1Arr = Array.isArray(equipa1) ? equipa1 : (equipa1 ? [equipa1] : []);
+      equipa1Arr.forEach((jogadorId) => {
+        if (jogadorId) {
+          db.query('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 1)', [jogoId, jogadorId], (err) => {
+            if (err) console.error('Erro ao inserir presença equipa1:', err);
+          });
+        }
+      });
+
+      const equipa2Arr = Array.isArray(equipa2) ? equipa2 : (equipa2 ? [equipa2] : []);
+      equipa2Arr.forEach((jogadorId) => {
+        if (jogadorId) {
+          db.query('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 2)', [jogoId, jogadorId], (err) => {
+            if (err) console.error('Erro ao inserir presença equipa2:', err);
+          });
+        }
+      });
+
+      res.redirect('/jogos');
     }
-
-    // Processar os dados do formulário
-    const { equipa_casa, equipa_fora, data_jogo, golos_casa, golos_fora } = req.body;
-    
-    // Validações básicas
-    if (!equipa_casa || !equipa_fora) {
-      return res.status(400).json({ erro: 'Equipas são obrigatórias' });
-    }
-    
-    // Adicionar aqui a lógica para guardar o jogo na base de dados
-    console.log('Novo jogo registado:', req.body);
-    
-    // Responder com sucesso em vez de redirect para debug
-    res.status(200).json({ 
-      sucesso: true, 
-      mensagem: 'Jogo registado com sucesso',
-      dados: req.body 
-    });
-    
-  } catch (error) {
-    console.error('Erro ao registar jogo:', error);
-    res.status(500).json({ erro: 'Erro interno do servidor', detalhes: error.message });
-  }
+  );
 });
 
-// Rota GET para mostrar a lista de jogos
-router.get('/', (req, res) => {
-  console.log('GET /jogos recebido');
-  try {
-    // Adicionar lógica para buscar jogos da base de dados
-    res.json({ 
-      mensagem: 'Lista de jogos',
-      jogos: [] // Temporário para teste
-    });
-  } catch (error) {
-    console.error('Erro ao buscar jogos:', error);
-    res.status(500).json({ erro: 'Erro ao buscar jogos' });
-  }
-});
-
-// Rota GET para mostrar o formulário de novo jogo
-router.get('/novo', (req, res) => {
-  res.render('novo_jogo');
-});
-
-// Rota GET para mostrar detalhes de um jogo específico
-router.get('/:id', (req, res) => {
+// Detalhe de um jogo
+router.get('/:id', requireAuth, (req, res) => {
   const jogoId = req.params.id;
-  
-  // Dados temporários para teste - substituir pela consulta à base de dados
-  const jogo = {
-    id: jogoId,
-    data: '2025-01-15',
-    equipa1_golos: 3,
-    equipa2_golos: 2,
-    equipa1: 'Sporting',
-    equipa2: 'Benfica'
-  };
-  
-  const equipa1 = []; // Dados dos jogadores da equipa 1
-  const equipa2 = []; // Dados dos jogadores da equipa 2
-  
-  res.render('detalhe_jogo', { jogo, equipa1, equipa2 });
+
+  db.query('SELECT * FROM jogos WHERE id = ?', [jogoId], (err, jogo) => {
+    if (err) {
+      console.error('Erro na base de dados:', err);
+      return res.status(500).send('Erro na base de dados');
+    }
+
+    if (!jogo) {
+      return res.status(404).send('Jogo não encontrado');
+    }
+
+    db.query(
+      `SELECT j.id, j.nome, p.equipa
+       FROM presencas p 
+       JOIN jogadores j ON p.jogador_id = j.id
+       WHERE p.jogo_id = ?`,
+      [jogoId],
+      (err, jogadores) => {
+        if (err) {
+          console.error('Erro ao buscar jogadores:', err);
+          return res.status(500).send('Erro ao buscar jogadores');
+        }
+
+        // Normalize rows shape
+        let rows = [];
+        if (Array.isArray(jogadores)) rows = jogadores;
+        else if (jogadores && Array.isArray(jogadores.rows)) rows = jogadores.rows;
+        else if (jogadores && jogadores[0]) rows = jogadores;
+
+        const equipa1 = rows ? rows.filter(j => Number(j.equipa) === 1) : [];
+        const equipa2 = rows ? rows.filter(j => Number(j.equipa) === 2) : [];
+
+        res.render('detalhe_jogo', { jogo, equipa1, equipa2, user: req.session.user });
+      }
+    );
+  });
+});
+
+// Atualizar jogo
+router.post('/:id/update', requireAdmin, (req, res) => {
+  const jogoId = req.params.id;
+  const { data, equipa1_golos, equipa2_golos } = req.body;
+
+  if (!data || equipa1_golos === undefined || equipa2_golos === undefined) {
+    return res.status(400).send('Dados incompletos');
+  }
+
+  db.query(
+    'UPDATE jogos SET data = ?, equipa1_golos = ?, equipa2_golos = ? WHERE id = ?',
+    [data, parseInt(equipa1_golos), parseInt(equipa2_golos), jogoId],
+    function(err) {
+      if (err) {
+        console.error('Erro ao atualizar jogo:', err);
+        return res.status(500).send('Erro ao atualizar jogo');
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).send('Jogo não encontrado');
+      }
+
+      res.redirect(`/jogos/${jogoId}`);
+    }
+  );
+});
+
+// Eliminar jogo
+router.post('/:id/delete', requireAdmin, (req, res) => {
+  const jogoId = req.params.id;
+
+  db.query('DELETE FROM presencas WHERE jogo_id = ?', [jogoId], (err) => {
+    if (err) {
+      console.error('Erro ao eliminar presenças:', err);
+      return res.status(500).send('Erro ao eliminar presenças do jogo');
+    }
+
+    db.query('DELETE FROM jogos WHERE id = ?', [jogoId], (err) => {
+      if (err) {
+        console.error('Erro ao eliminar jogo:', err);
+        return res.status(500).send('Erro ao eliminar jogo');
+      }
+
+      res.redirect('/jogos');
+    });
+  });
 });
 
 console.log('Módulo de rotas dos jogos carregado com sucesso');
