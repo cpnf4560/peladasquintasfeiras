@@ -697,9 +697,11 @@ body.main-bg {
 }
 
 .stats-table th, .stats-table td {
-  padding: 12px;
+  padding: 8px 10px;
   text-align: left;
   border-bottom: 1px solid #33384d;
+  height: 32px;
+  font-size: 15px;
 }
 
 .stats-table th {
@@ -1591,6 +1593,32 @@ p, span, div, label {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.card-visual {
+  min-height: 80px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(24,28,39,0.04);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.card-visual h4 {
+  margin-top: 0;
+  margin-bottom: 6px;
+  font-size: 16px;
+  color: #181c27;
+}
+
+.card-visual p {
+  margin: 0;
+  color: #33384d;
+  font-size: 15px;
 }
 
 /* Melhorias MVP para múltiplos MVPs */
