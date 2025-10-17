@@ -92,9 +92,9 @@ if (USE_POSTGRES) {
             });
           }
         });
-        return;
-      }      // Handle SELECT queries - return array directly like PostgreSQL wrapper
-      if (/LIMIT 1|WHERE.*=/.test(text) && !/COUNT\(\*\)|MAX\(|MIN\(|SUM\(/i.test(text)) {
+        return;      }      // Handle SELECT queries - return array directly like PostgreSQL wrapper
+      // Use .all() for most queries, only use .get() for explicit LIMIT 1 without JOIN
+      if (/LIMIT 1/.test(text) && !/JOIN/i.test(text) && !/COUNT\(\*\)|MAX\(|MIN\(|SUM\(/i.test(text)) {
         sqliteDb.get(text, params || [], (err, row) => {
           if (callback) {
             callback(err, row ? [row] : []);

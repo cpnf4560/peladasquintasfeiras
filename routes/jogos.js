@@ -74,39 +74,79 @@ router.get('/novo', requireAdmin, (req, res) => {
 });
 
 // Inserir novo jogo (via form)
-router.post('/', requireAdmin, (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   const { data, equipa1, equipa2, equipa1_golos, equipa2_golos } = req.body;
+
+  console.log('📝 Registando novo jogo:', { data, equipa1_golos, equipa2_golos });
+  console.log('👥 Equipa 1 raw:', equipa1);
+  console.log('👥 Equipa 2 raw:', equipa2);
 
   db.query(
     'INSERT INTO jogos (data, equipa1_golos, equipa2_golos) VALUES (?, ?, ?)',
     [data, equipa1_golos, equipa2_golos],
-    function (err) {
+    function (err, result) {
       if (err) {
-        console.error('Erro ao inserir jogo:', err);
+        console.error('❌ Erro ao inserir jogo:', err);
         return res.status(500).send('Erro ao registar jogo');
       }
 
-      const jogoId = this.lastID;
+      const jogoId = this?.lastID || result?.lastID;
+      console.log('✅ Jogo inserido com ID:', jogoId);
+
+      if (!jogoId) {
+        console.error('❌ Não foi possível obter ID do jogo inserido');
+        return res.status(500).send('Erro ao obter ID do jogo');
+      }
 
       const equipa1Arr = Array.isArray(equipa1) ? equipa1 : (equipa1 ? [equipa1] : []);
+      const equipa2Arr = Array.isArray(equipa2) ? equipa2 : (equipa2 ? [equipa2] : []);
+
+      console.log('👥 Equipa 1 array:', equipa1Arr);
+      console.log('👥 Equipa 2 array:', equipa2Arr);
+
+      let presencasInseridas = 0;
+      const totalPresencas = equipa1Arr.length + equipa2Arr.length;
+
+      if (totalPresencas === 0) {
+        console.log('⚠️  Nenhum jogador selecionado');
+        return res.redirect('/jogos');
+      }
+
+      const checkComplete = () => {
+        presencasInseridas++;
+        if (presencasInseridas === totalPresencas) {
+          console.log(`✅ Total de ${totalPresencas} presenças inseridas com sucesso`);
+          res.redirect('/jogos');
+        }
+      };
+
       equipa1Arr.forEach((jogadorId) => {
         if (jogadorId) {
+          console.log(`  ➕ Inserindo jogador ${jogadorId} na equipa 1 do jogo ${jogoId}`);
           db.query('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 1)', [jogoId, jogadorId], (err) => {
-            if (err) console.error('Erro ao inserir presença equipa1:', err);
+            if (err) {
+              console.error(`❌ Erro ao inserir presença equipa1 (jogador ${jogadorId}):`, err);
+            } else {
+              console.log(`  ✓ Jogador ${jogadorId} inserido na equipa 1`);
+            }
+            checkComplete();
           });
         }
       });
 
-      const equipa2Arr = Array.isArray(equipa2) ? equipa2 : (equipa2 ? [equipa2] : []);
       equipa2Arr.forEach((jogadorId) => {
         if (jogadorId) {
+          console.log(`  ➕ Inserindo jogador ${jogadorId} na equipa 2 do jogo ${jogoId}`);
           db.query('INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, 2)', [jogoId, jogadorId], (err) => {
-            if (err) console.error('Erro ao inserir presença equipa2:', err);
+            if (err) {
+              console.error(`❌ Erro ao inserir presença equipa2 (jogador ${jogadorId}):`, err);
+            } else {
+              console.log(`  ✓ Jogador ${jogadorId} inserido na equipa 2`);
+            }
+            checkComplete();
           });
         }
       });
-
-      res.redirect('/jogos');
     }
   );
 });
