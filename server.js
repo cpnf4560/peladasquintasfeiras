@@ -292,8 +292,9 @@ app.get('/', requireAuth, (req, res) => {
         [jogo.id],
         (err, jogadores) => {
           if (!err && jogadores) {
-            jogo.jogadores_equipa1 = jogadores.filter(j => j.equipa === 1);
-            jogo.jogadores_equipa2 = jogadores.filter(j => j.equipa === 2);
+            // Garantir que comparamos números (SQLite pode devolver strings)
+            jogo.jogadores_equipa1 = jogadores.filter(j => Number(j.equipa) === 1);
+            jogo.jogadores_equipa2 = jogadores.filter(j => Number(j.equipa) === 2);
           } else {
             jogo.jogadores_equipa1 = [];
             jogo.jogadores_equipa2 = [];
@@ -432,8 +433,8 @@ app.get('/jogos/:id', requireAuth, (req, res) => {
           return res.status(500).send('Erro ao buscar jogadores');
         }
         
-        const equipa1 = jogadores ? jogadores.filter(j => j.equipa === 1) : [];
-        const equipa2 = jogadores ? jogadores.filter(j => j.equipa === 2) : [];
+        const equipa1 = jogadores ? jogadores.filter(j => Number(j.equipa) === 1) : [];
+        const equipa2 = jogadores ? jogadores.filter(j => Number(j.equipa) === 2) : [];
         
         console.log('Renderizando detalhe_jogo com:', { jogo, equipa1, equipa2 });
         res.render('detalhe_jogo', { jogo, equipa1, equipa2, user: req.session.user });
