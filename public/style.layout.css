@@ -1,0 +1,63 @@
+/* Header, navbar, containers, responsividade */
+.header {
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,250,0.95));
+  padding: 18px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-image {
+  width: 46px;
+  height: 46px;
+}
+
+.logo-text {
+  font-size: 0.95rem;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1;
+}
+
+.navbar {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-link {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
+  border: 1px solid transparent;
+}
+
+.nav-link.active {
+  background: linear-gradient(90deg, rgba(31,111,235,0.08), rgba(14,165,164,0.04));
+  color: var(--accent);
+  border-color: rgba(31,111,235,0.12);
+}
+
+.nav-link:hover {
+  background: rgba(15,23,42,0.04);
+  transform: translateY(-1px);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 36px auto;
+  background: transparent;
+  padding: 0;
+}
