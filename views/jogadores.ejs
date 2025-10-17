@@ -10,35 +10,10 @@
   <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 </head>
-<body class="main-bg">  <header class="header">    <div class="logo-area">
-      <img src="/logo.svg" alt="Logo" class="logo-image">
-      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
-    </div>    <nav class="navbar">
-      <a href="/convocatoria" class="nav-link">Convocatória</a>
-      <a href="/coletes" class="nav-link">Coletes</a>
-      <a href="/" class="nav-link">Resultados</a>
-      <a href="/estatisticas" class="nav-link">Estatísticas</a>
-      <% if (user && user.role === 'admin') { %>
-        <a href="/jogos/novo" class="nav-link">Registar Resultado</a>
-        <a href="/jogadores" class="nav-link active">Admin</a>
-      <% } %>
-    </nav>
-    
-    <% if (user) { %>
-      <div class="user-info">
-        <span class="username">👤 <%= user.username %></span>
-        <% if (user.role === 'admin') { %>
-          <span class="user-role">Admin</span>
-        <% } else { %>
-          <a href="/dashboard" class="dashboard-link">📊 Dashboard</a>
-        <% } %>
-        <form method="POST" action="/logout" style="display: inline;">
-          <button type="submit" class="logout-btn">🚪 Logout</button>
-        </form>
-      </div>
-    <% } %>
-  </header>
-  <main class="container">
+<body class="main-bg">  
+
+<%- include('partials/header', { user: user }) %>
+
   <h2 class="section-title">Administração de Jogadores</h2>
 
   <form method="POST" action="/jogadores" class="form-add-player">
@@ -72,9 +47,9 @@
                 </span>
               </td>
               <td class="player-actions">
-                <button class="btn-small btn-edit" onclick="editPlayer(<%= jogador.id %>)">Editar</button>
-                <button class="btn-small btn-save" onclick="savePlayer(<%= jogador.id %>)" style="display: none;">Guardar</button>
-                <button class="btn-small btn-cancel" onclick="cancelEdit(<%= jogador.id %>)" style="display: none;">Cancelar</button>
+                <button class="btn-small btn-edit" data-player-id="<%= jogador.id %>">Editar</button>
+                <button class="btn-small btn-save" data-player-id="<%= jogador.id %>" style="display: none;">Guardar</button>
+                <button class="btn-small btn-cancel" data-player-id="<%= jogador.id %>" style="display: none;">Cancelar</button>
                 <form method="POST" action="/jogadores/<%= jogador.id %>/toggle-suspension" style="display: inline;">
                   <button type="submit" class="btn-small <%= jogador.suspenso ? 'btn-activate' : 'btn-suspend' %>">
                     <%= jogador.suspenso ? 'Ativar' : 'Inativar' %>
@@ -96,35 +71,45 @@
   </div>
 
   <script>
-  function editPlayer(id) {
-    document.getElementById('name-display-' + id).style.display = 'none';
-    document.getElementById('name-edit-' + id).style.display = 'inline';
-    document.querySelector('.btn-edit').style.display = 'none';
-    document.querySelector('.btn-save').style.display = 'inline';
-    document.querySelector('.btn-cancel').style.display = 'inline';
-  }
+  // Event delegation for player row actions (edit/save/cancel)
+  document.addEventListener('click', function(e) {
+    const editBtn = e.target.closest('.btn-edit');
+    const saveBtn = e.target.closest('.btn-save');
+    const cancelBtn = e.target.closest('.btn-cancel');
 
-  function cancelEdit(id) {
-    document.getElementById('name-display-' + id).style.display = 'inline';
-    document.getElementById('name-edit-' + id).style.display = 'none';
-    document.querySelector('.btn-edit').style.display = 'inline';
-    document.querySelector('.btn-save').style.display = 'none';
-    document.querySelector('.btn-cancel').style.display = 'none';
-  }
+    if (editBtn) {
+      const id = editBtn.dataset.playerId;
+      document.getElementById('name-display-' + id).style.display = 'none';
+      document.getElementById('name-edit-' + id).style.display = 'inline';
+      editBtn.style.display = 'none';
+      const row = editBtn.closest('tr');
+      row.querySelector('.btn-save').style.display = 'inline';
+      row.querySelector('.btn-cancel').style.display = 'inline';
+    }
 
-  function savePlayer(id) {
-    const newName = document.getElementById('name-edit-' + id).value;
-    fetch('/jogadores/' + id + '/update', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ nome: newName })
-    }).then(() => {
-      location.reload();
-    });
-  }
+    if (cancelBtn) {
+      const id = cancelBtn.dataset.playerId;
+      document.getElementById('name-display-' + id).style.display = 'inline';
+      document.getElementById('name-edit-' + id).style.display = 'none';
+      const row = cancelBtn.closest('tr');
+      row.querySelector('.btn-edit').style.display = 'inline';
+      row.querySelector('.btn-save').style.display = 'none';
+      row.querySelector('.btn-cancel').style.display = 'none';
+    }
+
+    if (saveBtn) {
+      const id = saveBtn.dataset.playerId;
+      const newName = document.getElementById('name-edit-' + id).value;
+      fetch('/jogadores/' + id + '/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: newName })
+      }).then(() => location.reload());
+    }
+  });
   </script>
-  </main>
+
+<%- include('partials/footer') %>
+
 </body>
 </html>

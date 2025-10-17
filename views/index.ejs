@@ -10,47 +10,27 @@
   <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 </head>
-<body class="main-bg">  <header class="header">    <div class="logo-area">
-      <img src="/logo.svg" alt="Logo" class="logo-image">
-      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
-    </div>    <nav class="navbar">
-      <a href="/convocatoria" class="nav-link">Convocatória</a>
-      <a href="/coletes" class="nav-link">Coletes</a>
-      <a href="/" class="nav-link active">Resultados</a>
-      <a href="/estatisticas" class="nav-link">Estatísticas</a>
-      <% if (user && user.role === 'admin') { %>
-        <a href="/jogos/novo" class="nav-link">Registar Resultado</a>
-        <a href="/jogadores" class="nav-link">Admin</a>
-      <% } %>
-    </nav>
-    
-    <% if (user) { %>
-      <div class="user-info">
-        <span class="username">👤 <%= user.username %></span>
-        <% if (user.role === 'admin') { %>
-          <span class="user-role">Admin</span>
-        <% } else { %>
-          <a href="/dashboard" class="dashboard-link">📊 Dashboard</a>
-        <% } %>
-        <form method="POST" action="/logout" style="display: inline;">
-          <button type="submit" class="logout-btn">🚪 Logout</button>
-        </form>
-      </div>
-    <% } %>
-  </header>
+<body class="main-bg">
+  <%- include('partials/header', { user: user }) %>
+
   <main class="container">
     <h2 class="section-title">Histórico de Resultados</h2>
     <div class="games-grid">
-      <% jogos.forEach(jogo => { %>      <div class="game-card">
-        <div class="game-date">
-          <%= new Date(jogo.data).toLocaleDateString('pt-PT') %>
-          <form method="POST" action="/jogos/<%= jogo.id %>/delete" style="display: inline; float: right;" onsubmit="return confirm('Tem certeza que deseja eliminar este jogo? Esta ação não pode ser desfeita.')">
-            <button type="submit" class="btn-delete-game" title="Eliminar jogo">🗑️</button>
-          </form>
+      <% jogos.forEach(jogo => { %>
+      <div class="game-card" data-game-id="<%= jogo.id %>">
+        <div class="game-card-header">
+          <div class="game-card-title">Resultado</div>
+          <div class="game-card-meta">
+            <div class="game-date"><%= new Date(jogo.data).toLocaleDateString('pt-PT') %></div>
+            <form method="POST" action="/jogos/<%= jogo.id %>/delete" class="delete-form" onsubmit="return confirm('Tem certeza que deseja eliminar este jogo? Esta ação não pode ser desfeita.')">
+              <button type="submit" class="btn-delete-game" title="Eliminar jogo">🗑️</button>
+            </form>
+          </div>
         </div>
-        <div class="game-teams">
-          <div class="team">
-            <div class="team-info">
+
+        <div class="game-card-body">
+          <div class="team team-left">
+            <div class="team-top">
               <h3 class="team-name">Equipa 1</h3>
               <div class="team-score"><%= jogo.equipa1_golos %></div>
             </div>
@@ -67,9 +47,11 @@
               <% } %>
             </div>
           </div>
-          <div class="vs">VS</div>
-          <div class="team">
-            <div class="team-info">
+
+          <div class="score-separator">VS</div>
+
+          <div class="team team-right">
+            <div class="team-top">
               <h3 class="team-name">Equipa 2</h3>
               <div class="team-score"><%= jogo.equipa2_golos %></div>
             </div>
@@ -91,5 +73,7 @@
       <% }) %>
     </div>
   </main>
+
+  <%- include('partials/footer') %>
 </body>
 </html>
