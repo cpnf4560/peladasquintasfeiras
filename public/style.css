@@ -171,6 +171,22 @@ body {
   margin-top: -6px; /* nudge up so the team-name becomes more visible */
 }
 
+/* Make team name flexible and allow wrapping so it does not collapse to 'Ec' */
+.team-top .team-name {
+  flex: 1 1 auto;
+  white-space: normal; /* allow wrapping */
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  margin-right: 8px; /* keep space from the score */
+}
+
+/* Ensure score does not shrink and stays to the right */
+.team-top .team-score {
+  flex: 0 0 auto;
+  min-width: 48px;
+}
+
 .team-name {
   font-size: 1rem;
   font-weight: 800; /* slightly bolder for legibility */
