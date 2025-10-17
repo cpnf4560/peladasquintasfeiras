@@ -95,7 +95,7 @@ body {
 .game-card {
   background: #ffffff !important;
   border-radius: 0.5rem;
-  padding: 0.75rem !important;
+  padding: 1rem !important;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -118,6 +118,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center; /* changed to center so date and delete align */
+  padding-bottom: 0.25rem;
 }
 
 .game-card-title {
@@ -171,20 +172,34 @@ body {
   margin-top: -6px; /* nudge up so the team-name becomes more visible */
 }
 
-/* Make team name flexible and allow wrapping so it does not collapse to 'Ec' */
+/* Make team name single-line with ellipsis to avoid vertical stacking */
 .team-top .team-name {
   flex: 1 1 auto;
-  white-space: normal; /* allow wrapping */
-  overflow: visible;
-  text-overflow: clip;
-  word-break: break-word;
+  white-space: nowrap; /* prevent character-by-character wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal;
   margin-right: 8px; /* keep space from the score */
 }
 
-/* Ensure score does not shrink and stays to the right */
+/* Strong override: ensure team names are horizontal and don't break into single characters */
+.game-card .team-top .team-name {
+  writing-mode: horizontal-tb !important;
+  transform: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  letter-spacing: normal !important;
+  word-break: normal !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+/* Ensure the score remains on the right and visually closer to the players */
 .team-top .team-score {
   flex: 0 0 auto;
   min-width: 48px;
+  margin-left: 6px;
 }
 
 .team-name {
@@ -204,9 +219,9 @@ body {
 .team-name::before {
   content: '';
   display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
   margin-right: 6px;
   flex: 0 0 auto;
 }
@@ -244,10 +259,11 @@ body {
   align-items: center;
   justify-content: center;
   width: 56px;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--muted);
   align-self: center; /* important: center vertically within game-card-body */
-  margin: 0 6px;
+  margin: 0 4px;
 }
 
 .player-names {
@@ -263,7 +279,7 @@ body {
   font-size: 0.9rem;
   color: var(--text);
   background: rgba(0,0,0,0.02);
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 6px;
   width: 100%;
   overflow: hidden;
