@@ -175,96 +175,14 @@ function requireAdmin(req, res, next) {
   }
 }
 
-// ROTAS DE AUTENTICAÇÃO
-app.get('/login', (req, res) => {
-  if (req.session.user) {
-    // Se já está logado, redirecionar conforme o role
-    if (req.session.user.role === 'admin') {
-      return res.redirect('/');
-    } else {
-      return res.redirect('/dashboard');
-    }
-  }
-  res.render('login', { error: null });
-});
+const authRoutes = require('./routes/auth');
+const jogadoresRoutes = require('./routes/jogadores');
 
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  
-  if (!username || !password) {
-    return res.render('login', { error: 'Por favor, preencha todos os campos' });
-  }
-  
-  db.query('SELECT * FROM users WHERE username = ?', [username], (err, result) => {
-    if (err) {
-      console.error('Erro na base de dados:', err);
-      return res.render('login', { error: 'Erro interno do servidor' });
-    }
-    
-    // Normalizar diferentes shapes retornadas pelo wrapper DB
-    let rows = [];
-    if (Array.isArray(result)) {
-      rows = result;
-    } else if (result && Array.isArray(result.rows)) {
-      rows = result.rows;
-    } else if (result && result[0]) {
-      rows = result;
-    }
+// Remove inline auth routes and use modular routes
+app.use('/', authRoutes);
+app.use('/jogadores', jogadoresRoutes);
 
-    const user = rows.length > 0 ? rows[0] : null;
-    
-    if (!user) {
-      return res.render('login', { error: 'Utilizador não encontrado' });
-    }
-    
-    // Verificar password
-    bcrypt.compare(password, user.password, (err, isMatch) => {
-      if (err) {
-        console.error('Erro ao verificar password:', err);
-        return res.render('login', { error: 'Erro interno do servidor' });
-      }
-      
-      if (!isMatch) {
-        return res.render('login', { error: 'Password incorreta' });
-      }
-        // Login bem-sucedido
-      req.session.user = {
-        id: user.id,
-        username: user.username,
-        role: user.role
-      };
-      
-      console.log(`✅ Login bem-sucedido: ${user.username} (${user.role})`);
-      
-      // Salvar sessão antes de redirecionar
-      req.session.save((err) => {
-        if (err) {
-          console.error('Erro ao salvar sessão:', err);
-          return res.render('login', { error: 'Erro ao salvar sessão' });
-        }
-        
-        // Redirecionar conforme o role
-        if (user.role === 'admin') {
-          res.redirect('/');
-        } else {
-          res.redirect('/dashboard');
-        }
-      });
-    });
-  });
-});
-
-app.post('/logout', (req, res) => {
-  const username = req.session.user ? req.session.user.username : 'Desconhecido';
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Erro ao fazer logout:', err);
-    } else {
-      console.log(`🚪 Logout: ${username}`);
-    }
-    res.redirect('/login');
-  });
-});
+// Keep other routes as-is (they still reference requireAuth/requireAdmin from middleware when needed)
 
 // ROTAS PRINCIPAIS
 app.get('/', requireAuth, (req, res) => {  
@@ -285,71 +203,53 @@ app.get('/', requireAuth, (req, res) => {
     jogos.forEach((jogo) => {
       db.query(
         `SELECT j.id, j.nome, p.equipa
-         FROM presencas p 
+         FROM presencas p
          JOIN jogadores j ON p.jogador_id = j.id
          WHERE p.jogo_id = ?
-         ORDER BY j.nome`,
+         ORDER BY p.equipa, j.nome`,
         [jogo.id],
         (err, jogadores) => {
           if (!err && jogadores) {
-            // Garantir que comparamos números (SQLite pode devolver strings)
-            jogo.jogadores_equipa1 = jogadores.filter(j => Number(j.equipa) === 1);
-            jogo.jogadores_equipa2 = jogadores.filter(j => Number(j.equipa) === 2);
+            // Normalize different result shapes from DB wrapper
+            let rows = [];
+            if (Array.isArray(jogadores)) rows = jogadores;
+            else if (jogadores && Array.isArray(jogadores.rows)) rows = jogadores.rows;
+            else if (jogadores && jogadores[0]) rows = jogadores;
+
+            // Deduplicate entries (some imports or bugs may have inserted duplicate presencas)
+            const seen = new Set();
+            const clean = [];
+            for (const r of rows) {
+              const pid = r.id || r.ID || r.Id;
+              const nome = r.nome || r.NOME || r.Nome || '';
+              const equipa = Number(r.equipa);
+              if (!pid) continue;
+              const key = `${pid}-${equipa}`;
+              if (seen.has(key)) continue;
+              seen.add(key);
+              clean.push({ id: Number(pid), nome, equipa });
+            }
+
+            // Separate teams ensuring equipa is numeric 1 or 2
+            jogo.jogadores_equipa1 = clean.filter(j => j.equipa === 1);
+            jogo.jogadores_equipa2 = clean.filter(j => j.equipa === 2);
           } else {
             jogo.jogadores_equipa1 = [];
             jogo.jogadores_equipa2 = [];
           }
-          
+
           jogosComJogadores.push(jogo);
           processedCount++;
-          
+
           // Quando todos os jogos foram processados, renderizar a página
           if (processedCount === jogos.length) {
-            // Ordenar novamente por data
+            // Ordenar novamente por data (garantir formato Date válido)
             jogosComJogadores.sort((a, b) => new Date(b.data) - new Date(a.data));
             res.render('index', { jogos: jogosComJogadores, user: req.session.user });
           }
         }
       );
     });
-  });
-});
-
-// ROTAS DE JOGADORES
-app.get('/jogadores', requireAdmin, (req, res) => {
-  db.query('SELECT * FROM jogadores ORDER BY nome', [], (err, jogadores) => {
-    res.render('jogadores', { jogadores: jogadores || [], user: req.session.user });
-  });
-});
-
-app.post('/jogadores', requireAdmin, (req, res) => {
-  const { nome } = req.body;
-  if (!nome) return res.redirect('/jogadores');
-  
-  db.query('INSERT INTO jogadores (nome) VALUES (?)', [nome], () => {
-    res.redirect('/jogadores');
-  });
-});
-
-app.post('/jogadores/:id/delete', requireAdmin, (req, res) => {
-  const { id } = req.params;
-  db.query('DELETE FROM jogadores WHERE id = ?', [id], () => {
-    res.redirect('/jogadores');
-  });
-});
-
-app.post('/jogadores/:id/toggle-suspension', requireAdmin, (req, res) => {
-  const { id } = req.params;
-  db.query('UPDATE jogadores SET suspenso = CASE WHEN suspenso = 1 THEN 0 ELSE 1 END WHERE id = ?', [id], () => {
-    res.redirect('/jogadores');
-  });
-});
-
-app.post('/jogadores/:id/update', requireAdmin, (req, res) => {
-  const { id } = req.params;
-  const { nome } = req.body;
-  db.query('UPDATE jogadores SET nome = ? WHERE id = ?', [nome, id], () => {
-    res.json({ sucesso: true });
   });
 });
 
