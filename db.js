@@ -65,23 +65,8 @@ if (USE_POSTGRES) {
   const path = require('path');
   const fs = require('fs');
 
-  // Escolher o ficheiro de base de dados correto quando existirem múltiplas cópias.
-  // Priorizar `futsal-manager/futsal.db` se existir (normalmente a versão da app dentro da pasta),
-  // caso contrário usar `futsal.db` na raiz do workspace.
-  const candidate1 = path.join(__dirname, 'futsal-manager', 'futsal.db');
-  const candidate2 = path.join(__dirname, 'futsal.db');
-  let dbPath;
-  if (fs.existsSync(candidate1)) {
-    dbPath = candidate1;
-    console.log(`📁 Using SQLite DB at: ${dbPath}`);
-  } else if (fs.existsSync(candidate2)) {
-    dbPath = candidate2;
-    console.log(`📁 Using SQLite DB at: ${dbPath}`);
-  } else {
-    // Fallback — criar no caminho padrão (root)
-    dbPath = candidate2;
-    console.warn(`⚠️ Nenhum ficheiro futsal.db encontrado. Será criado novo ficheiro em: ${dbPath}`);
-  }
+  const dbPath = path.join(__dirname, 'futsal.db');
+  console.log(`📁 Using SQLite DB at: ${dbPath}`);
 
   const sqliteDb = new sqlite3.Database(dbPath);
 

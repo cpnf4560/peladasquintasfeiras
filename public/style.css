@@ -1,555 +1,252 @@
-/* Import a professional font */
+/* General */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 :root {
   --bg: #ffffff;
-  --surface: #ffffff;
-  --muted: #6b7280;
-  --text: #111827;
-  --accent: #1f6feb; /* calm blue */
-  --accent-2: #0ea5a4; /* teal */
-  --border: #e6e9ee;
-  --card-shadow: 0 6px 18px rgba(17,24,39,0.06);
-}
-
-body, html {
-  height: 100%;
+  --muted: #6c757d;
+  --text: #212529;
+  --accent: #007bff;
+  --accent-2: #17a2b8;
+  --border: #dee2e6;
+  --card-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  padding: 24px;
-  background: var(--bg);
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg);
   color: var(--text);
   margin: 0;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
 /* Header */
 .header {
-  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,250,0.95));
-  padding: 18px 28px;
+  background: #f1f3f5;
+  padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
 
 .logo-area {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 1rem;
 }
 
 .logo-image {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
 }
 
 .logo-text {
-  font-size: 0.95rem;
-  color: var(--text);
+  font-size: 1.1rem;
   font-weight: 700;
-  letter-spacing: 0.2px;
-  line-height: 1;
+  line-height: 1.2;
 }
 
+/* Navigation */
 .navbar {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .nav-link {
   color: var(--text);
   text-decoration: none;
   font-weight: 600;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
-  border: 1px solid transparent;
-}
-
-.nav-link.active {
-  background: linear-gradient(90deg, rgba(31,111,235,0.08), rgba(14,165,164,0.04));
-  color: var(--accent);
-  border-color: rgba(31,111,235,0.12);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .nav-link:hover {
-  background: rgba(15,23,42,0.04);
-  transform: translateY(-1px);
+  background-color: var(--accent);
+  color: white;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 36px auto;
-  background: transparent;
-  padding: 0;
+.nav-link.active {
+  background-color: var(--accent);
+  color: white;
 }
 
-.section-title {
-  color: var(--text);
-  margin: 18px 0 12px 0;
-  font-size: 1.6rem;
-  font-weight: 700;
-}
-
+/* Cards */
 .games-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 18px;
-  margin-top: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .game-card {
-  background: var(--surface);
-  border-radius: 12px;
-  padding: 18px;
+  background: #f1f3f5;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
   border: 1px solid var(--border);
-  box-shadow: var(--card-shadow);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  min-height: 180px;
-  display: flex;
-  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .game-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(17,24,39,0.08);
+  transform: translateY(-5px);
+  box-shadow: var(--card-shadow);
 }
 
 .game-date {
   font-size: 0.9rem;
   color: var(--muted);
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 1rem;
   text-align: center;
 }
 
 .game-teams {
   display: flex;
-  align-items: stretch;
   justify-content: space-between;
-  flex: 1;
+  align-items: center;
 }
 
 .team {
-  flex: 1;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 140px;
 }
 
 .team-name {
   font-size: 1rem;
-  margin: 0 0 6px 0;
-  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
 }
 
 .team-score {
-  font-size: 1.6rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--accent);
-  margin-bottom: 10px;
 }
 
 .vs {
-  margin: 0 12px;
   font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  min-height: 60px;
-}
-
-.player-name {
-  color: var(--text);
-  font-size: 0.9rem;
-  padding: 3px 0;
-}
-
-.player-more {
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-top: 6px;
-}
-
-.btn-delete-game {
-  border: none;
-  background: transparent;
-  cursor: pointer;
   font-size: 1rem;
   color: var(--muted);
 }
 
-.btn-delete-game:hover {
-  color: #ef4444;
-}
-
-/* Tables and forms (light, minimal) */
-.table, table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-}
-
-th, td {
-  border: 1px solid var(--border);
-  padding: 10px;
-  text-align: center;
-}
-
-th {
-  background: rgba(15,23,42,0.03);
-  color: var(--muted);
-  font-weight: 700;
-}
-
-input[type="text"], input[type="number"], input[type="date"] {
-  margin-bottom: 8px;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  width: 100%;
-  box-sizing: border-box;
-  background: #ffffff;
-  color: var(--text);
-}
-
-button {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-button:hover {
-  background: #155db6;
-}
-
-/* small helpers */
-.user-info .username { font-weight: 600; color: var(--muted); }
-.logout-btn { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 6px 8px; border-radius: 6px; }
-
-/* Ensure legacy dark theme rules are overridden */
-body.main-bg { background: var(--bg); color: var(--text); }
-.container { background: transparent; }
-.game-card { background: var(--surface); }
-
-/* Updated sober design theme */
-body {
-  font-family: 'Roboto', sans-serif;
-  padding: 24px;
-  background: #ffffff;
-  color: #333333;
-}
-
-h1 {
-  color: #222222;
-  font-weight: 700;
-}
-
-nav a {
-  margin-right: 10px;
-  color: #0056b3;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-nav a:hover {
-  text-decoration: underline;
-  color: #003366;
-}
-
+/* Tables */
 table {
-  border-collapse: collapse;
   width: 100%;
-  background: #f9f9f9;
-  color: #333333;
-  border: 1px solid #dddddd;
+  border-collapse: collapse;
+  margin-top: 2rem;
+  background: #f1f3f5;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
 th, td {
-  border: 1px solid #dddddd;
-  padding: 10px;
-  text-align: center;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
 }
 
 th {
-  background: #f1f1f1;
-  color: #222222;
-  font-weight: 600;
+  background-color: #dee2e6;
+  font-weight: 700;
 }
 
+tbody tr:hover {
+  background-color: #e9ecef;
+}
+
+/* Forms */
 form {
-  margin-top: 10px;
+  margin-top: 2rem;
 }
 
-input[type="text"], input[type="number"], input[type="date"] {
-  margin-bottom: 8px;
-  padding: 8px;
-  border: 1px solid #cccccc;
-  border-radius: 4px;
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Filters */
+.stats-filters {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
   width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
   box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
 button {
-  background: #0056b3;
-  color: #ffffff;
+  background-color: var(--accent);
+  color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.25rem;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
 }
 
 button:hover {
-  background: #003366;
+  background-color: #0056b3;
 }
 
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-/* Compact layout tweaks: reduzir espaços e tamanhos para página de estatísticas */
-
-/* Layout compact overrides */
-body {
-  font-size: 13px !important;
-  line-height: 1.25 !important;
-}
-
-.container {
-  max-width: 1100px !important;
-  padding: 14px 16px !important;
-}
-
-.section-title {
-  font-size: 1.05rem !important;
-  margin-bottom: 10px !important;
-}
-
-/* Filtros compactos */
-.stats-filters {
-  display: flex !important;
-  gap: 10px !important;
-  align-items: center !important;
-  flex-wrap: wrap !important;
-  margin-bottom: 12px !important;
-}
-.stats-filters .filter-group {
-  margin-bottom: 0 !important;
-}
-.stats-filters label {
-  font-size: 0.85rem !important;
-  margin-right: 6px !important;
-}
-.stats-filters select {
-  padding: 6px 8px !important;
-  height: 32px !important;
-  font-size: 0.9rem !important;
-}
-
-/* Curiosidades compactas */
+/* Curiosidades Section */
 .curiosidades-section {
-  padding: 10px 12px !important;
-  margin: 12px 0 !important;
-}
-.curiosidades-title { font-size: 1rem !important; }
-.curiosidade-card {
-  padding: 8px 10px !important;
-  min-width: 160px !important;
-  font-size: 0.88rem !important;
-}
-.curiosidade-icon { font-size: 1rem !important; margin-right: 6px !important; }
-.curiosidade-content h4 { font-size: 0.95rem !important; margin: 0 0 4px 0 !important; }
-.curiosidade-content p { margin: 0; font-size: 0.85rem !important; }
-
-/* Tabela mais compacta */
-.stats-table thead th {
-  padding: 8px 6px !important;
-  font-size: 0.78rem !important;
-}
-.stats-table tbody td {
-  padding: 8px 6px !important;
-  font-size: 0.82rem !important;
-}
-.stats-table tbody tr { height: auto !important; }
-
-/* Player name column compact */
-.stats-table td.player-name {
-  padding-left: 10px !important;
-  font-size: 0.9rem !important;
+  margin-top: 1rem;
 }
 
-/* Reduce card paddings */
-.game-card, .game-detail-card, .edit-result-form, .card, .panel, .info-card {
-  padding: 10px !important;
-}
-
-/* Form inputs compact */
-.form-group input, input, textarea, select {
-  padding: 8px 10px !important;
-  font-size: 0.9rem !important;
-}
-
-/* Header/logo smaller */
-.logo-image { width: 44px !important; height: auto !important; }
-.logo-text { font-size: 0.98rem !important; line-height: 1 !important; }
-.header { gap: 12px !important; }
-
-/* Reduce margins on duo/other sections */
-.duplas-section, .equipas-section, .confirmar-convocados-section {
-  padding: 12px !important;
-  margin: 12px 0 !important;
-}
-
-/* Slightly tighter spacing for lists and player items */
-.player-item, .jogador-equipa-item { padding: 6px 10px !important; font-size: 0.9rem !important; }
-
-/* Make buttons slightly smaller */
-.btn, .btn-large, .btn-small { padding: 6px 10px !important; font-size: 0.9rem !important; }
-
-/* Ensure sticky header still works when compact */
-.stats-table thead { position: sticky; top: 0; z-index: 20; }
-
-/* Refinamento final: layout compacto, limpo e profissional */
-/* Reduzir espaços gerais */
-body {
-  padding: 12px !important;
-  font-size: 13px !important;
-  line-height: 1.25 !important;
-}
-
-.header {
-  padding: 10px 14px !important;
-  border-radius: 6px !important;
-  box-shadow: none !important;
-  border: 1px solid var(--border) !important;
-}
-
-.logo-image { width: 36px !important; height: auto !important; }
-.logo-text { font-size: 0.95rem !important; }
-
-.container {
-  max-width: 980px !important;
-  margin: 18px auto !important;
-  padding: 8px 12px !important;
-}
-
-.section-title {
-  font-size: 1.2rem !important;
-  margin-bottom: 8px !important;
-}
-
-/* Filtros mais compactos e alinhados */
-.stats-filters {
-  display: flex !important;
-  gap: 8px !important;
-  align-items: center !important;
-  flex-wrap: wrap !important;
-  margin-bottom: 10px !important;
-}
-.stats-filters .filter-group { margin-bottom: 0 !important; }
-.stats-filters label { font-size: 0.85rem !important; margin-right: 6px !important; color: var(--muted) !important; }
-.stats-filters select { padding: 6px 8px !important; height: 30px !important; font-size: 0.88rem !important; }
-
-/* Curiosidades: inverter para cartão branco; menos peso visual */
-.curiosidades-section {
-  background: #ffffff !important;
-  border: 1px solid var(--border) !important;
-  padding: 12px !important;
-  border-radius: 8px !important;
-  box-shadow: none !important;
-}
 .curiosidades-title {
-  font-size: 1rem !important;
-  color: var(--text) !important;
-  margin-bottom: 10px !important;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
 }
-.curiosidades-grid { display: flex !important; gap: 10px !important; flex-wrap: wrap !important; }
+
+.curiosidades-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
 .curiosidade-card {
-  background: transparent !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 8px !important;
-  padding: 10px !important;
-  min-width: 200px !important;
-  display: flex !important;
-  gap: 10px !important;
-  align-items: flex-start !important;
+  background: #f1f3f5;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
-.curiosidade-icon { font-size: 1.15rem !important; margin-top: 2px !important; }
-.curiosidade-content h4 { margin: 0 0 4px 0 !important; font-size: 0.95rem !important; color: var(--text) !important; }
-.curiosidade-content p { margin: 0 !important; font-size: 0.85rem !important; color: var(--muted) !important; }
-
-/* Tabela: mais compacta, limpa, sem sombras pesadas */
-.stats-table {
-  border-collapse: collapse !important;
-  width: 100% !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 6px !important;
-  overflow: hidden !important;
-  box-shadow: none !important;
-  background: #ffffff !important;
-}
-
-.stats-table thead th {
-  background: #f5f7fb !important;
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  padding: 8px 6px !important;
-  font-size: 0.82rem !important;
-  text-align: center !important;
-  border-bottom: 1px solid var(--border) !important;
-}
-
-.stats-table tbody td {
-  padding: 8px 6px !important;
-  font-size: 0.86rem !important;
-  color: #111827 !important;
-  border-right: 1px solid #f1f5f9 !important;
-  text-align: center !important;
-}
-.stats-table tbody td:first-child, .stats-table tbody td.player-name { text-align: left !important; }
-.stats-table tbody tr:nth-child(even) { background: transparent !important; }
-.stats-table tbody tr:hover { background: #fbfdff !important; }
-
-/* Reduce cell heights and spacing for very compact look */
-.stats-table thead th, .stats-table tbody td { line-height: 1.1 !important; }
-
-/* Player name column tweaks */
-.stats-table td.player-name { padding-left: 10px !important; font-weight: 600 !important; }
-
-/* Criteria block smaller */
-.classification-criteria { font-size: 0.85rem !important; color: var(--muted) !important; margin: 8px 0 12px 0 !important; }
-
-/* Collapse huge card paddings applied earlier */
-.game-card, .game-detail-card, .card, .panel, .info-card, .edit-result-form { padding: 10px !important; box-shadow: none !important; }
-
-/* Buttons and inputs slightly smaller */
-button, .btn, .btn-large, .btn-small { padding: 6px 10px !important; font-size: 0.9rem !important; }
-input[type="text"], input[type="number"], input[type="date"], select, textarea { padding: 6px 8px !important; font-size: 0.9rem !important; }
-
-/* Ensure sticky header remains visible but compact */
-.stats-table thead { position: sticky !important; top: 0 !important; z-index: 20 !important; }
-
-/* Small screens: keep compact spacing */
-@media (max-width: 768px) {
-  .container { padding: 8px !important; }
-  .curiosidade-card { min-width: 140px !important; }
-  .stats-table thead th, .stats-table tbody td { font-size: 0.78rem !important; padding: 6px 6px !important; }
-}
-
