@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Coletes - Peladas das Quintas Feiras</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.base.css">
+  <link rel="stylesheet" href="/style.layout.css">
+  <link rel="stylesheet" href="/style.tables.css">
+  <link rel="stylesheet" href="/style.cards.css">
+  <link rel="stylesheet" href="/style.forms.css">
+  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
 </head>
 <body class="main-bg">  <header class="header">
     <div class="logo-area">
@@ -77,11 +82,11 @@
         </div>
       <% } %>
     </div>    <!-- Tabela de estatísticas -->
-    <div class="coletes-stats">
+    <div class="coletes-stats card-visual">
       <h3>📊 Estatísticas dos Convocados</h3>
       <p><em>Apenas os 10 convocados podem levar os coletes</em></p>
-      
-      <% if (estatisticas.length > 0) { %>        <table class="table">
+      <% if (estatisticas.length > 0) { %>
+        <table class="table stats-table">
           <thead>
             <tr>
               <th>Posição</th>
@@ -95,7 +100,7 @@
           </thead>
           <tbody>
             <% estatisticas.forEach((jogador, index) => { %>
-              <tr class="<%= index < 3 ? 'priority-high' : '' %>">
+              <tr class="<%= index < 3 ? 'priority-high' : '' %> <%= index % 2 === 0 ? 'zebra' : '' %>">
                 <td><%= index + 1 %>º</td>
                 <td><%= jogador.nome %></td>
                 <td><%= jogador.posicao %>º Convocado</td>
