@@ -194,6 +194,11 @@ app.use('/', coletesRoutes);
 // ROTAS DE CONVOCATORIA
 app.use('/', convocatoriaRoutes);
 
+// Ensure root path is handled — redirect to jogos index
+app.get('/', requireAuth, (req, res) => {
+  return res.redirect('/jogos');
+});
+
 // Keep other routes as-is (they still reference requireAuth/requireAdmin from middleware when needed)
 
 // ROTA DE ESTATÍSTICAS
