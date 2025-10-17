@@ -26,14 +26,9 @@
               <button type="submit" class="btn-delete-game" title="Eliminar jogo">🗑️</button>
             </form>
           </div>
-        </div>
-
-        <div class="game-card-body">
+        </div>        <div class="game-card-body">
           <div class="team team-left">
-            <div class="team-top">
-              <h3 class="team-name">Equipa 1</h3>
-              <div class="team-score"><%= jogo.equipa1_golos %></div>
-            </div>
+            <h3 class="team-name">Equipa 1</h3>
             <div class="player-names">
               <% if (jogo.jogadores_equipa1 && jogo.jogadores_equipa1.length > 0) { %>
                 <% jogo.jogadores_equipa1.slice(0, 5).forEach((jogador) => { %>
@@ -48,13 +43,14 @@
             </div>
           </div>
 
-          <div class="score-separator">VS</div>
+          <div class="score-section">
+            <div class="team-score team-score-left"><%= jogo.equipa1_golos %></div>
+            <div class="score-separator">VS</div>
+            <div class="team-score team-score-right"><%= jogo.equipa2_golos %></div>
+          </div>
 
           <div class="team team-right">
-            <div class="team-top">
-              <h3 class="team-name">Equipa 2</h3>
-              <div class="team-score"><%= jogo.equipa2_golos %></div>
-            </div>
+            <h3 class="team-name">Equipa 2</h3>
             <div class="player-names">
               <% if (jogo.jogadores_equipa2 && jogo.jogadores_equipa2.length > 0) { %>
                 <% jogo.jogadores_equipa2.slice(0, 5).forEach((jogador) => { %>
