@@ -2,7 +2,12 @@
 <html>
 <head>
   <title>Convocatória - Peladas das Quintas Feiras</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.base.css">
+  <link rel="stylesheet" href="/style.layout.css">
+  <link rel="stylesheet" href="/style.tables.css">
+  <link rel="stylesheet" href="/style.cards.css">
+  <link rel="stylesheet" href="/style.forms.css">
+  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 </head>
 <body class="main-bg">  <header class="header">
@@ -77,8 +82,9 @@
     <div class="convocatoria-tables">      <!-- Tabela de Convocados -->
       <div class="convocados-section">
         <h3 class="table-title">🏆 Convocados (<%= convocados.length %>/<%= config.max_convocados || 10 %>)</h3>
-        <div class="table-container">
-          <table class="convocatoria-table">            <thead>
+        <div class="table-container card-visual">
+          <table class="convocatoria-table stats-table">
+            <thead>
               <tr>
                 <th>#</th>
                 <th>Nome</th>
@@ -89,7 +95,7 @@
             </thead>
             <tbody>
               <% if (convocados && convocados.length > 0) { %>
-                <% convocados.forEach((jogador, index) => { %>                  <tr class="convocado-row">
+                <% convocados.forEach((jogador, index) => { %>                  <tr class="convocado-row <%= index % 2 === 0 ? 'zebra' : '' %>">
                     <td class="posicao-number"><%= jogador.posicao %></td>
                     <td class="jogador-nome">
                       <span class="nome-convocado">🟢 <%= jogador.nome %></span>
@@ -137,8 +143,8 @@
       </div>      <!-- Tabela de Reservas -->
       <div class="reservas-section">
         <h3 class="table-title">⏳ Reservas (<%= reservas.length %>)</h3>
-        <div class="table-container">
-          <table class="convocatoria-table">
+        <div class="table-container card-visual">
+          <table class="convocatoria-table stats-table">
             <thead>
               <tr>
                 <th>#</th>
@@ -151,7 +157,7 @@
             <tbody>
               <% if (reservas && reservas.length > 0) { %>
                 <% reservas.forEach((jogador, index) => { %>
-                  <tr class="reserva-row <%= index === 0 ? 'proximo-convocado' : '' %>">
+                  <tr class="reserva-row <%= index % 2 === 0 ? 'zebra' : '' %> <%= index === 0 ? 'proximo-convocado' : '' %>">
                     <td class="posicao-number"><%= jogador.posicao %></td>
                     <td class="jogador-nome">
                       <span class="nome-reserva">
@@ -228,16 +234,17 @@
         <p class="equipas-info">Equipas geradas automaticamente baseadas na <strong>percentagem de vitórias</strong> dos jogadores para máximo equilíbrio.</p>
         
         <div class="equipas-container">
-          <!-- Equipa 1 - Verde Fluorescente -->
-          <div class="equipa-card equipa-verde">
+          <div class="equipa-card equipa-verde card-visual">
             <div class="equipa-header">
-              <h4>🟢 Equipa 1 - Coletes Verdes</h4>              <div class="equipa-stats">
+              <h4>🟢 Equipa 1 - Coletes Verdes</h4>
+              <div class="equipa-stats">
                 <span>% Vitórias: <%= equipas.equipa1.percentagem_vitorias_media.toFixed(1) %>%</span>
                 <span>Pontos: <%= equipas.equipa1.pontos_totais %></span>
               </div>
             </div>
             <div class="jogadores-equipa">
-              <% equipas.equipa1.jogadores.forEach((jogador, index) => { %>                <div class="jogador-equipa-item" data-jogador-id="<%= jogador.id %>" data-equipa="1">
+              <% equipas.equipa1.jogadores.forEach((jogador, index) => { %>
+                <div class="jogador-equipa-item" data-jogador-id="<%= jogador.id %>" data-equipa="1">
                   <span class="jogador-posicao"><%= index + 1 %>.</span>
                   <span class="jogador-nome"><%= jogador.nome %></span>
                   <span class="jogador-pontos"><%= (jogador.percentagem_vitorias || 0).toFixed(1) %>%</span>
@@ -246,17 +253,17 @@
               <% }) %>
             </div>
           </div>
-
-          <!-- Equipa 2 - Vermelho -->
-          <div class="equipa-card equipa-vermelha">
+          <div class="equipa-card equipa-vermelha card-visual">
             <div class="equipa-header">
-              <h4>🔴 Equipa 2 - Coletes Vermelhos</h4>              <div class="equipa-stats">
+              <h4>🔴 Equipa 2 - Coletes Vermelhos</h4>
+              <div class="equipa-stats">
                 <span>% Vitórias: <%= equipas.equipa2.percentagem_vitorias_media.toFixed(1) %>%</span>
                 <span>Pontos: <%= equipas.equipa2.pontos_totais %></span>
               </div>
             </div>
             <div class="jogadores-equipa">
-              <% equipas.equipa2.jogadores.forEach((jogador, index) => { %>                <div class="jogador-equipa-item" data-jogador-id="<%= jogador.id %>" data-equipa="2">
+              <% equipas.equipa2.jogadores.forEach((jogador, index) => { %>
+                <div class="jogador-equipa-item" data-jogador-id="<%= jogador.id %>" data-equipa="2">
                   <span class="jogador-posicao"><%= index + 1 %>.</span>
                   <span class="jogador-nome"><%= jogador.nome %></span>
                   <span class="jogador-pontos"><%= (jogador.percentagem_vitorias || 0).toFixed(1) %>%</span>
