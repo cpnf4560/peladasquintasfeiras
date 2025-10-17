@@ -1,3 +1,252 @@
+/* Import a professional font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --accent: #1f6feb; /* calm blue */
+  --accent-2: #0ea5a4; /* teal */
+  --border: #e6e9ee;
+  --card-shadow: 0 6px 18px rgba(17,24,39,0.06);
+}
+
+body, html {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  padding: 24px;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,250,0.95));
+  padding: 18px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-image {
+  width: 46px;
+  height: 46px;
+}
+
+.logo-text {
+  font-size: 0.95rem;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1;
+}
+
+.navbar {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-link {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
+  border: 1px solid transparent;
+}
+
+.nav-link.active {
+  background: linear-gradient(90deg, rgba(31,111,235,0.08), rgba(14,165,164,0.04));
+  color: var(--accent);
+  border-color: rgba(31,111,235,0.12);
+}
+
+.nav-link:hover {
+  background: rgba(15,23,42,0.04);
+  transform: translateY(-1px);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 36px auto;
+  background: transparent;
+  padding: 0;
+}
+
+.section-title {
+  color: var(--text);
+  margin: 18px 0 12px 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.game-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(17,24,39,0.08);
+}
+
+.game-date {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.game-teams {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.team {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 140px;
+}
+
+.team-name {
+  font-size: 1rem;
+  margin: 0 0 6px 0;
+  color: var(--muted);
+}
+
+.team-score {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.vs {
+  margin: 0 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+}
+
+.player-name {
+  color: var(--text);
+  font-size: 0.9rem;
+  padding: 3px 0;
+}
+
+.player-more {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 6px;
+}
+
+.btn-delete-game {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.btn-delete-game:hover {
+  color: #ef4444;
+}
+
+/* Tables and forms (light, minimal) */
+.table, table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+th, td {
+  border: 1px solid var(--border);
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background: rgba(15,23,42,0.03);
+  color: var(--muted);
+  font-weight: 700;
+}
+
+input[type="text"], input[type="number"], input[type="date"] {
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: var(--text);
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #155db6;
+}
+
+/* small helpers */
+.user-info .username { font-weight: 600; color: var(--muted); }
+.logout-btn { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 6px 8px; border-radius: 6px; }
+
+/* Ensure legacy dark theme rules are overridden */
+body.main-bg { background: var(--bg); color: var(--text); }
+.container { background: transparent; }
+.game-card { background: var(--surface); }
+
 /* Updated sober design theme */
 body {
   font-family: 'Roboto', sans-serif;
