@@ -426,3 +426,130 @@ body {
 /* Ensure sticky header still works when compact */
 .stats-table thead { position: sticky; top: 0; z-index: 20; }
 
+/* Refinamento final: layout compacto, limpo e profissional */
+/* Reduzir espaços gerais */
+body {
+  padding: 12px !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+}
+
+.header {
+  padding: 10px 14px !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  border: 1px solid var(--border) !important;
+}
+
+.logo-image { width: 36px !important; height: auto !important; }
+.logo-text { font-size: 0.95rem !important; }
+
+.container {
+  max-width: 980px !important;
+  margin: 18px auto !important;
+  padding: 8px 12px !important;
+}
+
+.section-title {
+  font-size: 1.2rem !important;
+  margin-bottom: 8px !important;
+}
+
+/* Filtros mais compactos e alinhados */
+.stats-filters {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 10px !important;
+}
+.stats-filters .filter-group { margin-bottom: 0 !important; }
+.stats-filters label { font-size: 0.85rem !important; margin-right: 6px !important; color: var(--muted) !important; }
+.stats-filters select { padding: 6px 8px !important; height: 30px !important; font-size: 0.88rem !important; }
+
+/* Curiosidades: inverter para cartão branco; menos peso visual */
+.curiosidades-section {
+  background: #ffffff !important;
+  border: 1px solid var(--border) !important;
+  padding: 12px !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+.curiosidades-title {
+  font-size: 1rem !important;
+  color: var(--text) !important;
+  margin-bottom: 10px !important;
+}
+.curiosidades-grid { display: flex !important; gap: 10px !important; flex-wrap: wrap !important; }
+.curiosidade-card {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  padding: 10px !important;
+  min-width: 200px !important;
+  display: flex !important;
+  gap: 10px !important;
+  align-items: flex-start !important;
+}
+.curiosidade-icon { font-size: 1.15rem !important; margin-top: 2px !important; }
+.curiosidade-content h4 { margin: 0 0 4px 0 !important; font-size: 0.95rem !important; color: var(--text) !important; }
+.curiosidade-content p { margin: 0 !important; font-size: 0.85rem !important; color: var(--muted) !important; }
+
+/* Tabela: mais compacta, limpa, sem sombras pesadas */
+.stats-table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+}
+
+.stats-table thead th {
+  background: #f5f7fb !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  padding: 8px 6px !important;
+  font-size: 0.82rem !important;
+  text-align: center !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.stats-table tbody td {
+  padding: 8px 6px !important;
+  font-size: 0.86rem !important;
+  color: #111827 !important;
+  border-right: 1px solid #f1f5f9 !important;
+  text-align: center !important;
+}
+.stats-table tbody td:first-child, .stats-table tbody td.player-name { text-align: left !important; }
+.stats-table tbody tr:nth-child(even) { background: transparent !important; }
+.stats-table tbody tr:hover { background: #fbfdff !important; }
+
+/* Reduce cell heights and spacing for very compact look */
+.stats-table thead th, .stats-table tbody td { line-height: 1.1 !important; }
+
+/* Player name column tweaks */
+.stats-table td.player-name { padding-left: 10px !important; font-weight: 600 !important; }
+
+/* Criteria block smaller */
+.classification-criteria { font-size: 0.85rem !important; color: var(--muted) !important; margin: 8px 0 12px 0 !important; }
+
+/* Collapse huge card paddings applied earlier */
+.game-card, .game-detail-card, .card, .panel, .info-card, .edit-result-form { padding: 10px !important; box-shadow: none !important; }
+
+/* Buttons and inputs slightly smaller */
+button, .btn, .btn-large, .btn-small { padding: 6px 10px !important; font-size: 0.9rem !important; }
+input[type="text"], input[type="number"], input[type="date"], select, textarea { padding: 6px 8px !important; font-size: 0.9rem !important; }
+
+/* Ensure sticky header remains visible but compact */
+.stats-table thead { position: sticky !important; top: 0 !important; z-index: 20 !important; }
+
+/* Small screens: keep compact spacing */
+@media (max-width: 768px) {
+  .container { padding: 8px !important; }
+  .curiosidade-card { min-width: 140px !important; }
+  .stats-table thead th, .stats-table tbody td { font-size: 0.78rem !important; padding: 6px 6px !important; }
+}
+
