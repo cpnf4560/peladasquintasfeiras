@@ -7,7 +7,7 @@ const { normalizeRows } = require('../utils/helpers');
 router.get('/estatisticas', requireAuth, (req, res) => {
   const anoSelecionado = req.query.ano || '2025';
   const mesSelecionado = req.query.mes || '';
-  const ordenacaoSelecionada = req.query.ordenacao || 'pontos';
+  const ordenacaoSelecionada = req.query.ordenacao || 'percentagem';
 
   let filtroData = '';
   const mesPad = mesSelecionado ? mesSelecionado.padStart(2, '0') : null;
