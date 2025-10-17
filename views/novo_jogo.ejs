@@ -2,8 +2,14 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Registar Resultado - Peladas das Quintas Feiras</title>
-  <link rel="stylesheet" href="/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+  <title>Registar Resultado - Peladas das Quintas Feiras</title>
+  <link rel="stylesheet" href="/style.base.css">
+  <link rel="stylesheet" href="/style.layout.css">
+  <link rel="stylesheet" href="/style.tables.css">
+  <link rel="stylesheet" href="/style.cards.css">
+  <link rel="stylesheet" href="/style.forms.css">
+  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 </head>
 <body class="main-bg">  <header class="header">
@@ -38,16 +44,15 @@
   <main class="container">
     <h2 class="section-title">Registar Novo Resultado</h2>
 
-    <form method="POST" action="/jogos" class="game-form">
+    <form method="POST" action="/jogos" class="game-form card-visual">
       <div class="form-row">
         <div class="form-group">
           <label for="data">Data do Jogo:</label>
           <input type="date" id="data" name="data" required>
         </div>
       </div>
-
       <div class="teams-section">
-        <div class="team-form">
+        <div class="team-form card-visual">
           <h3>Equipa 1</h3>
           <div class="form-group">
             <label for="equipa1_golos">Golos:</label>
@@ -67,8 +72,7 @@
             </div>
           </div>
         </div>
-
-        <div class="team-form">
+        <div class="team-form card-visual">
           <h3>Equipa 2</h3>
           <div class="form-group">
             <label for="equipa2_golos">Golos:</label>
@@ -88,10 +92,11 @@
             </div>
           </div>
         </div>
-      </div>      <button type="submit" class="btn btn-large">Registar Resultado</button>
+      </div>
+      <button type="submit" class="btn btn-large">Registar Resultado</button>
     </form>
     
-    <a href="/">Voltar aos Resultados</a>
+    <a href="/" class="btn btn-secondary" style="margin-top: 18px;">Voltar aos Resultados</a>
   </main>
 </body>
 </html>
