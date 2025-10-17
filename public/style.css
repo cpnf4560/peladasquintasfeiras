@@ -921,102 +921,12 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, 
   border-radius: 4px;
 }
 
-/* Seleção de jogadores com checkboxes */
-.players-selection {
-  border: 1px solid #33384d;
-  border-radius: 6px;
-  padding: 8px;
-  background: #181c27;
-  min-height: 200px;
-}
-
-.player-checkbox {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2px;
-  cursor: pointer;
-  color: #f5f5f5;
-  padding: 2px 4px;
-  border-radius: 3px;
-  transition: background 0.2s;
-  min-height: 24px;
-  font-size: 0.9rem;
-}
-
-.player-checkbox:hover {
-  background: #2a2e44;
-  color: #f9b233;
-}
-
-.player-checkbox input[type="checkbox"] {
-  margin: 0 8px 0 0;
-  width: 16px;
-  height: 16px;
-  accent-color: #f9b233;
-  flex-shrink: 0;
-  vertical-align: middle;
-}
-
-.player-checkbox span {
-  font-weight: 500;
-  line-height: 1;
-  vertical-align: middle;
-}
-
 /* Formulário de novo jogo */
 .teams-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 30px;
   margin: 30px 0;
-}
-
-.team-form {
-  background: #2a2e44;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #33384d;
-  display: flex;
-  flex-direction: column;
-  min-height: 380px;
-}
-
-.team-form h3 {
-  color: #f9b233;
-  margin: 0 0 15px 0;
-  text-align: center;
-  font-size: 1.1rem;
-}
-
-.team-form .form-group {
-  margin-bottom: 12px;
-}
-
-.team-form .form-group label {
-  margin-bottom: 4px;
-  font-size: 0.95rem;
-}
-
-.team-form .form-group input {
-  padding: 8px;
-  font-size: 0.95rem;
-}
-
-.team-form .form-group:last-of-type {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 0;
-}
-
-.team-form .form-group:last-of-type label {
-  margin-bottom: 8px;
-}
-
-.team-form .players-selection {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .form-row {
@@ -3130,5 +3040,155 @@ input, textarea, select {
 
 /* End of improvements */
 
+/* Correções para curiosidades na estatísticas */
+.curiosidades-section, .curiosidades-card, .curiosidades-grid {
+  background: #2a2e44 !important;
+  color: #f9b233 !important;
+  border-radius: 10px;
+  border: 1px solid #33384d;
+  padding: 18px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: block !important;
+}
+.curiosidades-title {
+  color: #f9b233 !important;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+}
+.curiosidades-card {
+  background: #23263a !important;
+  color: #f5f5f5 !important;
+  border: 1px solid #33384d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+}
+
+/* Garantir fundo e texto legível nos inputs e checkboxes */
+input[type="text"], input[type="number"], input[type="date"], textarea, select {
+  background: #fff !important;
+  color: #23263a !important;
+  border: 1px solid #33384d !important;
+}
+input[type="checkbox"] {
+  accent-color: #f9b233;
+  background: #fff !important;
+}
+
+/* Corrigir nomes dos jogadores na tabela de estatísticas */
+.stats-table td, .stats-table th {
+  background: #23263a !important;
+  color: #f5f5f5 !important;
+  border-bottom: 1px solid #33384d !important;
+}
+.stats-table th {
+  background: #181c27 !important;
+  color: #f9b233 !important;
+}
+.stats-table tbody tr {
+  background: #2a2e44 !important;
+}
+.stats-table tbody tr:nth-child(even) {
+  background: #23263a !important;
+}
+.stats-table tbody tr:hover {
+  background: #33384d !important;
+}
+.stats-table .player-name {
+  color: #f5f5f5 !important;
+  font-weight: 600;
+}
+
+/* Garantir que todos os textos em cards, painéis e tabelas são legíveis */
+.card, .panel, .info-card, .classification-criteria {
+  background: #2a2e44 !important;
+  color: #f5f5f5 !important;
+  border: 1px solid #33384d !important;
+}
+
+/* Remover regras conflitantes que forçam texto branco em fundo branco */
+p, span, div, label {
+  color: inherit !important;
+}
+
+/* Garantir que curiosidades aparecem sempre */
+.curiosidades-section {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 /* End of final overrides */
+
+/* Curiosidades: garantir fundo escuro e texto claro, e visibilidade */
+.curiosidades-section {
+  background: #2a2e44;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 24px 0;
+  color: #f9b233;
+  border: 1px solid #33384d;
+}
+.curiosidades-title {
+  color: #f9b233;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.curiosidades-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.curiosidade-card {
+  background: #23263a;
+  color: #f5f5f5;
+  border-radius: 8px;
+  padding: 14px 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #33384d;
+  min-width: 220px;
+  font-size: 0.98rem;
+}
+
+/* Inputs e formulários: garantir contraste e legibilidade */
+input[type="text"], input[type="number"], input[type="date"], textarea, select {
+  background: #181c27 !important;
+  color: #f9b233 !important;
+  border: 1px solid #33384d !important;
+}
+input[type="text"]::placeholder, input[type="number"]::placeholder, input[type="date"]::placeholder, textarea::placeholder {
+  color: #b0b0b0 !important;
+}
+.form-group label {
+  color: #f9b233 !important;
+}
+
+/* Nomes dos jogadores na stats-table: garantir contraste e visibilidade */
+.stats-table .player-name {
+  color: #f9b233 !important;
+  font-weight: 600;
+  font-size: 1rem;
+  background: transparent;
+}
+.stats-table td {
+  background: #2a2e44;
+}
+.stats-table tr {
+  border-bottom: 1px solid #33384d;
+}
+
+/* Zebra striping para stats-table */
+.stats-table tbody tr:nth-child(even) {
+  background: #23263a;
+}
+
+/* Garantir que curiosidades não ficam display:none */
+.curiosidades-section, .curiosidades-grid, .curiosidade-card {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 

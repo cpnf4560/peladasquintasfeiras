@@ -205,6 +205,114 @@ app.get('/', requireAuth, (req, res) => {
 
 // Keep other routes as-is (they still reference requireAuth/requireAdmin from middleware when needed)
 
+// Função para gerar curiosidades baseadas em estatísticas
+function gerarCuriosidades(estatisticas, ano, mes) {
+  const curiosidades = [];
+  
+  if (estatisticas.length === 0) return curiosidades;
+  
+  // 1. Jogador com maior percentagem de vitórias
+  const melhorPercentagem = estatisticas.reduce((max, stat) => 
+    stat.percentagem_vitorias > max.percentagem_vitorias ? stat : max
+  );
+  curiosidades.push({
+    icone: '👑',
+    titulo: 'Rei das Vitórias',
+    texto: `${melhorPercentagem.nome} tem a melhor percentagem de vitórias: ${melhorPercentagem.percentagem_vitorias}%`
+  });
+  
+  // 2. Jogador com melhor goal average
+  const melhorGoalAverage = estatisticas.reduce((max, stat) => 
+    stat.diferenca_golos > max.diferenca_golos ? stat : max
+  );
+  if (melhorGoalAverage.diferenca_golos > 0) {
+    curiosidades.push({
+      icone: '⚽',
+      titulo: 'Máquina de Golos',
+      texto: `${melhorGoalAverage.nome} tem o melhor goal average: +${melhorGoalAverage.diferenca_golos} golos`
+    });
+  }
+  
+  // 3. Jogador mais presente
+  const maisPresentas = estatisticas.reduce((max, stat) => 
+    stat.jogos > max.jogos ? stat : max
+  );
+  curiosidades.push({
+    icone: '🎯',
+    titulo: 'Mais Assíduo',
+    texto: `${maisPresentas.nome} é o mais presente com ${maisPresentas.jogos} jogos`
+  });
+  
+  // 4. Jogador há mais tempo sem jogar (apenas para período anual)
+  if (!mes) {
+    const maisTempoSemJogar = estatisticas.reduce((oldest, stat) => {
+      if (!stat.ultimo_jogo) return oldest;
+      return new Date(stat.ultimo_jogo) < new Date(oldest.ultimo_jogo || '9999-12-31') ? stat : oldest;
+    }, {});
+    
+    if (maisTempoSemJogar.ultimo_jogo) {
+      const diasSemJogar = Math.floor((new Date() - new Date(maisTempoSemJogar.ultimo_jogo)) / (1000 * 60 * 60 * 24));
+      if (diasSemJogar > 30) {
+        curiosidades.push({
+          icone: '😴',
+          titulo: 'Saudades do Campo',
+          texto: `${maisTempoSemJogar.nome} não joga há ${diasSemJogar} dias (último jogo: ${new Date(maisTempoSemJogar.ultimo_jogo).toLocaleDateString('pt-PT')})`
+        });
+      }
+    }
+  }
+  
+  // 5. Estatística curiosa sobre pontos
+  const totalPontos = estatisticas.reduce((sum, stat) => sum + stat.pontos, 0);
+  const mediaPontos = Math.round(totalPontos / estatisticas.length * 10) / 10;
+  curiosidades.push({
+    icone: '📊',
+    titulo: 'Média de Pontos',
+    texto: `A média de pontos ${mes ? 'do mês' : 'do ano'} é ${mediaPontos} pontos por jogador`
+  });
+  
+  // 6. Jogador mais "azarado" (mais derrotas)
+  const maisAzarado = estatisticas.reduce((max, stat) => 
+    stat.derrotas > max.derrotas ? stat : max
+  );
+  if (maisAzarado.derrotas > 0) {
+    curiosidades.push({
+      icone: '😅',
+      titulo: 'Azar nas Cartas',
+      texto: `${maisAzarado.nome} tem o maior número de derrotas: ${maisAzarado.derrotas}`
+    });
+  }
+  
+  // 7. Jogador mais equilibrado (com mais empates)
+  const maisEmpates = estatisticas.reduce((max, stat) => 
+    stat.empates > max.empates ? stat : max
+  );
+  if (maisEmpates.empates > 0) {
+    curiosidades.push({
+      icone: '⚖️',
+      titulo: 'Mestre do Equilíbrio',
+      texto: `${maisEmpates.nome} é o rei dos empates com ${maisEmpates.empates} jogos empatados`
+    });
+  }
+  
+  // 8. Comparação interessante entre top 2
+  if (estatisticas.length >= 2) {
+    const primeiro = estatisticas[0];
+    const segundo = estatisticas[1];
+    const diferencaPontos = primeiro.pontos - segundo.pontos;
+    
+    if (diferencaPontos > 0) {
+      curiosidades.push({
+        icone: '🥇',
+        titulo: 'Liderança',
+        texto: `${primeiro.nome} lidera com ${diferencaPontos} ponto${diferencaPontos > 1 ? 's' : ''} de vantagem sobre ${segundo.nome}`
+      });
+    }
+  }
+  
+  return curiosidades;
+}
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor a correr na porta ${PORT}`);
@@ -426,7 +534,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
         if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
         return b.jogos - a.jogos;      });
     }    // 5. CURIOSIDADES E ANÁLISES ESPECIAIS
-    const curiosidades = [];
+    const curiosidades = gerarCuriosidades(estatisticasProcessadas, anoAtual);
     
     if (estatisticasProcessadas.length > 0) {
       // MVP do ano
@@ -659,3 +767,9 @@ app.get('/dashboard-test', async (req, res) => {
     });
   }
 });
+
+// Exportar função para ser utilizada em rotas
+module.exports = {
+  gerarCuriosidades,
+  app
+};

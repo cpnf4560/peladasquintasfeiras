@@ -70,9 +70,8 @@ router.get('/estatisticas', requireAuth, (req, res) => {
         if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
         return b.jogos - a.jogos;
       });
-    }
-
-    const curiosidades = require('../server').gerarCuriosidades ? require('../server').gerarCuriosidades(estatisticasProcessadas, anoSelecionado, mesSelecionado) : [];
+    }    const { gerarCuriosidades } = require('../server');
+    const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasProcessadas, anoSelecionado, mesSelecionado) : [];
 
     // handle MVP/month logic and duplas call by delegating back to server.js helpers for now
 
