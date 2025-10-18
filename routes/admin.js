@@ -111,4 +111,120 @@ router.post('/import-history', async (req, res) => {
   }
 });
 
+// Rota para corrigir presenças do Rui Lopes
+router.get('/fix-rui-lopes', async (req, res) => {
+  const log = [];
+  
+  try {
+    // 1. Obter ID do jogador "Rui Lopes"
+    const jogadores = await new Promise((resolve, reject) => {
+      db.query("SELECT id FROM jogadores WHERE nome = ?", ['Rui Lopes'], (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
+    
+    if (!jogadores || jogadores.length === 0) {
+      return res.send(`
+        <h1>❌ Erro</h1>
+        <p>Jogador "Rui Lopes" não encontrado na base de dados.</p>
+        <p>Certifica-te que o nome está exatamente assim na tabela jogadores.</p>
+        <a href="/admin/import-history">← Voltar</a>
+      `);
+    }
+    
+    const ruiId = jogadores[0].id;
+    log.push(`✅ Jogador "Rui Lopes" encontrado com ID ${ruiId}`);
+    
+    // 2. Encontrar os jogos pelas datas
+    const jogosParaCorrigir = [
+      { data: '2025-07-31', equipa: 2 },
+      { data: '2025-07-03', equipa: 1 },
+      { data: '2025-06-12', equipa: 1 },
+      { data: '2025-06-05', equipa: 2 },
+      { data: '2025-05-22', equipa: 1 }
+    ];
+    
+    let adicionados = 0;
+    
+    for (const info of jogosParaCorrigir) {
+      // Encontrar ID do jogo
+      const jogos = await new Promise((resolve, reject) => {
+        db.query("SELECT id FROM jogos WHERE data = ?", [info.data], (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        });
+      });
+      
+      if (!jogos || jogos.length === 0) {
+        log.push(`⚠️  Jogo ${info.data} não encontrado`);
+        continue;
+      }
+      
+      const jogoId = jogos[0].id;
+      
+      // Verificar se já existe
+      const presencaExistente = await new Promise((resolve, reject) => {
+        db.query("SELECT id FROM presencas WHERE jogo_id = ? AND jogador_id = ?", [jogoId, ruiId], (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        });
+      });
+      
+      if (presencaExistente && presencaExistente.length > 0) {
+        log.push(`ℹ️  Presença já existe no jogo ${info.data}`);
+        continue;
+      }
+      
+      // Inserir presença
+      await new Promise((resolve, reject) => {
+        db.query("INSERT INTO presencas (jogo_id, jogador_id, equipa) VALUES (?, ?, ?)", [jogoId, ruiId, info.equipa], (err) => {
+          if (err) return reject(err);
+          resolve();
+        });
+      });
+      
+      log.push(`✅ Presença adicionada: Jogo ${info.data}, Equipa ${info.equipa}`);
+      adicionados++;
+    }
+    
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Correção Rui Lopes</title>
+        <style>
+          body { font-family: Inter, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #f8f9fa; }
+          .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          h1 { color: #28a745; }
+          .log { background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+          .success { background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; }
+          a { display: inline-block; margin-top: 20px; color: #007bff; text-decoration: none; }
+          a:hover { text-decoration: underline; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>✅ Correção Concluída!</h1>
+          <div class="success">
+            <strong>Presenças adicionadas:</strong> ${adicionados}/5
+          </div>
+          <h3>Log Detalhado:</h3>
+          <div class="log">${log.join('\n')}</div>
+          <a href="/">← Voltar à Página Principal</a>
+        </div>
+      </body>
+      </html>
+    `);
+    
+  } catch (error) {
+    res.status(500).send(`
+      <h1>❌ Erro</h1>
+      <p>${error.message}</p>
+      <pre>${log.join('\n')}</pre>
+      <a href="/admin/import-history">← Voltar</a>
+    `);
+  }
+});
+
 module.exports = router;
