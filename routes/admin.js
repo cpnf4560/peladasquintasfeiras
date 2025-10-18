@@ -6,7 +6,8 @@ const { requireAdmin } = require('../middleware/auth');
 // Rota para painel de administração
 router.get('/dashboard', requireAdmin, (req, res) => {
   res.render('admin-dashboard', {
-    user: req.session.user
+    user: req.session.user,
+    activePage: 'admin'
   });
 });
 
