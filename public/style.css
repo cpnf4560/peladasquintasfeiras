@@ -814,3 +814,209 @@ button:hover {
   color: var(--muted);
   font-weight: 500;
 }
+
+/* Análise de Duplas - TOP 3 */
+.dupla-categoria {
+  margin-bottom: 3rem;
+}
+
+.dupla-categoria-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px solid var(--border);
+}
+
+.duplas-top3-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  .duplas-top3-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .duplas-top3-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dupla-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dupla-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+/* Destaques por posição */
+.dupla-card.destaque-ouro {
+  border-top: 4px solid #FFD700;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, white 100%);
+}
+
+.dupla-card.destaque-prata {
+  border-top: 4px solid #C0C0C0;
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.05) 0%, white 100%);
+}
+
+.dupla-card.destaque-bronze {
+  border-top: 4px solid #CD7F32;
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.05) 0%, white 100%);
+}
+
+.dupla-card.destaque-vermelho {
+  border-top: 4px solid #dc2626;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, white 100%);
+}
+
+.dupla-card.destaque-azul {
+  border-top: 4px solid #3b82f6;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, white 100%);
+}
+
+.dupla-posicao {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: var(--accent);
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.dupla-card.destaque-ouro .dupla-posicao {
+  background: #FFD700;
+  color: #000;
+}
+
+.dupla-card.destaque-prata .dupla-posicao {
+  background: #C0C0C0;
+  color: #000;
+}
+
+.dupla-card.destaque-bronze .dupla-posicao {
+  background: #CD7F32;
+  color: #fff;
+}
+
+.dupla-card.destaque-vermelho .dupla-posicao {
+  background: #dc2626;
+}
+
+.dupla-card.destaque-azul .dupla-posicao {
+  background: #3b82f6;
+}
+
+.dupla-nomes {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 1rem 0;
+  padding-right: 2.5rem; /* espaço para a posição */
+}
+
+.dupla-stat-principal {
+  text-align: center;
+  padding: 1.25rem;
+  background: rgba(248, 249, 250, 0.5);
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.stat-valor-grande {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.dupla-card.destaque-ouro .stat-valor-grande {
+  color: #FFD700;
+  text-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+}
+
+.dupla-card.destaque-prata .stat-valor-grande {
+  color: #808080;
+}
+
+.dupla-card.destaque-bronze .stat-valor-grande {
+  color: #CD7F32;
+}
+
+.dupla-card.destaque-vermelho .stat-valor-grande {
+  color: #dc2626;
+}
+
+.dupla-card.destaque-azul .stat-valor-grande {
+  color: #3b82f6;
+}
+
+.stat-label-pequeno {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.dupla-stats-linha {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.stat-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.stat-badge.wins {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+
+.stat-badge.draws {
+  background: rgba(234, 179, 8, 0.15);
+  color: #ca8a04;
+}
+
+.stat-badge.losses {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+}
+
+.dupla-info-jogos {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0.5rem 0 0 0;
+  font-weight: 500;
+}

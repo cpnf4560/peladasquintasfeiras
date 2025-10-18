@@ -138,21 +138,30 @@ router.get('/estatisticas', requireAuth, (req, res) => {
       GROUP BY j1.id, j2.id, j1.nome, j2.nome
       HAVING COUNT(DISTINCT jogo.id) >= 3
       ORDER BY percentagem_vitorias DESC
-    `;
-    
+    `;    
     db.query(queryDuplas, [], (errDuplas, duplasResult) => {
       let duplasProcessadas = null;
       
       if (!errDuplas && duplasResult && duplasResult.length > 0) {
-        // Melhor dupla (maior % vitórias)
-        const melhorVitorias = duplasResult[0];
+        // TOP 3 - Melhor % de vitórias
+        const top3MelhorVitorias = duplasResult
+          .sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)
+          .slice(0, 3);
         
-        // Pior dupla (menor % vitórias)
-        const piorVitorias = duplasResult[duplasResult.length - 1];
+        // TOP 3 - Pior % de vitórias
+        const top3PiorVitorias = duplasResult
+          .sort((a, b) => a.percentagem_vitorias - b.percentagem_vitorias)
+          .slice(0, 3);
+        
+        // TOP 3 - Menos jogos juntos
+        const top3MenosJogos = duplasResult
+          .sort((a, b) => a.jogos_juntos - b.jogos_juntos)
+          .slice(0, 3);
         
         duplasProcessadas = {
-          melhorVitorias: melhorVitorias,
-          piorVitorias: piorVitorias
+          melhorVitorias: top3MelhorVitorias,
+          piorVitorias: top3PiorVitorias,
+          menosJogos: top3MenosJogos
         };
       }
     

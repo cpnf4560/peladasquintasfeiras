@@ -219,8 +219,12 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
   
   // Usar estatísticas do ano completo para "Mais Assíduo" se disponível
   const statsParaAssiduidade = estatisticasAnoCompleto || estatisticas;
-    // 1. TOP 3 - Reis das % de Vitórias
-  const top3Percentagem = [...estatisticas]
+  
+  // Filtro de mínimo 5 jogos (para todas as categorias exceto "Saudades do Campo" e "Mais Assíduos")
+  const statsCom5Jogos = estatisticas.filter(stat => stat.jogos >= 5);
+  
+  // 1. TOP 3 - Reis das % de Vitórias (mínimo 5 jogos)
+  const top3Percentagem = [...statsCom5Jogos]
     .sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)
     .slice(0, 3);
   
@@ -235,8 +239,28 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
     });
   }
   
-  // 2. TOP 3 - Melhor goal average (diferença de golos)
-  const top3GoalAverage = [...estatisticas]
+  // 2. TOP 3 - Reis das % de Derrotas (mínimo 5 jogos) - NOVO
+  const top3Derrotas = [...statsCom5Jogos]
+    .map(stat => ({
+      ...stat,
+      percentagem_derrotas: stat.jogos > 0 ? ((stat.derrotas / stat.jogos) * 100).toFixed(1) : 0
+    }))
+    .sort((a, b) => parseFloat(b.percentagem_derrotas) - parseFloat(a.percentagem_derrotas))
+    .slice(0, 3);
+  
+  if (top3Derrotas.length > 0) {
+    const texto = top3Derrotas
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.percentagem_derrotas}%)`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '💀',
+      titulo: 'TOP 3 - Reis das % de Derrotas',
+      texto: texto
+    });
+  }
+  
+  // 3. TOP 3 - Melhor goal average (mínimo 5 jogos)
+  const top3GoalAverage = [...statsCom5Jogos]
     .filter(stat => stat.diferenca_golos > 0)
     .sort((a, b) => b.diferenca_golos - a.diferenca_golos)
     .slice(0, 3);
@@ -252,7 +276,7 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
     });
   }
   
-  // 3. TOP 3 - Mais Assíduos (usando estatísticas do ano completo)
+  // 4. TOP 3 - Mais Assíduos (SEM filtro de 5 jogos - usando estatísticas do ano completo)
   const top3Assiduos = [...statsParaAssiduidade]
     .sort((a, b) => b.jogos - a.jogos)
     .slice(0, 3);
@@ -268,8 +292,8 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
     });
   }
   
-  // 4. TOP 3 - Golos Equipa (mais golos marcados)
-  const top3Artilheiros = [...estatisticas]
+  // 5. TOP 3 - Golos Equipa (mínimo 5 jogos)
+  const top3Artilheiros = [...statsCom5Jogos]
     .sort((a, b) => b.golos_marcados - a.golos_marcados)
     .slice(0, 3);
   
@@ -284,8 +308,8 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
     });
   }
   
-  // 5. TOP 3 - Melhor Defesa (golos sofridos por jogo)
-  const top3Defesa = [...estatisticas]
+  // 6. TOP 3 - Melhor Defesa (mínimo 5 jogos)
+  const top3Defesa = [...statsCom5Jogos]
     .map(stat => ({
       ...stat,
       media_golos_sofridos: stat.jogos > 0 ? (stat.golos_sofridos / stat.jogos).toFixed(2) : 0
@@ -303,8 +327,9 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
       texto: texto
     });
   }
-    // 6. TOP 3 - Média de Pontos/Jogo
-  const top3MediaPontos = [...estatisticas]
+  
+  // 7. TOP 3 - Média de Pontos/Jogo (mínimo 5 jogos)
+  const top3MediaPontos = [...statsCom5Jogos]
     .map(stat => ({
       ...stat,
       media_pontos: stat.jogos > 0 ? (stat.pontos / stat.jogos).toFixed(1) : 0
@@ -319,6 +344,29 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
     curiosidades.push({
       icone: '📊',
       titulo: 'TOP 3 - Média de Pontos/Jogo',
+      texto: texto
+    });
+  }
+  
+  // 8. TOP 3 - Saudades do Campo (SEM filtro de 5 jogos - jogadores que não jogam há mais tempo)
+  const top3Saudades = [...estatisticas]
+    .filter(stat => stat.ultimo_jogo) // Apenas jogadores que já jogaram
+    .sort((a, b) => {
+      // Ordenar por data mais antiga primeiro
+      return new Date(a.ultimo_jogo) - new Date(b.ultimo_jogo);
+    })
+    .slice(0, 3);
+  
+  if (top3Saudades.length > 0) {
+    const texto = top3Saudades
+      .map((stat, i) => {
+        const diasDesde = Math.floor((new Date() - new Date(stat.ultimo_jogo)) / (1000 * 60 * 60 * 24));
+        return `${i + 1}º ${stat.nome} (${diasDesde} dias)`;
+      })
+      .join(' • ');
+    curiosidades.push({
+      icone: '😢',
+      titulo: 'TOP 3 - Saudades do Campo',
       texto: texto
     });
   }
