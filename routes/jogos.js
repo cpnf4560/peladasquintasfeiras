@@ -247,7 +247,7 @@ router.post('/:id/delete', requireAdmin, (req, res) => {
 });
 
 // Atualizar observações
-router.post('/:id/observacoes', requireAdmin, (req, res) => {
+router.post('/:id/observacoes', requireAuth, (req, res) => {
   const jogoId = req.params.id;
   const { observacoes } = req.body;
 
@@ -258,11 +258,12 @@ router.post('/:id/observacoes', requireAdmin, (req, res) => {
     [observacoes || '', jogoId],
     function(err) {
       if (err) {
-        console.error('Erro ao atualizar observações:', err);
-        return res.status(500).send('Erro ao atualizar observações');
+        console.error('❌ Erro ao atualizar observações:', err);
+        return res.status(500).json({ error: 'Erro ao atualizar observações' });
       }
 
-      res.redirect('/jogos');
+      console.log('✅ Observações atualizadas com sucesso!');
+      res.redirect('/');
     }
   );
 });
