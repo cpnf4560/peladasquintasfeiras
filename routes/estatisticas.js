@@ -4,6 +4,22 @@ const { db } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { normalizeRows } = require('../utils/helpers');
 
+// Função auxiliar para renderizar a view
+function renderView(res, req, estatisticasProcessadas, curiosidades, anoSelecionado, mesSelecionado, ordenacaoSelecionada) {
+  res.render('estatisticas', {
+    user: req.session.user,
+    estatisticas: estatisticasProcessadas,
+    anoSelecionado,
+    mesSelecionado,
+    ordenacaoSelecionada,
+    mvpMensais: [],
+    totalJogosMes: 0,
+    minimoJogosParaMVP: 0,
+    duplas: null,
+    curiosidades
+  });
+}
+
 router.get('/estatisticas', requireAuth, (req, res) => {
   const anoSelecionado = req.query.ano || '2025';
   const mesSelecionado = req.query.mes || '';
@@ -17,7 +33,6 @@ router.get('/estatisticas', requireAuth, (req, res) => {
   else filtroData = `AND j.data LIKE '${anoSelecionado}-%'`;
 
   console.log('🔍 Filtro de data:', filtroData);
-
   const queryEstatisticas = `SELECT 
       jog.id,
       jog.nome,
@@ -35,6 +50,19 @@ router.get('/estatisticas', requireAuth, (req, res) => {
     WHERE jog.suspenso = 0 ${filtroData}
     GROUP BY jog.id, jog.nome
     HAVING COUNT(DISTINCT j.id) > 0`;
+  
+  // Query para estatísticas do ano completo (para curiosidades)
+  const queryEstatisticasAno = `SELECT 
+      jog.id,
+      jog.nome,
+      COUNT(DISTINCT j.id) as jogos
+    FROM jogadores jog
+    LEFT JOIN presencas p ON jog.id = p.jogador_id
+    LEFT JOIN jogos j ON p.jogo_id = j.id
+    WHERE jog.suspenso = 0 AND j.data LIKE '${anoSelecionado}-%'
+    GROUP BY jog.id, jog.nome
+    HAVING COUNT(DISTINCT j.id) > 0`;
+
   db.query(queryEstatisticas, [], (err, estatisticas) => {
     if (err) {
       console.error('❌ Erro ao buscar estatísticas:', err);
@@ -73,26 +101,24 @@ router.get('/estatisticas', requireAuth, (req, res) => {
         if (a.pontos !== b.pontos) return b.pontos - a.pontos;
         if (a.diferenca_golos !== b.diferenca_golos) return b.diferenca_golos - a.diferenca_golos;
         if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
-        return b.jogos - a.jogos;
-      });
+        return b.jogos - a.jogos;      });
     }    const { gerarCuriosidades } = require('../server');
-    const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasProcessadas, anoSelecionado, mesSelecionado) : [];
-
-    // handle MVP/month logic and duplas call by delegating back to server.js helpers for now
-
-    res.render('estatisticas', {
-      user: req.session.user,
-      estatisticas: estatisticasProcessadas,
-      anoSelecionado,
-      mesSelecionado,
-      ordenacaoSelecionada,
-      mvpMensais: [],
-      totalJogosMes: 0,
-      minimoJogosParaMVP: 0,
-      curiosidades,
-      duplas: null
-    });
-  });
+    
+    // Buscar estatísticas do ano completo se estiver filtrado por mês
+    if (mesSelecionado) {
+      db.query(queryEstatisticasAno, [], (errAno, estatisticasAno) => {
+        const statsAnoProcessadas = (estatisticasAno || []).map(stat => ({
+          ...stat,
+          pontos: 0,
+          diferenca_golos: 0
+        }));
+        const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasProcessadas, anoSelecionado, mesSelecionado, statsAnoProcessadas) : [];
+        renderView(res, req, estatisticasProcessadas, curiosidades, anoSelecionado, mesSelecionado, ordenacaoSelecionada);
+      });
+    } else {
+      const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasProcessadas, anoSelecionado, mesSelecionado) : [];
+      renderView(res, req, estatisticasProcessadas, curiosidades, anoSelecionado, mesSelecionado, ordenacaoSelecionada);
+    }  });
 });
 
 module.exports = router;

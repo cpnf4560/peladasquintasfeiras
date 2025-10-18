@@ -212,10 +212,13 @@ app.get('/', requireAuth, (req, res) => {
 // Keep other routes as-is (they still reference requireAuth/requireAdmin from middleware when needed)
 
 // Função para gerar curiosidades baseadas em estatísticas
-function gerarCuriosidades(estatisticas, ano, mes) {
+function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = null) {
   const curiosidades = [];
   
   if (estatisticas.length === 0) return curiosidades;
+  
+  // Usar estatísticas do ano completo para "Mais Assíduo" se disponível
+  const statsParaAssiduidade = estatisticasAnoCompleto || estatisticas;
   
   // 1. Jogador com maior percentagem de vitórias
   const melhorPercentagem = estatisticas.reduce((max, stat) => 
@@ -239,14 +242,14 @@ function gerarCuriosidades(estatisticas, ano, mes) {
     });
   }
   
-  // 3. Jogador mais presente
-  const maisPresentas = estatisticas.reduce((max, stat) => 
+  // 3. Jogador mais presente (usando estatísticas do ano completo)
+  const maisPresentas = statsParaAssiduidade.reduce((max, stat) => 
     stat.jogos > max.jogos ? stat : max
   );
   curiosidades.push({
     icone: '🎯',
     titulo: 'Mais Assíduo',
-    texto: `${maisPresentas.nome} é o mais presente com ${maisPresentas.jogos} jogos`
+    texto: `${maisPresentas.nome} é o mais presente com ${maisPresentas.jogos} jogos${mes ? ' no ano' : ''}`
   });
   
   // 4. Jogador há mais tempo sem jogar (apenas para período anual)
