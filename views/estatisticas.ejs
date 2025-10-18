@@ -61,7 +61,7 @@
         </div>
       </div>
     <% } %>    <!-- Análise de Duplas -->
-    <% var duplasSafe = typeof duplas !== 'undefined' && duplas ? duplas : { melhorVitorias: [], piorVitorias: [], menosJogos: [] }; %>
+    <% var duplasSafe = typeof duplas !== 'undefined' && duplas ? duplas : { melhorVitorias: [], piorVitorias: [], maisJogos: [], menosJogos: [] }; %>
     <% if (duplasSafe.melhorVitorias && duplasSafe.melhorVitorias.length > 0) { %>
       <div class="duplas-section-compact">
         <h3 class="duplas-title">👥 Análise de Duplas</h3>
@@ -86,8 +86,9 @@
                 </div>
               </div>
             <% }) %>
-          </div>
-        </div>        <!-- TOP 3 - Pior % Vitórias -->
+          </div>        </div>
+
+        <!-- TOP 3 - Pior % Vitórias -->
         <div class="dupla-categoria-compact">
           <h4 class="dupla-header-compact">
             💩 TOP 3 - Piores Duplas
@@ -107,17 +108,39 @@
               </div>
             <% }) %>
           </div>
+        </div>
+
+        <!-- TOP 3 - Mais Jogos Juntos -->
+        <div class="dupla-categoria-compact">
+          <h4 class="dupla-header-compact">
+            🔥 TOP 3 - Duplas com Mais Jogos Juntos
+          </h4>
+          <div class="duplas-compact-grid">
+            <% duplasSafe.maisJogos.forEach((dupla, idx) => { %>
+              <div class="dupla-card-mini veteran">
+                <div class="dupla-rank">#<%= idx + 1 %></div>
+                <div class="dupla-names"><%= dupla.jogador1 %> & <%= dupla.jogador2 %></div>
+                <div class="dupla-stat-main"><strong><%= dupla.jogos_juntos %></strong> jogos juntos</div>
+                <div class="dupla-stats-mini">
+                  <span><%= dupla.vitorias %>V</span> · 
+                  <span><%= dupla.empates || 0 %>E</span> · 
+                  <span><%= dupla.derrotas || 0 %>D</span> · 
+                  <span><%= dupla.percentagem_vitorias %>%</span>
+                </div>
+              </div>
+            <% }) %>
+          </div>
         </div>        <!-- TOP 3 - Menos Jogos Juntos -->
         <div class="dupla-categoria-compact">
           <h4 class="dupla-header-compact">
-            🆕 TOP 3 - Duplas Mais Recentes
+            🆕 TOP 3 - Duplas com Menos Jogos Juntos
           </h4>
           <div class="duplas-compact-grid">
             <% duplasSafe.menosJogos.forEach((dupla, idx) => { %>
               <div class="dupla-card-mini new">
                 <div class="dupla-rank">#<%= idx + 1 %></div>
                 <div class="dupla-names"><%= dupla.jogador1 %> & <%= dupla.jogador2 %></div>
-                <div class="dupla-stat-main"><strong><%= dupla.jogos_juntos %></strong> jogos</div>
+                <div class="dupla-stat-main"><strong><%= dupla.jogos_juntos %></strong> jogos juntos</div>
                 <div class="dupla-stats-mini">
                   <span><%= dupla.vitorias %>V</span> · 
                   <span><%= dupla.empates || 0 %>E</span> · 

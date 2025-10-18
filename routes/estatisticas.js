@@ -159,31 +159,35 @@ router.get('/estatisticas', requireAuth, (req, res) => {
       
       let duplasProcessadas = null;
         if (!errDuplas && duplasResult && duplasResult.length > 0) {
-        console.log('✅ [DUPLAS DEBUG] A processar', duplasResult.length, 'duplas');
-        
-        const top3MelhorVitorias = duplasResult
+        console.log('✅ [DUPLAS DEBUG] A processar', duplasResult.length, 'duplas');        // TOP 3 - Melhor % de vitórias
+        const top3MelhorVitorias = [...duplasResult]
           .sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)
           .slice(0, 3);
         
         // TOP 3 - Pior % de vitórias
-        const top3PiorVitorias = duplasResult
+        const top3PiorVitorias = [...duplasResult]
           .sort((a, b) => a.percentagem_vitorias - b.percentagem_vitorias)
           .slice(0, 3);
         
+        // TOP 3 - Mais jogos juntos
+        const top3MaisJogos = [...duplasResult]
+          .sort((a, b) => b.jogos_juntos - a.jogos_juntos)
+          .slice(0, 3);
+        
         // TOP 3 - Menos jogos juntos
-        const top3MenosJogos = duplasResult
+        const top3MenosJogos = [...duplasResult]
           .sort((a, b) => a.jogos_juntos - b.jogos_juntos)
           .slice(0, 3);
         
         duplasProcessadas = {
           melhorVitorias: top3MelhorVitorias,
           piorVitorias: top3PiorVitorias,
+          maisJogos: top3MaisJogos,
           menosJogos: top3MenosJogos
-        };
-        
-        console.log('📊 [DUPLAS DEBUG] Objeto criado:');
+        };        console.log('📊 [DUPLAS DEBUG] Objeto criado:');
         console.log('   melhorVitorias:', top3MelhorVitorias.length);
         console.log('   piorVitorias:', top3PiorVitorias.length);
+        console.log('   maisJogos:', top3MaisJogos.length);
         console.log('   menosJogos:', top3MenosJogos.length);
       } else {
         console.log('❌ [DUPLAS DEBUG] Nenhuma dupla processada - condição falhou');
