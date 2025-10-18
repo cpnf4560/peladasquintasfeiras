@@ -2467,3 +2467,260 @@ table td.position {
   text-align: center;
   width: 60px;
 }
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   NOVO JOGO - LAYOUT COMPACTO (NEW)
+   ============================================ */
+
+.game-form-compact {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.game-date-card-compact {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.game-date-card-compact label {
+  display: block;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  font-size: 1.125rem;
+}
+
+.input-date-compact {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.input-date-compact:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Score Section - Centralized */
+.score-section-center {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.score-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 1.5rem 0;
+}
+
+.score-inputs-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.score-input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.score-input-group label {
+  font-weight: 700;
+  color: #374151;
+  font-size: 1.125rem;
+}
+
+.input-score-center {
+  width: 100px;
+  height: 100px;
+  padding: 1rem;
+  border: 3px solid #e5e7eb;
+  border-radius: 16px;
+  font-size: 3rem;
+  font-weight: 900;
+  text-align: center;
+  transition: all 0.2s;
+  background: #f9fafb;
+}
+
+.input-score-center:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  background: white;
+}
+
+.score-separator {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #9ca3af;
+  margin: 0 1rem;
+}
+
+/* Players Selection - Compact Layout */
+.players-selection-compact {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 2rem;
+}
+
+.players-selection-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+  text-align: center;
+}
+
+.players-selection-subtitle {
+  text-align: center;
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+}
+
+.players-list-compact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+  padding: 0.25rem;
+}
+
+.player-row-compact {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.player-row-compact:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.player-name-compact {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-team-selector {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.team-option {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  min-width: 85px;
+  justify-content: center;
+}
+
+.team-option:hover {
+  border-color: #9ca3af;
+}
+
+.team1-option input[type="checkbox"]:checked ~ .team-label {
+  color: #1e40af;
+  font-weight: 700;
+}
+
+.team1-option:has(input[type="checkbox"]:checked) {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+}
+
+.team2-option input[type="checkbox"]:checked ~ .team-label {
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.team2-option:has(input[type="checkbox"]:checked) {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border-color: #ef4444;
+}
+
+.team-option input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.team-label {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .score-inputs-center {
+    gap: 1rem;
+  }
+  
+  .input-score-center {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5rem;
+  }
+  
+  .score-separator {
+    font-size: 2.5rem;
+  }
+  
+  .players-list-compact {
+    grid-template-columns: 1fr;
+  }
+  
+  .player-row-compact {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .player-team-selector {
+    justify-content: center;
+  }
+}

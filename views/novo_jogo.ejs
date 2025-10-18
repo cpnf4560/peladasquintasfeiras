@@ -14,65 +14,58 @@
     <div class="game-header">
       <h2 class="section-title">⚽ Registar Novo Resultado</h2>
       <p class="section-subtitle">Introduz os dados do jogo</p>
-    </div>
-
-    <form method="POST" action="/jogos" class="game-form-modern">
-      <div class="game-date-card">
+    </div>    <form method="POST" action="/jogos" class="game-form-compact">
+      <!-- Data do Jogo -->
+      <div class="game-date-card-compact">
         <label for="data">📅 Data do Jogo</label>
-        <input type="date" id="data" name="data" required class="input-date-modern">
-      </div>      <div class="teams-grid">
-        <div class="team-card team-blue">
-          <div class="team-header">
-            <h3>🔵 Equipa 1</h3>
+        <input type="date" id="data" name="data" required class="input-date-compact">
+      </div>
+
+      <!-- Resultado Central -->
+      <div class="score-section-center">
+        <h3 class="score-title">⚽ Resultado do Jogo</h3>
+        <div class="score-inputs-center">
+          <div class="score-input-group">
+            <label for="equipa1_golos">🔵 Equipa 1</label>
+            <input type="number" id="equipa1_golos" name="equipa1_golos" min="0" value="0" required class="input-score-center">
           </div>
-          <div class="team-goals">
-            <label for="equipa1_golos">Golos Marcados</label>
-            <input type="number" id="equipa1_golos" name="equipa1_golos" min="0" value="0" required class="input-goals">
-          </div>
-          <div class="team-players">
-            <label class="players-label">Selecionar Jogadores</label>
-            <div class="players-grid">
-              <% if (jogadores && jogadores.length > 0) { %>
-                <% jogadores.forEach(jogador => { %>
-                  <label class="player-checkbox-modern">
-                    <input type="checkbox" name="equipa1" value="<%= jogador.id %>">
-                    <span class="checkbox-custom"></span>
-                    <span class="player-name"><%= jogador.nome %></span>
-                  </label>
-                <% }) %>
-              <% } %>
-            </div>
+          <span class="score-separator">-</span>
+          <div class="score-input-group">
+            <label for="equipa2_golos">🔴 Equipa 2</label>
+            <input type="number" id="equipa2_golos" name="equipa2_golos" min="0" value="0" required class="input-score-center">
           </div>
         </div>
+      </div>
+
+      <!-- Seleção de Jogadores - Layout Compacto -->
+      <div class="players-selection-compact">
+        <h3 class="players-selection-title">👥 Distribuição de Jogadores</h3>
+        <p class="players-selection-subtitle">Seleciona os jogadores para cada equipa (por ordem alfabética)</p>
         
-        <div class="vs-divider">
-          <span>VS</span>
-        </div>
-        
-        <div class="team-card team-red">
-          <div class="team-header">
-            <h3>🔴 Equipa 2</h3>
-          </div>
-          <div class="team-goals">
-            <label for="equipa2_golos">Golos Marcados</label>
-            <input type="number" id="equipa2_golos" name="equipa2_golos" min="0" value="0" required class="input-goals">
-          </div>
-          <div class="team-players">
-            <label class="players-label">Selecionar Jogadores</label>
-            <div class="players-grid">
-              <% if (jogadores && jogadores.length > 0) { %>
-                <% jogadores.forEach(jogador => { %>
-                  <label class="player-checkbox-modern">
-                    <input type="checkbox" name="equipa2" value="<%= jogador.id %>">
-                    <span class="checkbox-custom"></span>
-                    <span class="player-name"><%= jogador.nome %></span>
+        <div class="players-list-compact">
+          <% if (jogadores && jogadores.length > 0) { %>
+            <% 
+              // Ordenar jogadores alfabeticamente
+              const jogadoresOrdenados = [...jogadores].sort((a, b) => a.nome.localeCompare(b.nome));
+            %>
+            <% jogadoresOrdenados.forEach(jogador => { %>
+              <div class="player-row-compact">
+                <span class="player-name-compact"><%= jogador.nome %></span>
+                <div class="player-team-selector">
+                  <label class="team-option team1-option">
+                    <input type="checkbox" name="equipa1" value="<%= jogador.id %>" class="team-checkbox" data-player="<%= jogador.id %>">
+                    <span class="team-label">Equipa 1</span>
                   </label>
-                <% }) %>
-              <% } %>
-            </div>
-          </div>
+                  <label class="team-option team2-option">
+                    <input type="checkbox" name="equipa2" value="<%= jogador.id %>" class="team-checkbox" data-player="<%= jogador.id %>">
+                    <span class="team-label">Equipa 2</span>
+                  </label>
+                </div>
+              </div>
+            <% }) %>
+          <% } %>
         </div>
-      </div>      <div class="form-actions-modern">
+      </div><div class="form-actions-modern">
         <button type="submit" class="btn btn-success">
           <span>✅</span> Registar Resultado
         </button>
@@ -80,8 +73,23 @@
           <span>❌</span> Cancelar
         </a>
       </div>
-    </form>
-  </main>
+    </form>  </main>
+
+  <script>
+    // Prevent player from being in both teams
+    document.querySelectorAll('.team-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        if (this.checked) {
+          const playerId = this.dataset.player;
+          const otherTeam = this.name === 'equipa1' ? 'equipa2' : 'equipa1';
+          const otherCheckbox = document.querySelector(`input[name="${otherTeam}"][data-player="${playerId}"]`);
+          if (otherCheckbox) {
+            otherCheckbox.checked = false;
+          }
+        }
+      });
+    });
+  </script>
 
 <%- include('partials/footer') %>
 </body>
