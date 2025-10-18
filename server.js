@@ -220,103 +220,99 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
   // Usar estatísticas do ano completo para "Mais Assíduo" se disponível
   const statsParaAssiduidade = estatisticasAnoCompleto || estatisticas;
   
-  // 1. Jogador com maior percentagem de vitórias
-  const melhorPercentagem = estatisticas.reduce((max, stat) => 
-    stat.percentagem_vitorias > max.percentagem_vitorias ? stat : max
-  );
-  curiosidades.push({
-    icone: '👑',
-    titulo: 'Rei das Vitórias',
-    texto: `${melhorPercentagem.nome} tem a melhor percentagem de vitórias: ${melhorPercentagem.percentagem_vitorias}%`
-  });
+  // 1. TOP 3 - Melhor percentagem de vitórias
+  const top3Percentagem = [...estatisticas]
+    .sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)
+    .slice(0, 3);
   
-  // 2. Jogador com melhor goal average
-  const melhorGoalAverage = estatisticas.reduce((max, stat) => 
-    stat.diferenca_golos > max.diferenca_golos ? stat : max
-  );
-  if (melhorGoalAverage.diferenca_golos > 0) {
+  if (top3Percentagem.length > 0) {
+    const texto = top3Percentagem
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.percentagem_vitorias}%)`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '👑',
+      titulo: 'TOP 3 - Reis das Vitórias',
+      texto: texto
+    });
+  }
+  
+  // 2. TOP 3 - Melhor goal average (diferença de golos)
+  const top3GoalAverage = [...estatisticas]
+    .filter(stat => stat.diferenca_golos > 0)
+    .sort((a, b) => b.diferenca_golos - a.diferenca_golos)
+    .slice(0, 3);
+  
+  if (top3GoalAverage.length > 0) {
+    const texto = top3GoalAverage
+      .map((stat, i) => `${i + 1}º ${stat.nome} (+${stat.diferenca_golos})`)
+      .join(' • ');
     curiosidades.push({
       icone: '⚽',
-      titulo: 'Máquina de Golos',
-      texto: `${melhorGoalAverage.nome} tem o melhor goal average: +${melhorGoalAverage.diferenca_golos} golos`
+      titulo: 'TOP 3 - Melhor Goal Average',
+      texto: texto
     });
   }
   
-  // 3. Jogador mais presente (usando estatísticas do ano completo)
-  const maisPresentas = statsParaAssiduidade.reduce((max, stat) => 
-    stat.jogos > max.jogos ? stat : max
-  );
-  curiosidades.push({
-    icone: '🎯',
-    titulo: 'Mais Assíduo',
-    texto: `${maisPresentas.nome} é o mais presente com ${maisPresentas.jogos} jogos${mes ? ' no ano' : ''}`
-  });
+  // 3. TOP 3 - Mais Assíduos (usando estatísticas do ano completo)
+  const top3Assiduos = [...statsParaAssiduidade]
+    .sort((a, b) => b.jogos - a.jogos)
+    .slice(0, 3);
   
-  // 4. Jogador há mais tempo sem jogar (apenas para período anual)
-  if (!mes) {
-    const maisTempoSemJogar = estatisticas.reduce((oldest, stat) => {
-      if (!stat.ultimo_jogo) return oldest;
-      return new Date(stat.ultimo_jogo) < new Date(oldest.ultimo_jogo || '9999-12-31') ? stat : oldest;
-    }, {});
-    
-    if (maisTempoSemJogar.ultimo_jogo) {
-      const diasSemJogar = Math.floor((new Date() - new Date(maisTempoSemJogar.ultimo_jogo)) / (1000 * 60 * 60 * 24));
-      if (diasSemJogar > 30) {
-        curiosidades.push({
-          icone: '😴',
-          titulo: 'Saudades do Campo',
-          texto: `${maisTempoSemJogar.nome} não joga há ${diasSemJogar} dias (último jogo: ${new Date(maisTempoSemJogar.ultimo_jogo).toLocaleDateString('pt-PT')})`
-        });
-      }
-    }
-  }
-  
-  // 5. Estatística curiosa sobre pontos
-  const totalPontos = estatisticas.reduce((sum, stat) => sum + stat.pontos, 0);
-  const mediaPontos = Math.round(totalPontos / estatisticas.length * 10) / 10;
-  curiosidades.push({
-    icone: '📊',
-    titulo: 'Média de Pontos',
-    texto: `A média de pontos ${mes ? 'do mês' : 'do ano'} é ${mediaPontos} pontos por jogador`
-  });
-  
-  // 6. Jogador mais "azarado" (mais derrotas)
-  const maisAzarado = estatisticas.reduce((max, stat) => 
-    stat.derrotas > max.derrotas ? stat : max
-  );
-  if (maisAzarado.derrotas > 0) {
+  if (top3Assiduos.length > 0) {
+    const texto = top3Assiduos
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.jogos} jogos)`)
+      .join(' • ');
     curiosidades.push({
-      icone: '😅',
-      titulo: 'Azar nas Cartas',
-      texto: `${maisAzarado.nome} tem o maior número de derrotas: ${maisAzarado.derrotas}`
+      icone: '🎯',
+      titulo: `TOP 3 - Mais Assíduos${mes ? ' do Ano' : ''}`,
+      texto: texto
     });
   }
   
-  // 7. Jogador mais equilibrado (com mais empates)
-  const maisEmpates = estatisticas.reduce((max, stat) => 
-    stat.empates > max.empates ? stat : max
-  );
-  if (maisEmpates.empates > 0) {
+  // 4. TOP 3 - Artilheiros (mais golos marcados)
+  const top3Artilheiros = [...estatisticas]
+    .sort((a, b) => b.golos_marcados - a.golos_marcados)
+    .slice(0, 3);
+  
+  if (top3Artilheiros.length > 0 && top3Artilheiros[0].golos_marcados > 0) {
+    const texto = top3Artilheiros
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.golos_marcados} golos)`)
+      .join(' • ');
     curiosidades.push({
-      icone: '⚖️',
-      titulo: 'Mestre do Equilíbrio',
-      texto: `${maisEmpates.nome} é o rei dos empates com ${maisEmpates.empates} jogos empatados`
+      icone: '🥅',
+      titulo: 'TOP 3 - Artilheiros',
+      texto: texto
     });
   }
   
-  // 8. Comparação interessante entre top 2
-  if (estatisticas.length >= 2) {
-    const primeiro = estatisticas[0];
-    const segundo = estatisticas[1];
-    const diferencaPontos = primeiro.pontos - segundo.pontos;
-    
-    if (diferencaPontos > 0) {
-      curiosidades.push({
-        icone: '🥇',
-        titulo: 'Liderança',
-        texto: `${primeiro.nome} lidera com ${diferencaPontos} ponto${diferencaPontos > 1 ? 's' : ''} de vantagem sobre ${segundo.nome}`
-      });
-    }
+  // 5. TOP 3 - Melhor Defesa (menos golos sofridos)
+  const top3Defesa = [...estatisticas]
+    .sort((a, b) => a.golos_sofridos - b.golos_sofridos)
+    .slice(0, 3);
+  
+  if (top3Defesa.length > 0) {
+    const texto = top3Defesa
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.golos_sofridos} sofridos)`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '🛡️',
+      titulo: 'TOP 3 - Melhor Defesa',
+      texto: texto
+    });
+  }
+  
+  // 6. TOP 3 - Mais Pontos
+  const top3Pontos = [...estatisticas]
+    .sort((a, b) => b.pontos - a.pontos)
+    .slice(0, 3);
+  
+  if (top3Pontos.length > 0) {
+    const texto = top3Pontos      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.pontos} pts)`)      .join(' • ');
+    curiosidades.push({
+      icone: '🏆',
+      titulo: 'TOP 3 - Mais Pontos',
+      texto: texto
+    });
   }
   
   return curiosidades;

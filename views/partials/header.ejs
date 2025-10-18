@@ -1,57 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Peladas das Quintas Feiras</title>
-  <link rel="stylesheet" href="/style.base.css">
-  <link rel="stylesheet" href="/style.layout.css">
-  <link rel="stylesheet" href="/style.tables.css">
-  <link rel="stylesheet" href="/style.cards.css">
-  <link rel="stylesheet" href="/style.forms.css">
-  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="/logo.svg">
-  <link rel="shortcut icon" href="/logo.svg">
-</head>
-<body class="main-bg">
-  <header class="header">
-    <div class="logo-area">
-      <img src="/logo.svg" alt="Logo" class="logo-image">
-      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
-    </div>
-    <nav class="navbar">
-      <a href="/convocatoria" class="nav-link">Convocatória</a>
-      <a href="/coletes" class="nav-link">Coletes</a>
-      <a href="/" class="nav-link">Resultados</a>
-      <a href="/estatisticas" class="nav-link">Estatísticas</a>
-      <a href="/jogos/novo" class="nav-link">Registar Resultado</a>
-      <a href="/jogadores" class="nav-link">Admin</a>
-    </nav>
-
-    <% if (typeof user !== 'undefined' && user) { %>
-      <div class="user-info">
-        <span class="username">👤 <%= user.username %></span>
-        <% if (user.role === 'admin') { %>
-          <span class="user-role">Admin</span>
-        <% } else { %>
-          <a href="/dashboard" class="dashboard-link">📊 Dashboard</a>
-        <% } %>
-        <form method="POST" action="/logout" style="display: inline;">
-          <button type="submit" class="logout-btn">🚪 Logout</button>
-        </form>
-      </div>
+<header class="header">
+  <div class="logo-area">
+    <img src="/logo.svg" alt="Logo" class="logo-image">
+    <span class="logo-text">Peladas das<br>Quintas Feiras</span>
+  </div>
+  <nav class="navbar">
+    <a href="/convocatoria" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'convocatoria' ? 'active' : '' %>">Convocatória</a>
+    <a href="/coletes" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'coletes' ? 'active' : '' %>">Coletes</a>
+    <a href="/" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'resultados' ? 'active' : '' %>">Resultados</a>
+    <a href="/estatisticas" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'estatisticas' ? 'active' : '' %>">Estatísticas</a>
+    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+      <a href="/jogos/novo" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'novo-jogo' ? 'active' : '' %>">Registar Resultado</a>
+      <a href="/jogadores" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'admin' ? 'active' : '' %>">Admin</a>
     <% } %>
-  </header>
+  </nav>
 
-  <main class="container">
-
-  <script>
-    // Marca automaticamente a nav-link activa com base na path
-    (function(){
-      try {
-        var path = window.location.pathname;
-        document.querySelectorAll('.navbar a').forEach(function(a){
-          if (a.getAttribute('href') === path) a.classList.add('active');
-        });
-      } catch(e) { /* ignore */ }
-    })();
-  </script>
+  <% if (typeof user !== 'undefined' && user) { %>
+    <div class="user-info">
+      <span class="username">👤 <%= user.username %></span>
+      <% if (user.role === 'admin') { %>
+        <span class="user-role">Admin</span>
+      <% } else { %>
+        <a href="/dashboard" class="dashboard-link">📊 Dashboard</a>
+      <% } %>
+      <form method="POST" action="/logout" style="display: inline;">      <button type="submit" class="logout-btn">🚪 Logout</button>
+      </form>
+    </div>
+  <% } %>
+</header>

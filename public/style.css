@@ -559,6 +559,40 @@ button:hover {
 }
 
 .curiosidade-content p {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* TOP 3 styling - make it more prominent */
+.curiosidade-card[data-top3="true"],
+.curiosidade-card:has(.curiosidade-content h4:contains("TOP 3")) {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 249, 250, 0.95)) !important;
+  border: 2px solid rgba(0, 123, 255, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.08);
+}
+
+.curiosidade-content h4 {
+  position: relative;
+}
+
+/* Add gold accent to TOP 3 titles */
+.curiosidade-content h4:first-letter {
+  color: var(--accent);
+}
+
+/* Enhance TOP 3 medal icons */
+.curiosidade-icon {
+  position: relative;
+  animation: none;
+}
+
+.curiosidade-card:hover .curiosidade-icon {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
   font-size: 0.9rem;
   color: var(--muted) !important;
   margin: 0;
