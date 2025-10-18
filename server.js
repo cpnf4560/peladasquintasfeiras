@@ -145,7 +145,6 @@ const initDatabase = async () => {
       created_at ${USE_POSTGRES ? 'TIMESTAMP DEFAULT NOW()' : "DATETIME DEFAULT CURRENT_TIMESTAMP"}
     )`
   ];
-
   for (const query of queries) {
     await new Promise((resolve, reject) => {
       db.query(query, [], (err) => {
@@ -154,6 +153,52 @@ const initDatabase = async () => {
       });
     });
   }
+
+  // 🔧 MIGRAÇÃO: Adicionar coluna observacoes se não existir
+  console.log('🔧 Checking for observacoes column...');
+  const checkColumnSql = USE_POSTGRES
+    ? `SELECT column_name FROM information_schema.columns WHERE table_name = 'jogos' AND column_name = 'observacoes'`
+    : `PRAGMA table_info(jogos)`;
+
+  await new Promise((resolve) => {
+    db.query(checkColumnSql, [], (err, rows) => {
+      if (err) {
+        console.error('⚠️ Error checking observacoes column:', err);
+        resolve();
+        return;
+      }
+
+      let columnExists = false;
+      if (USE_POSTGRES) {
+        columnExists = rows && rows.length > 0;
+      } else {
+        columnExists = rows && rows.some(row => row.name === 'observacoes');
+      }
+
+      if (columnExists) {
+        console.log('✅ Column observacoes already exists');
+        resolve();
+      } else {
+        console.log('➕ Adding column observacoes to jogos table...');
+        const alterSql = `ALTER TABLE jogos ADD COLUMN observacoes TEXT`;
+        db.query(alterSql, [], (err) => {
+          if (err) {
+            // Check for "already exists" errors
+            if (err.message && (err.message.includes('duplicate column') || 
+                err.message.includes('already exists') ||
+                err.code === '42701')) {
+              console.log('✅ Column observacoes already exists (caught by error)');
+            } else {
+              console.error('⚠️ Error adding observacoes column:', err.message);
+            }
+          } else {
+            console.log('✅ Column observacoes added successfully!');
+          }
+          resolve();
+        });
+      }
+    });
+  });
 
   // Criar utilizadores padrão se não existirem
   const checkUsers = 'SELECT COUNT(*) as count FROM users';
