@@ -246,5 +246,26 @@ router.post('/:id/delete', requireAdmin, (req, res) => {
   });
 });
 
+// Atualizar observações
+router.post('/:id/observacoes', requireAdmin, (req, res) => {
+  const jogoId = req.params.id;
+  const { observacoes } = req.body;
+
+  console.log('📝 Atualizando observações do jogo:', jogoId, observacoes);
+
+  db.query(
+    'UPDATE jogos SET observacoes = ? WHERE id = ?',
+    [observacoes || '', jogoId],
+    function(err) {
+      if (err) {
+        console.error('Erro ao atualizar observações:', err);
+        return res.status(500).send('Erro ao atualizar observações');
+      }
+
+      res.redirect('/jogos');
+    }
+  );
+});
+
 console.log('Módulo de rotas dos jogos carregado com sucesso');
 module.exports = router;

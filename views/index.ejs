@@ -7,64 +7,214 @@
   <link rel="shortcut icon" href="/logo.svg">
 </head>
 <body class="main-bg">
-  <%- include('partials/header', { user: user }) %>
+  <%- include('partials/header', { user: user }) %>  <main class="container">
+    <div class="page-header-modern">
+      <h2 class="section-title">⚽ Histórico de Resultados</h2>
+      <p class="section-subtitle-modern">Todos os jogos registados, ordenados do mais recente para o mais antigo</p>
+    </div>
 
-  <main class="container">
-    <h2 class="section-title">Histórico de Resultados</h2>
-    <div class="games-grid">
-      <% jogos.forEach(jogo => { %>
-      <div class="game-card" data-game-id="<%= jogo.id %>">
-        <div class="game-card-header">
-          <div class="game-card-title">Resultado</div>
-          <div class="game-card-meta">
-            <div class="game-date"><%= new Date(jogo.data).toLocaleDateString('pt-PT') %></div>
-            <form method="POST" action="/jogos/<%= jogo.id %>/delete" class="delete-form" onsubmit="return confirm('Tem certeza que deseja eliminar este jogo? Esta ação não pode ser desfeita.')">
-              <button type="submit" class="btn-delete-game" title="Eliminar jogo">🗑️</button>
-            </form>
-          </div>
-        </div>        <div class="game-card-body">
-          <div class="team team-left">
-            <h3 class="team-name">Equipa 1</h3>
-            <div class="player-names">
-              <% if (jogo.jogadores_equipa1 && jogo.jogadores_equipa1.length > 0) { %>
-                <% jogo.jogadores_equipa1.slice(0, 5).forEach((jogador) => { %>
-                  <div class="player-name"><%= jogador.nome %></div>
-                <% }) %>
-                <% if (jogo.jogadores_equipa1.length > 5) { %>
-                  <div class="player-more">+<%= jogo.jogadores_equipa1.length - 5 %> mais</div>
-                <% } %>
-              <% } else { %>
-                <div class="player-name" style="color: #888; font-style: italic;">Sem jogadores registados</div>
-              <% } %>
-            </div>
-          </div>
+    <!-- Estatísticas TOP 3 -->
+    <% 
+      // Calcular estatísticas
+      const jogosComDiferenca = jogos.map(j => ({
+        ...j,
+        diferenca: Math.abs(j.equipa1_golos - j.equipa2_golos),
+        totalGolos: j.equipa1_golos + j.equipa2_golos
+      }));
 
-          <div class="score-section">
-            <div class="team-score team-score-left"><%= jogo.equipa1_golos %></div>
-            <div class="score-separator">VS</div>
-            <div class="team-score team-score-right"><%= jogo.equipa2_golos %></div>
-          </div>
+      const top3Goleadas = [...jogosComDiferenca]
+        .filter(j => j.diferenca > 0)
+        .sort((a, b) => b.diferenca - a.diferenca)
+        .slice(0, 3);
 
-          <div class="team team-right">
-            <h3 class="team-name">Equipa 2</h3>
-            <div class="player-names">
-              <% if (jogo.jogadores_equipa2 && jogo.jogadores_equipa2.length > 0) { %>
-                <% jogo.jogadores_equipa2.slice(0, 5).forEach((jogador) => { %>
-                  <div class="player-name"><%= jogador.nome %></div>
-                <% }) %>
-                <% if (jogo.jogadores_equipa2.length > 5) { %>
-                  <div class="player-more">+<%= jogo.jogadores_equipa2.length - 5 %> mais</div>
-                <% } %>
-              <% } else { %>
-                <div class="player-name" style="color: #888; font-style: italic;">Sem jogadores registados</div>
-              <% } %>
-            </div>
+      const top3MaisGolos = [...jogosComDiferenca]
+        .sort((a, b) => b.totalGolos - a.totalGolos)
+        .slice(0, 3);
+
+      const top3MenosGolos = [...jogosComDiferenca]
+        .filter(j => j.totalGolos > 0)
+        .sort((a, b) => a.totalGolos - b.totalGolos)
+        .slice(0, 3);
+    %>
+
+    <% if (jogos && jogos.length > 0) { %>
+      <div class="stats-top3-container">
+        <!-- TOP 3 - Goleadas -->
+        <div class="stat-top3-card">
+          <div class="stat-top3-header">
+            <span class="stat-top3-icon">🔥</span>
+            <h3 class="stat-top3-title">Maiores Goleadas</h3>
+          </div>
+          <div class="stat-top3-list">
+            <% top3Goleadas.forEach((jogo, idx) => { %>
+              <div class="stat-top3-item">
+                <span class="stat-rank">#<%= idx + 1 %></span>
+                <span class="stat-score"><%= jogo.equipa1_golos %> - <%= jogo.equipa2_golos %></span>
+                <span class="stat-detail">(<%= jogo.diferenca %> golos)</span>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- TOP 3 - Mais Golos -->
+        <div class="stat-top3-card">
+          <div class="stat-top3-header">
+            <span class="stat-top3-icon">⚽</span>
+            <h3 class="stat-top3-title">Mais Golos</h3>
+          </div>
+          <div class="stat-top3-list">
+            <% top3MaisGolos.forEach((jogo, idx) => { %>
+              <div class="stat-top3-item">
+                <span class="stat-rank">#<%= idx + 1 %></span>
+                <span class="stat-score"><%= jogo.equipa1_golos %> - <%= jogo.equipa2_golos %></span>
+                <span class="stat-detail">(<%= jogo.totalGolos %> golos)</span>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- TOP 3 - Menos Golos -->
+        <div class="stat-top3-card">
+          <div class="stat-top3-header">
+            <span class="stat-top3-icon">🛡️</span>
+            <h3 class="stat-top3-title">Menos Golos</h3>
+          </div>
+          <div class="stat-top3-list">
+            <% top3MenosGolos.forEach((jogo, idx) => { %>
+              <div class="stat-top3-item">
+                <span class="stat-rank">#<%= idx + 1 %></span>
+                <span class="stat-score"><%= jogo.equipa1_golos %> - <%= jogo.equipa2_golos %></span>
+                <span class="stat-detail">(<%= jogo.totalGolos %> golos)</span>
+              </div>
+            <% }) %>
           </div>
         </div>
       </div>
+    <% } %>
+
+    <div class="games-grid-modern">
+      <% jogos.forEach(jogo => { %>
+        <% 
+          const isEquipa1Winner = jogo.equipa1_golos > jogo.equipa2_golos;
+          const isEquipa2Winner = jogo.equipa2_golos > jogo.equipa1_golos;
+          const isDraw = jogo.equipa1_golos === jogo.equipa2_golos;
+          const totalGoals = jogo.equipa1_golos + jogo.equipa2_golos;
+        %>
+        
+        <div class="game-card-modern <%= isDraw ? 'draw' : '' %>" data-game-id="<%= jogo.id %>">
+          <!-- Header -->
+          <div class="game-card-header-modern">
+            <div class="game-info-badges">
+              <span class="game-badge date-badge">📅 <%= new Date(jogo.data).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) %></span>
+              <span class="game-badge goals-badge">⚽ <%= totalGoals %> golos</span>
+            </div>
+            <div class="game-actions">
+              <button class="btn-obs-modern" onclick="toggleObs('<%= jogo.id %>')" title="Adicionar/editar observações">
+                📝
+              </button>
+              <form method="POST" action="/jogos/<%= jogo.id %>/delete" class="delete-form-modern" onsubmit="return confirm('⚠️ Tem certeza que deseja eliminar este jogo?\nEsta ação não pode ser desfeita.')">
+                <button type="submit" class="btn-delete-modern" title="Eliminar jogo">
+                  🗑️
+                </button>
+              </form>
+            </div>
+          </div>          <!-- Score Section -->
+          <div class="game-score-modern">
+            <div class="team-score-container-vertical <%= isEquipa1Winner ? 'winner' : isEquipa2Winner ? 'loser' : 'draw' %>">
+              <div class="team-label-modern">Equipa 1</div>
+              <div class="score-number-modern"><%= jogo.equipa1_golos %></div>
+              <% if (isEquipa1Winner) { %>
+                <div class="winner-badge-modern">Vitória</div>
+              <% } %>
+            </div>
+
+            <div class="score-divider-modern">
+              <% if (isDraw) { %>
+                <span class="draw-badge-modern">Empate</span>
+              <% } else { %>
+                <span class="vs-text-modern">-</span>
+              <% } %>
+            </div>
+
+            <div class="team-score-container-vertical <%= isEquipa2Winner ? 'winner' : isEquipa1Winner ? 'loser' : 'draw' %>">
+              <div class="team-label-modern">Equipa 2</div>
+              <div class="score-number-modern"><%= jogo.equipa2_golos %></div>
+              <% if (isEquipa2Winner) { %>
+                <div class="winner-badge-modern">Vitória</div>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Players Section - 2 Columns Side by Side -->
+          <div class="game-players-grid">
+            <div class="team-players-section green">
+              <h4 class="team-title-grid">Equipa 1</h4>
+              <div class="players-list-vertical">
+                <% if (jogo.jogadores_equipa1 && jogo.jogadores_equipa1.length > 0) { %>
+                  <% jogo.jogadores_equipa1.forEach((jogador, idx) => { %>
+                    <span class="player-name-vertical"><%= jogador.nome %></span>
+                  <% }) %>
+                <% } else { %>
+                  <span class="no-players-text">Sem jogadores</span>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="team-players-section red">
+              <h4 class="team-title-grid">Equipa 2</h4>
+              <div class="players-list-vertical">
+                <% if (jogo.jogadores_equipa2 && jogo.jogadores_equipa2.length > 0) { %>
+                  <% jogo.jogadores_equipa2.forEach((jogador, idx) => { %>
+                    <span class="player-name-vertical"><%= jogador.nome %></span>
+                  <% }) %>
+                <% } else { %>
+                  <span class="no-players-text">Sem jogadores</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Observações Form (Hidden by default) -->
+          <div id="obs-form-<%= jogo.id %>" class="obs-form-container" style="display: none;">
+            <form method="POST" action="/jogos/<%= jogo.id %>/observacoes" class="obs-form">
+              <textarea name="observacoes" placeholder="Adicione observações sobre este jogo..." class="obs-textarea" maxlength="500"><%= jogo.observacoes || '' %></textarea>
+              <div class="obs-actions">
+                <button type="submit" class="btn-save-obs">Guardar</button>
+                <button type="button" class="btn-cancel-obs" onclick="toggleObs('<%= jogo.id %>')">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Display Observações if exists -->
+          <% if (jogo.observacoes && jogo.observacoes.trim()) { %>
+            <div class="game-obs-display">
+              <%= jogo.observacoes %>
+            </div>
+          <% } %>
+        </div>
       <% }) %>
     </div>
-  </main>
+
+    <% if (!jogos || jogos.length === 0) { %>
+      <div class="empty-state-modern">
+        <div class="empty-icon">⚽</div>
+        <h3>Nenhum jogo registado</h3>
+        <p>Comece a registar os resultados dos jogos!</p>
+        <a href="/jogos/novo" class="btn btn-primary-modern">➕ Registar Novo Jogo</a>
+      </div>
+    <% } %>  </main>
+
+  <script>
+    function toggleObs(jogoId) {
+      const form = document.getElementById('obs-form-' + jogoId);
+      if (form.style.display === 'none') {
+        form.style.display = 'block';
+        form.querySelector('textarea').focus();
+      } else {
+        form.style.display = 'none';
+      }
+    }
+  </script>
 
   <%- include('partials/footer') %>
 </body>
