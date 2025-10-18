@@ -5,8 +5,12 @@ const { requireAuth } = require('../middleware/auth');
 const { normalizeRows } = require('../utils/helpers');
 
 // Função auxiliar para renderizar a view
-function renderView(res, req, estatisticasProcessadas, curiosidades, duplas, anoSelecionado, mesSelecionado, ordenacaoSelecionada) {
-  console.log('🖼️  [RENDERVIEW] Chamada com duplas:', duplas ? 'SIM' : 'NÃO');
+function renderView(res, req, estatisticasProcessadas, curiosidades, duplas, anoSelecionado, mesSelecionado, ordenacaoSelecionada, totalJogos, minimoJogos) {
+  console.log('🖼️  [RENDERVIEW] Chamada com:');
+  console.log('   - duplas:', duplas ? 'SIM' : 'NÃO');
+  console.log('   - totalJogos:', totalJogos);
+  console.log('   - minimoJogos:', minimoJogos);
+  console.log('   - estatisticas:', estatisticasProcessadas?.length || 0);
   if (duplas) {
     console.log('   melhorVitorias:', duplas.melhorVitorias ? duplas.melhorVitorias.length : 'undefined');
     console.log('   piorVitorias:', duplas.piorVitorias ? duplas.piorVitorias.length : 'undefined');
@@ -22,7 +26,9 @@ function renderView(res, req, estatisticasProcessadas, curiosidades, duplas, ano
     totalJogosMes: 0,
     minimoJogosParaMVP: 0,
     duplas: duplas,
-    curiosidades
+    curiosidades,
+    totalJogos: totalJogos || 0,
+    minimoJogos: minimoJogos || 0
   });
 }
 
@@ -70,12 +76,14 @@ router.get('/estatisticas', requireAuth, (req, res) => {
     LEFT JOIN presencas p ON jog.id = p.jogador_id
     LEFT JOIN jogos j ON p.jogo_id = j.id
     WHERE jog.suspenso = 0 AND j.data LIKE '${anoSelecionado}-%'
-    GROUP BY jog.id, jog.nome
-    HAVING COUNT(DISTINCT j.id) > 0`;
-
-  db.query(queryEstatisticas, [], (err, estatisticas) => {
-    if (err) {
-      console.error('❌ Erro ao buscar estatísticas:', err);
+    GROUP BY jog.id, jog.nome    HAVING COUNT(DISTINCT j.id) > 0`;
+  // Query para contar total de jogos (para calcular 25%)
+  // Remove o alias 'j.' porque não existe na query de contagem
+  let filtroDataSemAlias = filtroData.replace(/j\.data/g, 'data');
+  const queryTotalJogos = `SELECT COUNT(*) as total FROM jogos WHERE 1=1 ${filtroDataSemAlias}`;
+    db.query(queryTotalJogos, [], (errTotal, totalResult) => {
+    if (errTotal) {
+      console.error('❌ Erro ao contar total de jogos:', errTotal);
       return res.render('estatisticas', {
         user: req.session.user,
         estatisticas: [],
@@ -86,42 +94,113 @@ router.get('/estatisticas', requireAuth, (req, res) => {
         totalJogosMes: 0,
         minimoJogosParaMVP: 0,
         curiosidades: [],
-        duplas: null
+        duplas: null,
+        totalJogos: 0,
+        minimoJogos: 0
       });
     }
 
-    console.log(`✅ Estatísticas encontradas: ${estatisticas?.length || 0} jogadores`);    const estatisticasProcessadas = estatisticas.map(stat => ({
+    const totalJogos = totalResult[0]?.total || totalResult[0]?.Total || totalResult[0]?.COUNT || 0;
+    const minimoJogos = Math.ceil(totalJogos * 0.25); // 25% dos jogos
+    
+    console.log(`📊 Total de jogos no período: ${totalJogos}, Mínimo necessário (25%): ${minimoJogos}`);
+
+    db.query(queryEstatisticas, [], (err, estatisticas) => {
+      if (err) {
+        console.error('❌ Erro ao buscar estatísticas:', err);
+        return res.render('estatisticas', {
+          user: req.session.user,
+          estatisticas: [],
+          anoSelecionado,
+          mesSelecionado,
+          ordenacaoSelecionada,
+          mvpMensais: [],
+          totalJogosMes: 0,
+          minimoJogosParaMVP: 0,
+          curiosidades: [],
+          duplas: null,
+          totalJogos: 0,
+          minimoJogos: 0
+        });
+      }
+
+      console.log(`✅ Estatísticas encontradas: ${estatisticas?.length || 0} jogadores`);    const estatisticasProcessadas = estatisticas.map(stat => ({
       ...stat,
       pontos: (stat.vitorias * 3) + (stat.empates * 1),
       diferenca_golos: stat.golos_marcados - stat.golos_sofridos,
-      media_pontos: stat.jogos > 0 ? ((stat.vitorias * 3) + (stat.empates * 1)) / stat.jogos : 0
+      media_pontos: stat.jogos > 0 ? ((stat.vitorias * 3) + (stat.empates * 1)) / stat.jogos : 0,
+      temMinimoJogos: stat.jogos >= minimoJogos
     }));
 
-    // sorting
+    // Separar jogadores com e sem mínimo de jogos
+    const comMinimoJogos = estatisticasProcessadas.filter(s => s.temMinimoJogos);
+    const semMinimoJogos = estatisticasProcessadas.filter(s => !s.temMinimoJogos);
+
+    // Ordenar jogadores COM mínimo de jogos
     if (ordenacaoSelecionada === 'percentagem') {
-      estatisticasProcessadas.sort((a, b) => {
+      comMinimoJogos.sort((a, b) => {
         if (a.percentagem_vitorias !== b.percentagem_vitorias) return b.percentagem_vitorias - a.percentagem_vitorias;
         if (a.diferenca_golos !== b.diferenca_golos) return b.diferenca_golos - a.diferenca_golos;
         if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
         return b.jogos - a.jogos;
       });
     } else if (ordenacaoSelecionada === 'mediaPontos') {
-      estatisticasProcessadas.sort((a, b) => {
+      comMinimoJogos.sort((a, b) => {
         if (a.media_pontos !== b.media_pontos) return b.media_pontos - a.media_pontos;
         if (a.diferenca_golos !== b.diferenca_golos) return b.diferenca_golos - a.diferenca_golos;
         if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
         return b.jogos - a.jogos;
       });
     } else {
-      estatisticasProcessadas.sort((a, b) => {
+      comMinimoJogos.sort((a, b) => {
         if (a.pontos !== b.pontos) return b.pontos - a.pontos;
         if (a.diferenca_golos !== b.diferenca_golos) return b.diferenca_golos - a.diferenca_golos;
         if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
-        return b.jogos - a.jogos;      });
-    }const { gerarCuriosidades } = require('../server');
+        return b.jogos - a.jogos;
+      });
+    }
+
+    // Ordenar jogadores SEM mínimo de jogos (mesma lógica)
+    if (ordenacaoSelecionada === 'percentagem') {
+      semMinimoJogos.sort((a, b) => {
+        if (a.percentagem_vitorias !== b.percentagem_vitorias) return b.percentagem_vitorias - a.percentagem_vitorias;
+        if (a.diferenca_golos !== b.diferenca_golos) return b.diferenca_golos - a.diferenca_golos;
+        if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
+        return b.jogos - a.jogos;
+      });
+    } else if (ordenacaoSelecionada === 'mediaPontos') {
+      semMinimoJogos.sort((a, b) => {
+        if (a.media_pontos !== b.media_pontos) return b.media_pontos - a.media_pontos;
+        if (a.diferenca_golos !== b.diferenca_golos) return b.diferenca_golos - a.diferenca_golos;
+        if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
+        return b.jogos - a.jogos;
+      });
+    } else {
+      semMinimoJogos.sort((a, b) => {
+        if (a.pontos !== b.pontos) return b.pontos - a.pontos;
+        if (a.diferenca_golos !== b.diferenca_golos) return b.diferenca_golos - a.diferenca_golos;
+        if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
+        return b.jogos - a.jogos;
+      });
+    }
+
+    // Combinar: primeiro os com mínimo, depois os sem
+    const estatisticasOrdenadas = [...comMinimoJogos, ...semMinimoJogos];    const { gerarCuriosidades } = require('../server');
     
-    // Query para duplas
+    // Query para duplas - incluir apenas jogadores com pelo menos 25% de presenças
     const queryDuplas = `
+      WITH jogadores_ativos AS (
+        SELECT 
+          jog.id,
+          jog.nome,
+          COUNT(DISTINCT j.id) as total_jogos
+        FROM jogadores jog
+        LEFT JOIN presencas p ON jog.id = p.jogador_id
+        LEFT JOIN jogos j ON p.jogo_id = j.id
+        WHERE jog.suspenso = 0 ${filtroData}
+        GROUP BY jog.id, jog.nome
+        HAVING COUNT(DISTINCT j.id) >= ${minimoJogos}
+      )
       SELECT 
         j1.nome as jogador1,
         j2.nome as jogador2,
@@ -143,8 +222,8 @@ router.get('/estatisticas', requireAuth, (req, res) => {
             THEN 1 ELSE 0 END) * 100.0) / COUNT(DISTINCT jogo.id), 1
         ) as percentagem_vitorias      FROM presencas p1
       JOIN presencas p2 ON p1.jogo_id = p2.jogo_id AND p1.equipa = p2.equipa AND p1.jogador_id < p2.jogador_id
-      JOIN jogadores j1 ON p1.jogador_id = j1.id
-      JOIN jogadores j2 ON p2.jogador_id = j2.id
+      JOIN jogadores_ativos j1 ON p1.jogador_id = j1.id
+      JOIN jogadores_ativos j2 ON p2.jogador_id = j2.id
       JOIN jogos jogo ON p1.jogo_id = jogo.id
       WHERE jogo.equipa1_golos IS NOT NULL 
         AND jogo.equipa2_golos IS NOT NULL
@@ -152,6 +231,8 @@ router.get('/estatisticas', requireAuth, (req, res) => {
       GROUP BY j1.id, j2.id, j1.nome, j2.nome      HAVING COUNT(DISTINCT jogo.id) >= 3
       ORDER BY percentagem_vitorias DESC
     `;
+    
+    console.log('🔍 Query de duplas com mínimo de jogos:', minimoJogos);
     
     db.query(queryDuplas, [], (errDuplas, duplasResult) => {
       console.log('🔍 [DUPLAS DEBUG] Erro?', errDuplas ? errDuplas.message : 'Nenhum');
@@ -194,8 +275,7 @@ router.get('/estatisticas', requireAuth, (req, res) => {
         console.log('   errDuplas?', !!errDuplas);
         console.log('   duplasResult existe?', !!duplasResult);
         console.log('   duplasResult.length:', duplasResult ? duplasResult.length : 'N/A');
-      }
-      // Buscar estatísticas do ano completo se estiver filtrado por mês
+      }      // Buscar estatísticas do ano completo se estiver filtrado por mês
     if (mesSelecionado) {
       db.query(queryEstatisticasAno, [], (errAno, estatisticasAno) => {
         const statsAnoProcessadas = (estatisticasAno || []).map(stat => ({
@@ -203,17 +283,18 @@ router.get('/estatisticas', requireAuth, (req, res) => {
           pontos: 0,
           diferenca_golos: 0
         }));
-        const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasProcessadas, anoSelecionado, mesSelecionado, statsAnoProcessadas) : [];
+        const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasOrdenadas, anoSelecionado, mesSelecionado, statsAnoProcessadas) : [];
         console.log('🎯 [RENDER] Renderizando com mês selecionado, duplas:', duplasProcessadas ? 'SIM' : 'NÃO');
-        renderView(res, req, estatisticasProcessadas, curiosidades, duplasProcessadas, anoSelecionado, mesSelecionado, ordenacaoSelecionada);
+        renderView(res, req, estatisticasOrdenadas, curiosidades, duplasProcessadas, anoSelecionado, mesSelecionado, ordenacaoSelecionada, totalJogos, minimoJogos);
       });
     } else {
-      const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasProcessadas, anoSelecionado, mesSelecionado) : [];
+      const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasOrdenadas, anoSelecionado, mesSelecionado) : [];
       console.log('🎯 [RENDER] Renderizando sem mês, duplas:', duplasProcessadas ? 'SIM' : 'NÃO');
       console.log('   Duplas object:', JSON.stringify(duplasProcessadas ? Object.keys(duplasProcessadas) : null));
-      renderView(res, req, estatisticasProcessadas, curiosidades, duplasProcessadas, anoSelecionado, mesSelecionado, ordenacaoSelecionada);
+      renderView(res, req, estatisticasOrdenadas, curiosidades, duplasProcessadas, anoSelecionado, mesSelecionado, ordenacaoSelecionada, totalJogos, minimoJogos);
     }
     });  });
+  });
 });
 
 module.exports = router;
