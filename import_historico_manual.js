@@ -2,13 +2,12 @@
 const { db } = require('./db');
 
 const jogos = [
-  // Imagem 1
-  {
+  // Imagem 1  {
     data: '2025-07-31',
     equipa1_golos: 8,
     equipa2_golos: 9,
     equipa1: ['Ismael Campos', 'Joaquim Rocha', 'João Couto', 'Nuno Ferreira', 'Rogério Silva'],
-    equipa2: ['Carlos Correia', 'João Couto', 'Ricardo Sousa', 'Rui', 'Valter Pinho']
+    equipa2: ['Carlos Correia', 'João Couto', 'Ricardo Sousa', 'Rui Lopes', 'Valter Pinho']
   },
   {
     data: '2025-07-24',
@@ -30,12 +29,11 @@ const jogos = [
     equipa2_golos: 6,
     equipa1: ['Carlos Silva', 'Flávio Silva', 'João Couto', 'Paulo Pinto', 'Rogério Silva'],
     equipa2: ['Carlos Correia', 'Césaro Cruz', 'Ismael Campos', 'Joel Almeida', 'Manuel Rocha']
-  },
-  {
+  },  {
     data: '2025-07-03',
     equipa1_golos: 8,
     equipa2_golos: 7,
-    equipa1: ['Joel Almeida', 'João Couto', 'Leonardo Sousa', 'Paulo Pinto', 'Rui'],
+    equipa1: ['Joel Almeida', 'João Couto', 'Leonardo Sousa', 'Paulo Pinto', 'Rui Lopes'],
     equipa2: ['Carlos Correia', 'Césaro Cruz', 'Flávio Silva', 'Ismael Campos', 'Rogério Silva']
   },
   {
@@ -51,21 +49,19 @@ const jogos = [
     equipa2_golos: 8,
     equipa1: ['Carlos Correia', 'Carlos Silva', 'Césaro Cruz', 'João Couto', 'Rogério Silva'],
     equipa2: ['Filipe Garcês', 'Flávio Silva', 'Nuno Ferreira', 'Paulo Pinto', 'Pedro Lopes']
-  },
-  {
+  },  {
     data: '2025-06-12',
     equipa1_golos: 4,
     equipa2_golos: 18,
-    equipa1: ['Flávio Silva', 'Nuno Ferreira', 'Pedro Lopes', 'Rogério Silva', 'Rui'],
+    equipa1: ['Flávio Silva', 'Nuno Ferreira', 'Pedro Lopes', 'Rogério Silva', 'Rui Lopes'],
     equipa2: ['Carlos Correia', 'Césaro Cruz', 'Joel Almeida', 'João Couto', 'Valter Pinho']
   },
-  // Imagem 2
-  {
+  // Imagem 2  {
     data: '2025-06-05',
     equipa1_golos: 13,
     equipa2_golos: 7,
     equipa1: ['Flávio Silva', 'Joel Almeida', 'Nuno Ferreira', 'Pedro Lopes', 'Rogério Silva'],
-    equipa2: ['Carlos Correia', 'Césaro Cruz', 'João Couto', 'Rui', 'Valter Pinho']
+    equipa2: ['Carlos Correia', 'Césaro Cruz', 'João Couto', 'Rui Lopes', 'Valter Pinho']
   },
   {
     data: '2025-05-29',
@@ -73,12 +69,11 @@ const jogos = [
     equipa2_golos: 8,
     equipa1: ['Césaro Cruz', 'Flávio Silva', 'Ismael Campos', 'Joaquim Rocha', 'Ricardo Sousa'],
     equipa2: ['Carlos Correia', 'Nuno Ferreira', 'Rogério Silva', 'Valter Pinho']
-  },
-  {
+  },  {
     data: '2025-05-22',
     equipa1_golos: 5,
     equipa2_golos: 2,
-    equipa1: ['Carlos Silva', 'Césaro Cruz', 'Ismael Campos', 'Nuno Ferreira', 'Rui'],
+    equipa1: ['Carlos Silva', 'Césaro Cruz', 'Ismael Campos', 'Nuno Ferreira', 'Rui Lopes'],
     equipa2: ['Carlos Correia', 'Flávio Silva', 'Joaquim Rocha', 'Pedro Lopes', 'Rogério Silva']
   },
   {
