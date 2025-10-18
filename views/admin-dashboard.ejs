@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin - Futsal Manager</title>
+  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <style>
+    .admin-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .admin-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .admin-header h1 {
+      margin: 0 0 10px 0;
+      font-size: 2.5em;
+    }
+    .admin-header p {
+      margin: 0;
+      opacity: 0.9;
+    }
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .admin-card {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .admin-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .admin-card h2 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 1.5em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-card .icon {
+      font-size: 2em;
+    }
+    .admin-card p {
+      color: #666;
+      margin: 0 0 20px 0;
+      line-height: 1.6;
+    }
+    .btn-admin {
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    .btn-admin:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    .btn-backup {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .btn-backup:hover {
+      box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+    }
+    .btn-secondary {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      margin-left: 10px;
+    }
+    .btn-secondary:hover {
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      border-left: 4px solid #667eea;
+    }
+    .stat-box .number {
+      font-size: 2em;
+      font-weight: bold;
+      color: #667eea;
+      display: block;
+    }
+    .stat-box .label {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 5px;
+    }
+    .info-note {
+      background: #e7f3ff;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 4px;
+    }
+    .info-note p {
+      margin: 0;
+      color: #1976D2;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      color: #667eea;
+    }
+    .loading.active {
+      display: block;
+    }
+  </style>
+</head>
+<body class="main-bg">
+  <header class="header">
+    <div class="logo-area">
+      <img src="/logo.svg" alt="Logo" class="logo-image">
+      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
+    </div>
+    <nav class="navbar">
+      <a href="/convocatoria" class="nav-link">Convocatória</a>
+      <a href="/coletes" class="nav-link">Coletes</a>
+      <a href="/" class="nav-link">Resultados</a>
+      <a href="/estatisticas" class="nav-link">Estatísticas</a>
+      <a href="/jogos/novo" class="nav-link">Registar Resultado</a>
+      <a href="/jogadores" class="nav-link">Admin</a>
+    </nav>
+  </header>
+
+  <main class="admin-container">
+    <div class="admin-header">
+      <h1>🛠️ Painel de Administração</h1>
+      <p>Bem-vindo, <strong><%= user.username %></strong> | Ferramentas administrativas</p>
+    </div>
+
+    <div class="admin-grid">
+      <!-- Backup Card -->
+      <div class="admin-card">
+        <h2><span class="icon">💾</span> Backup da Base de Dados</h2>
+        <p>Faça o download de um backup completo de todos os dados do sistema em formato ZIP. Inclui jogadores, jogos, presenças, coletes, convocatórias e muito mais.</p>
+        
+        <div id="dbStats" class="stats-grid" style="margin-bottom: 15px;">
+          <div class="stat-box">
+            <span class="number" id="totalJogadores">-</span>
+            <span class="label">Jogadores</span>
+          </div>
+          <div class="stat-box">
+            <span class="number" id="totalJogos">-</span>
+            <span class="label">Jogos</span>
+          </div>
+          <div class="stat-box">
+            <span class="number" id="totalPresencas">-</span>
+            <span class="label">Presenças</span>
+          </div>
+        </div>
+        
+        <button onclick="downloadBackup()" class="btn-admin btn-backup">
+          📥 Fazer Backup Agora
+        </button>
+        <button onclick="loadStats()" class="btn-admin btn-secondary">
+          🔄 Atualizar Estatísticas
+        </button>
+        
+        <div class="loading" id="loading">
+          <p>⏳ A preparar backup...</p>
+        </div>
+        
+        <div class="info-note">
+          <p><strong>ℹ️ Informação:</strong> O backup será exportado em formato ZIP com ficheiros CSV. Guarde-o num local seguro para restauro futuro se necessário.</p>
+        </div>
+      </div>
+
+      <!-- Database Info Card -->
+      <div class="admin-card">
+        <h2><span class="icon">📊</span> Informações do Sistema</h2>
+        <p>Estatísticas detalhadas sobre o estado atual da base de dados e do sistema.</p>
+        
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="number" id="totalColetes">-</span>
+            <span class="label">Coletes</span>
+          </div>
+          <div class="stat-box">
+            <span class="number" id="totalConvocados">-</span>
+            <span class="label">Convocados</span>
+          </div>
+          <div class="stat-box">
+            <span class="number" id="totalFaltas">-</span>
+            <span class="label">Faltas</span>
+          </div>
+          <div class="stat-box">
+            <span class="number" id="totalUsers">-</span>
+            <span class="label">Utilizadores</span>
+          </div>
+        </div>
+        
+        <div class="info-note">
+          <p><strong>💡 Dica:</strong> Use o botão "Atualizar Estatísticas" para obter os valores mais recentes da base de dados.</p>
+        </div>
+      </div>
+
+      <!-- Import/Export Card -->
+      <div class="admin-card">
+        <h2><span class="icon">🔄</span> Importação & Exportação</h2>
+        <p>Ferramentas para importar dados históricos ou exportar dados específicos para análise.</p>
+        
+        <a href="/admin/import-history" class="btn-admin">
+          📤 Importar Histórico
+        </a>
+        
+        <div class="info-note">
+          <p><strong>⚠️ Atenção:</strong> A importação de dados históricos deve ser feita com cuidado para evitar duplicações.</p>
+        </div>
+      </div>
+
+      <!-- Quick Links Card -->
+      <div class="admin-card">
+        <h2><span class="icon">🔗</span> Links Rápidos</h2>
+        <p>Acesso rápido às principais funcionalidades administrativas do sistema.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a href="/jogadores" class="btn-admin">👥 Gerir Jogadores</a>
+          <a href="/jogos/novo" class="btn-admin">⚽ Registar Novo Jogo</a>
+          <a href="/estatisticas" class="btn-admin">📈 Ver Estatísticas</a>
+          <a href="/" class="btn-admin btn-secondary">🏠 Voltar ao Início</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Função para carregar estatísticas do sistema
+    async function loadStats() {
+      try {
+        const response = await fetch('/admin/info');
+        const data = await response.json();
+        
+        // Atualizar os números na interface
+        document.getElementById('totalJogadores').textContent = data.jogadores || 0;
+        document.getElementById('totalJogos').textContent = data.jogos || 0;
+        document.getElementById('totalPresencas').textContent = data.presencas || 0;
+        document.getElementById('totalColetes').textContent = data.coletes || 0;
+        document.getElementById('totalConvocados').textContent = data.convocatoria || 0;
+        document.getElementById('totalFaltas').textContent = data.faltas || 0;
+        document.getElementById('totalUsers').textContent = data.users || 0;
+      } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+        alert('Erro ao carregar estatísticas. Por favor, tente novamente.');
+      }
+    }
+
+    // Função para fazer download do backup
+    async function downloadBackup() {
+      const loading = document.getElementById('loading');
+      loading.classList.add('active');
+      
+      try {
+        // Criar um link temporário para download
+        const link = document.createElement('a');
+        link.href = '/admin/backup';
+        link.download = `backup_futsal_${new Date().toISOString().split('T')[0]}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => {
+          loading.classList.remove('active');
+          alert('✅ Backup concluído! O ficheiro foi descarregado.');
+        }, 2000);
+      } catch (error) {
+        loading.classList.remove('active');
+        console.error('Erro ao fazer backup:', error);
+        alert('❌ Erro ao fazer backup. Por favor, tente novamente.');
+      }
+    }
+
+    // Carregar estatísticas ao abrir a página
+    window.addEventListener('DOMContentLoaded', loadStats);
+  </script>
+</body>
+</html>

@@ -279,6 +279,7 @@ const coletesRoutes = require('./routes/coletes');
 const convocatoriaRoutes = require('./routes/convocatoria');
 const estatisticasRoutes = require('./routes/estatisticas');
 const adminRoutes = require('./routes/admin');
+const backupRoutes = require('./routes/backup');
 
 // Remove inline auth routes and use modular routes
 app.use('/', authRoutes);
@@ -298,6 +299,9 @@ app.use('/', estatisticasRoutes);
 
 // ROTAS ADMIN (temporárias para importação)
 app.use('/admin', adminRoutes);
+
+// ROTAS DE BACKUP
+app.use('/admin', backupRoutes);
 
 // Ensure root path is handled — redirect to jogos index
 app.get('/', requireAuth, (req, res) => {

@@ -1,6 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
+const { requireAdmin } = require('../middleware/auth');
+
+// Rota para painel de administração
+router.get('/dashboard', requireAdmin, (req, res) => {
+  res.render('admin-dashboard', {
+    user: req.session.user
+  });
+});
 
 const jogos = [
   { data: '2025-07-31', equipa1_golos: 8, equipa2_golos: 9, equipa1: ['Ismael Campos', 'Joaquim Rocha', 'João Couto', 'Nuno Ferreira', 'Rogério Silva'], equipa2: ['Carlos Correia', 'João Couto', 'Ricardo Sousa', 'Rui Lopes', 'Valter Pinho'] },
@@ -58,7 +66,6 @@ router.post('/import-history', async (req, res) => {
   const avisos = [];
   let sucessos = 0;
   let erros = 0;
-
   try {
     log.push('🚀 Iniciando importação...\\n');
     const jogadoresMap = await getJogadores();
