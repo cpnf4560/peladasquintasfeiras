@@ -5,7 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const { normalizeRows } = require('../utils/helpers');
 
 // Função auxiliar para renderizar a view
-function renderView(res, req, estatisticasProcessadas, curiosidades, anoSelecionado, mesSelecionado, ordenacaoSelecionada) {
+function renderView(res, req, estatisticasProcessadas, curiosidades, duplas, anoSelecionado, mesSelecionado, ordenacaoSelecionada) {
   res.render('estatisticas', {
     user: req.session.user,
     estatisticas: estatisticasProcessadas,
@@ -15,7 +15,7 @@ function renderView(res, req, estatisticasProcessadas, curiosidades, anoSelecion
     mvpMensais: [],
     totalJogosMes: 0,
     minimoJogosParaMVP: 0,
-    duplas: null,
+    duplas: duplas,
     curiosidades
   });
 }
@@ -104,6 +104,58 @@ router.get('/estatisticas', requireAuth, (req, res) => {
         return b.jogos - a.jogos;      });
     }    const { gerarCuriosidades } = require('../server');
     
+    // Query para duplas
+    const queryDuplas = `
+      SELECT 
+        j1.nome as jogador1,
+        j2.nome as jogador2,
+        COUNT(DISTINCT jogo.id) as jogos_juntos,
+        SUM(CASE 
+          WHEN (p1.equipa = p2.equipa AND p1.equipa = 1 AND jogo.equipa1_golos > jogo.equipa2_golos) OR 
+               (p1.equipa = p2.equipa AND p1.equipa = 2 AND jogo.equipa2_golos > jogo.equipa1_golos) 
+          THEN 1 ELSE 0 END) as vitorias,
+        SUM(CASE 
+          WHEN (p1.equipa = p2.equipa AND jogo.equipa1_golos = jogo.equipa2_golos) 
+          THEN 1 ELSE 0 END) as empates,
+        SUM(CASE 
+          WHEN (p1.equipa = p2.equipa AND p1.equipa = 1 AND jogo.equipa1_golos < jogo.equipa2_golos) OR 
+               (p1.equipa = p2.equipa AND p1.equipa = 2 AND jogo.equipa2_golos < jogo.equipa1_golos) 
+          THEN 1 ELSE 0 END) as derrotas,
+        ROUND(
+          (SUM(CASE 
+            WHEN (p1.equipa = p2.equipa AND p1.equipa = 1 AND jogo.equipa1_golos > jogo.equipa2_golos) OR 
+                 (p1.equipa = p2.equipa AND p1.equipa = 2 AND jogo.equipa2_golos > jogo.equipa1_golos) 
+            THEN 1 ELSE 0 END) * 100.0) / COUNT(DISTINCT jogo.id), 1
+        ) as percentagem_vitorias
+      FROM presencas p1
+      JOIN presencas p2 ON p1.jogo_id = p2.jogo_id AND p1.equipa = p2.equipa AND p1.jogador_id < p2.jogador_id
+      JOIN jogadores j1 ON p1.jogador_id = j1.id
+      JOIN jogadores j2 ON p2.jogador_id = j2.id
+      JOIN jogos jogo ON p1.jogo_id = jogo.id
+      WHERE jogo.equipa1_golos IS NOT NULL 
+        AND jogo.equipa2_golos IS NOT NULL
+        ${filtroData}
+      GROUP BY j1.id, j2.id, j1.nome, j2.nome
+      HAVING COUNT(DISTINCT jogo.id) >= 3
+      ORDER BY percentagem_vitorias DESC
+    `;
+    
+    db.query(queryDuplas, [], (errDuplas, duplasResult) => {
+      let duplasProcessadas = null;
+      
+      if (!errDuplas && duplasResult && duplasResult.length > 0) {
+        // Melhor dupla (maior % vitórias)
+        const melhorVitorias = duplasResult[0];
+        
+        // Pior dupla (menor % vitórias)
+        const piorVitorias = duplasResult[duplasResult.length - 1];
+        
+        duplasProcessadas = {
+          melhorVitorias: melhorVitorias,
+          piorVitorias: piorVitorias
+        };
+      }
+    
     // Buscar estatísticas do ano completo se estiver filtrado por mês
     if (mesSelecionado) {
       db.query(queryEstatisticasAno, [], (errAno, estatisticasAno) => {
@@ -113,12 +165,13 @@ router.get('/estatisticas', requireAuth, (req, res) => {
           diferenca_golos: 0
         }));
         const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasProcessadas, anoSelecionado, mesSelecionado, statsAnoProcessadas) : [];
-        renderView(res, req, estatisticasProcessadas, curiosidades, anoSelecionado, mesSelecionado, ordenacaoSelecionada);
+        renderView(res, req, estatisticasProcessadas, curiosidades, duplasProcessadas, anoSelecionado, mesSelecionado, ordenacaoSelecionada);
       });
     } else {
       const curiosidades = gerarCuriosidades ? gerarCuriosidades(estatisticasProcessadas, anoSelecionado, mesSelecionado) : [];
-      renderView(res, req, estatisticasProcessadas, curiosidades, anoSelecionado, mesSelecionado, ordenacaoSelecionada);
-    }  });
+      renderView(res, req, estatisticasProcessadas, curiosidades, duplasProcessadas, anoSelecionado, mesSelecionado, ordenacaoSelecionada);
+    }
+    });  });
 });
 
 module.exports = router;

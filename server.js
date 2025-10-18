@@ -219,8 +219,7 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
   
   // Usar estatísticas do ano completo para "Mais Assíduo" se disponível
   const statsParaAssiduidade = estatisticasAnoCompleto || estatisticas;
-  
-  // 1. TOP 3 - Melhor percentagem de vitórias
+    // 1. TOP 3 - Reis das % de Vitórias
   const top3Percentagem = [...estatisticas]
     .sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)
     .slice(0, 3);
@@ -231,7 +230,7 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
       .join(' • ');
     curiosidades.push({
       icone: '👑',
-      titulo: 'TOP 3 - Reis das Vitórias',
+      titulo: 'TOP 3 - Reis das % de Vitórias',
       texto: texto
     });
   }
@@ -269,7 +268,7 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
     });
   }
   
-  // 4. TOP 3 - Artilheiros (mais golos marcados)
+  // 4. TOP 3 - Golos Equipa (mais golos marcados)
   const top3Artilheiros = [...estatisticas]
     .sort((a, b) => b.golos_marcados - a.golos_marcados)
     .slice(0, 3);
@@ -280,19 +279,23 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
       .join(' • ');
     curiosidades.push({
       icone: '🥅',
-      titulo: 'TOP 3 - Artilheiros',
+      titulo: 'TOP 3 - Golos Equipa',
       texto: texto
     });
   }
   
-  // 5. TOP 3 - Melhor Defesa (menos golos sofridos)
+  // 5. TOP 3 - Melhor Defesa (golos sofridos por jogo)
   const top3Defesa = [...estatisticas]
-    .sort((a, b) => a.golos_sofridos - b.golos_sofridos)
+    .map(stat => ({
+      ...stat,
+      media_golos_sofridos: stat.jogos > 0 ? (stat.golos_sofridos / stat.jogos).toFixed(2) : 0
+    }))
+    .sort((a, b) => parseFloat(a.media_golos_sofridos) - parseFloat(b.media_golos_sofridos))
     .slice(0, 3);
   
   if (top3Defesa.length > 0) {
     const texto = top3Defesa
-      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.golos_sofridos} sofridos)`)
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.media_golos_sofridos} golos/jogo)`)
       .join(' • ');
     curiosidades.push({
       icone: '🛡️',
@@ -300,17 +303,22 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
       texto: texto
     });
   }
-  
-  // 6. TOP 3 - Mais Pontos
-  const top3Pontos = [...estatisticas]
-    .sort((a, b) => b.pontos - a.pontos)
+    // 6. TOP 3 - Média de Pontos/Jogo
+  const top3MediaPontos = [...estatisticas]
+    .map(stat => ({
+      ...stat,
+      media_pontos: stat.jogos > 0 ? (stat.pontos / stat.jogos).toFixed(1) : 0
+    }))
+    .sort((a, b) => parseFloat(b.media_pontos) - parseFloat(a.media_pontos))
     .slice(0, 3);
   
-  if (top3Pontos.length > 0) {
-    const texto = top3Pontos      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.pontos} pts)`)      .join(' • ');
+  if (top3MediaPontos.length > 0) {
+    const texto = top3MediaPontos
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.media_pontos} pts/jogo)`)
+      .join(' • ');
     curiosidades.push({
-      icone: '🏆',
-      titulo: 'TOP 3 - Mais Pontos',
+      icone: '📊',
+      titulo: 'TOP 3 - Média de Pontos/Jogo',
       texto: texto
     });
   }

@@ -63,96 +63,64 @@
           <% }) %>
         </div>
       </div>
-    <% } %>
-
-    <!-- Análise de Duplas -->
-    <% var duplasSafe = typeof duplas !== 'undefined' && duplas ? duplas : { melhores: [], piores: [], extremas: {} }; %>
-    <% if (duplasSafe.melhores.length > 0 || duplasSafe.piores.length > 0) { %>
+    <% } %>    <!-- Análise de Duplas -->
+    <% var duplasSafe = typeof duplas !== 'undefined' && duplas ? duplas : { melhores: [], piores: [] }; %>
+    <% if (duplasSafe.melhorVitorias || duplasSafe.piorVitorias) { %>
       <div class="duplas-section">
         <h3 class="duplas-title">👥 Análise de Duplas</h3>
         <p class="duplas-subtitle"><em>Duplas que jogaram pelo menos 3 jogos juntas</em></p>
         
-        <!-- Duplas Extremas -->
-        <% if (duplasSafe.extremas && (duplasSafe.extremas.maisJogos || duplasSafe.extremas.menosJogos)) { %>
-          <div class="duplas-extremas-section">
-            <h4 class="duplas-extremas-titulo">🌟 Duplas em Destaque</h4>
-            <div class="duplas-extremas-grid">
-              <% if (duplasSafe.extremas.maisJogos) { %>
-                <div class="dupla-extrema-card">
-                  <span class="dupla-extrema-label">Mais jogos juntos</span>
-                  <span class="dupla-extrema-nome"><%= duplasSafe.extremas.maisJogos.nome %></span>
-                  <span class="dupla-extrema-valor"><%= duplasSafe.extremas.maisJogos.jogos %> jogos</span>
+        <div class="duplas-destacadas-grid">
+          <!-- Melhor Dupla % Vitórias -->
+          <% if (duplasSafe.melhorVitorias) { %>
+            <div class="dupla-destacada melhor">
+              <div class="dupla-header">
+                <div class="dupla-icon">🏆</div>
+                <h4 class="dupla-categoria-titulo">Dupla com mais % de vitórias juntos</h4>
+              </div>
+              <div class="dupla-content">
+                <h3 class="dupla-nomes"><%= duplasSafe.melhorVitorias.jogador1 %> & <%= duplasSafe.melhorVitorias.jogador2 %></h3>
+                <div class="dupla-stat-destaque">
+                  <span class="stat-valor"><%= duplasSafe.melhorVitorias.percentagem_vitorias %>%</span>
+                  <span class="stat-label">de vitórias</span>
                 </div>
-              <% } %>
-              <% if (duplasSafe.extremas.menosJogos) { %>
-                <div class="dupla-extrema-card">
-                  <span class="dupla-extrema-label">Menos jogos juntos</span>
-                  <span class="dupla-extrema-nome"><%= duplasSafe.extremas.menosJogos.nome %></span>
-                  <span class="dupla-extrema-valor"><%= duplasSafe.extremas.menosJogos.jogos %> jogo<%= duplasSafe.extremas.menosJogos.jogos > 1 ? 's' : '' %></span>
-                </div>
-              <% } %>
-              <% if (duplasSafe.extremas.maisVitorias) { %>
-                <div class="dupla-extrema-card">
-                  <span class="dupla-extrema-label">Mais vitórias juntos</span>
-                  <span class="dupla-extrema-nome"><%= duplasSafe.extremas.maisVitorias.nome %></span>
-                  <span class="dupla-extrema-valor"><%= duplasSafe.extremas.maisVitorias.vitorias %> vitória<%= duplasSafe.extremas.maisVitorias.vitorias > 1 ? 's' : '' %></span>
-                </div>
-              <% } %>
-              <% if (duplasSafe.extremas.maisDerrotas) { %>
-                <div class="dupla-extrema-card">
-                  <span class="dupla-extrema-label">Mais derrotas juntos</span>
-                  <span class="dupla-extrema-nome"><%= duplasSafe.extremas.maisDerrotas.nome %></span>
-                  <span class="dupla-extrema-valor"><%= duplasSafe.extremas.maisDerrotas.derrotas %> derrota<%= duplasSafe.extremas.maisDerrotas.derrotas > 1 ? 's' : '' %></span>
-                </div>
-              <% } %>
-            </div>
-          </div>
-        <% } %>
-        <!-- Fim Duplas Extremas -->
-        
-        <div class="duplas-grid">
-          <!-- Melhores Duplas -->
-          <% if (duplasSafe.melhores.length > 0) { %>
-            <div class="duplas-categoria">
-              <h4 class="duplas-categoria-titulo">🏆 Melhores Duplas</h4>
-              <div class="duplas-cards">
-                <% duplasSafe.melhores.forEach((dupla, index) => { %>
-                  <div class="dupla-card melhor">
-                    <div class="dupla-posicao"><%= index + 1 %>º</div>
-                    <div class="dupla-info">
-                      <h5><%= dupla.nome %></h5>
-                      <div class="dupla-stats">
-                        <span class="dupla-stat-principal"><%= dupla.percentagem_vitorias %>% vitórias</span>
-                        <span class="dupla-stat">(<%= dupla.vitorias %>V <%= dupla.empates %>E <%= dupla.derrotas %>D)</span>
-                      </div>
-                      <div class="dupla-detalhes">
-                        <span><%= dupla.jogos %> jogos | +<%= dupla.diferenca_golos %> golos | <%= dupla.pontos %> pts</span>
-                      </div>
-                    </div>
+                <div class="dupla-stats-detalhadas">
+                  <div class="stat-item">
+                    <span class="stat-numero"><%= duplasSafe.melhorVitorias.vitorias %>V</span>
+                    <span class="stat-numero"><%= duplasSafe.melhorVitorias.empates || 0 %>E</span>
+                    <span class="stat-numero"><%= duplasSafe.melhorVitorias.derrotas || 0 %>D</span>
                   </div>
-                <% }) %>
+                  <div class="stat-item">
+                    <span class="stat-info"><%= duplasSafe.melhorVitorias.jogos_juntos %> jogos juntos</span>
+                  </div>
+                </div>
               </div>
             </div>
           <% } %>
           
-          <!-- Piores Duplas -->          <% if (duplasSafe.piores.length > 0) { %>
-            <div class="duplas-categoria">
-              <h4 class="duplas-categoria-titulo">💩 Duplas com Mais Dificuldades</h4>              <div class="duplas-cards">
-                <% duplasSafe.piores.forEach((dupla, index) => { %>
-                  <div class="dupla-card pior">
-                    <div class="dupla-posicao"><%= index + 1 %>º</div>
-                    <div class="dupla-info">
-                      <h5><%= dupla.nome %></h5>
-                      <div class="dupla-stats">
-                        <span class="dupla-stat-principal"><%= dupla.percentagem_vitorias %>% vitórias</span>
-                        <span class="dupla-stat">(<%= dupla.vitorias %>V <%= dupla.empates %>E <%= dupla.derrotas %>D)</span>
-                      </div>
-                      <div class="dupla-detalhes">
-                        <span><%= dupla.jogos %> jogos | <%= dupla.diferenca_golos >= 0 ? '+' : '' %><%= dupla.diferenca_golos %> golos | <%= dupla.pontos %> pts</span>
-                      </div>
-                    </div>
+          <!-- Pior Dupla % Vitórias -->
+          <% if (duplasSafe.piorVitorias) { %>
+            <div class="dupla-destacada pior">
+              <div class="dupla-header">
+                <div class="dupla-icon">💩</div>
+                <h4 class="dupla-categoria-titulo">Dupla com mais % de derrotas juntos</h4>
+              </div>
+              <div class="dupla-content">
+                <h3 class="dupla-nomes"><%= duplasSafe.piorVitorias.jogador1 %> & <%= duplasSafe.piorVitorias.jogador2 %></h3>
+                <div class="dupla-stat-destaque">
+                  <span class="stat-valor"><%= duplasSafe.piorVitorias.percentagem_vitorias %>%</span>
+                  <span class="stat-label">de vitórias</span>
+                </div>
+                <div class="dupla-stats-detalhadas">
+                  <div class="stat-item">
+                    <span class="stat-numero"><%= duplasSafe.piorVitorias.vitorias %>V</span>
+                    <span class="stat-numero"><%= duplasSafe.piorVitorias.empates || 0 %>E</span>
+                    <span class="stat-numero"><%= duplasSafe.piorVitorias.derrotas || 0 %>D</span>
                   </div>
-                <% }) %>
+                  <div class="stat-item">
+                    <span class="stat-info"><%= duplasSafe.piorVitorias.jogos_juntos %> jogos juntos</span>
+                  </div>
+                </div>
               </div>
             </div>
           <% } %>
