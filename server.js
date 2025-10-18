@@ -1,6 +1,7 @@
 console.log('Running from directory: ' + __dirname);
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const { db, USE_POSTGRES } = require('./db');
@@ -12,11 +13,60 @@ const PORT = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.disable('view cache');
+app.set('etag', false);
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('public'));
+
+// Forçar no-cache em todas as respostas (útil para debug/deploy)
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
+});
+
+// Serve static from both roots to avoid path mismatches (sem cache)
+const staticNoCacheRoot = {
+  etag: false,
+  lastModified: false,
+  maxAge: 0,
+  cacheControl: true,
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
+    res.set('X-Asset-Source', 'root-public');
+  }
+};
+
+const staticNoCacheNested = {
+  etag: false,
+  lastModified: false,
+  maxAge: 0,
+  cacheControl: true,
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
+    res.set('X-Asset-Source', 'nested-public');
+  }
+};
+
+// Logging simples para chamadas ao style.css (debug)
+app.use((req, _res, next) => {
+  if (req.path && req.path.startsWith('/style.css')) {
+    console.log(`[static] Pedido a ${req.path}`);
+  }
+  next();
+});
+
+app.use('/public', express.static(path.join(__dirname, 'public'), staticNoCacheRoot));
+app.use(express.static(path.join(__dirname, 'public'), staticNoCacheRoot));
 
 // Configuração de sessões
 app.use(session({
@@ -219,116 +269,21 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
   
   // Usar estatísticas do ano completo para "Mais Assíduo" se disponível
   const statsParaAssiduidade = estatisticasAnoCompleto || estatisticas;
-  
-  // Filtro de mínimo 5 jogos (para todas as categorias exceto "Saudades do Campo" e "Mais Assíduos")
+    // Filtro de mínimo 5 jogos (para todas as categorias exceto "Saudades do Campo" e "Mais Assíduos")
   const statsCom5Jogos = estatisticas.filter(stat => stat.jogos >= 5);
   
-  // 1. TOP 3 - Reis das % de Vitórias (mínimo 5 jogos)
-  const top3Percentagem = [...statsCom5Jogos]
-    .sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)
-    .slice(0, 3);
+  // ORDEM SOLICITADA:
+  // 1 - TOP 3 - Média de Pontos/Jogo
+  // 2 - TOP 3 - Mais Assíduos
+  // 3 - TOP 3 - % Vitórias
+  // 4 - TOP 3 - Goal Average
+  // 5 - TOP 3 - Golos Marcados
+  // 6 - TOP 3 - Golos Sofridos
+  // 7 - TOP 3 - Melhor Ataque (NOVO)
+  // 8 - TOP 3 - Melhor Defesa
+  // 9 - TOP 3 - Saudades do Campo
   
-  if (top3Percentagem.length > 0) {
-    const texto = top3Percentagem
-      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.percentagem_vitorias}%)`)
-      .join(' • ');
-    curiosidades.push({
-      icone: '👑',
-      titulo: 'TOP 3 - Reis das % de Vitórias',
-      texto: texto
-    });
-  }
-  
-  // 2. TOP 3 - Reis das % de Derrotas (mínimo 5 jogos) - NOVO
-  const top3Derrotas = [...statsCom5Jogos]
-    .map(stat => ({
-      ...stat,
-      percentagem_derrotas: stat.jogos > 0 ? ((stat.derrotas / stat.jogos) * 100).toFixed(1) : 0
-    }))
-    .sort((a, b) => parseFloat(b.percentagem_derrotas) - parseFloat(a.percentagem_derrotas))
-    .slice(0, 3);
-  
-  if (top3Derrotas.length > 0) {
-    const texto = top3Derrotas
-      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.percentagem_derrotas}%)`)
-      .join(' • ');
-    curiosidades.push({
-      icone: '💀',
-      titulo: 'TOP 3 - Reis das % de Derrotas',
-      texto: texto
-    });
-  }
-  
-  // 3. TOP 3 - Melhor goal average (mínimo 5 jogos)
-  const top3GoalAverage = [...statsCom5Jogos]
-    .filter(stat => stat.diferenca_golos > 0)
-    .sort((a, b) => b.diferenca_golos - a.diferenca_golos)
-    .slice(0, 3);
-  
-  if (top3GoalAverage.length > 0) {
-    const texto = top3GoalAverage
-      .map((stat, i) => `${i + 1}º ${stat.nome} (+${stat.diferenca_golos})`)
-      .join(' • ');
-    curiosidades.push({
-      icone: '⚽',
-      titulo: 'TOP 3 - Melhor Goal Average',
-      texto: texto
-    });
-  }
-  
-  // 4. TOP 3 - Mais Assíduos (SEM filtro de 5 jogos - usando estatísticas do ano completo)
-  const top3Assiduos = [...statsParaAssiduidade]
-    .sort((a, b) => b.jogos - a.jogos)
-    .slice(0, 3);
-  
-  if (top3Assiduos.length > 0) {
-    const texto = top3Assiduos
-      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.jogos} jogos)`)
-      .join(' • ');
-    curiosidades.push({
-      icone: '🎯',
-      titulo: `TOP 3 - Mais Assíduos${mes ? ' do Ano' : ''}`,
-      texto: texto
-    });
-  }
-  
-  // 5. TOP 3 - Golos Equipa (mínimo 5 jogos)
-  const top3Artilheiros = [...statsCom5Jogos]
-    .sort((a, b) => b.golos_marcados - a.golos_marcados)
-    .slice(0, 3);
-  
-  if (top3Artilheiros.length > 0 && top3Artilheiros[0].golos_marcados > 0) {
-    const texto = top3Artilheiros
-      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.golos_marcados} golos)`)
-      .join(' • ');
-    curiosidades.push({
-      icone: '🥅',
-      titulo: 'TOP 3 - Golos Equipa',
-      texto: texto
-    });
-  }
-  
-  // 6. TOP 3 - Melhor Defesa (mínimo 5 jogos)
-  const top3Defesa = [...statsCom5Jogos]
-    .map(stat => ({
-      ...stat,
-      media_golos_sofridos: stat.jogos > 0 ? (stat.golos_sofridos / stat.jogos).toFixed(2) : 0
-    }))
-    .sort((a, b) => parseFloat(a.media_golos_sofridos) - parseFloat(b.media_golos_sofridos))
-    .slice(0, 3);
-  
-  if (top3Defesa.length > 0) {
-    const texto = top3Defesa
-      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.media_golos_sofridos} golos/jogo)`)
-      .join(' • ');
-    curiosidades.push({
-      icone: '🛡️',
-      titulo: 'TOP 3 - Melhor Defesa',
-      texto: texto
-    });
-  }
-  
-  // 7. TOP 3 - Média de Pontos/Jogo (mínimo 5 jogos)
+  // 1. TOP 3 - Média de Pontos/Jogo (mínimo 5 jogos)
   const top3MediaPontos = [...statsCom5Jogos]
     .map(stat => ({
       ...stat,
@@ -344,6 +299,127 @@ function gerarCuriosidades(estatisticas, ano, mes, estatisticasAnoCompleto = nul
     curiosidades.push({
       icone: '📊',
       titulo: 'TOP 3 - Média de Pontos/Jogo',
+      texto: texto
+    });
+  }
+  
+  // 2. TOP 3 - Mais Assíduos (SEM filtro de 5 jogos - usando estatísticas do ano completo)
+  const top3Assiduos = [...statsParaAssiduidade]
+    .sort((a, b) => b.jogos - a.jogos)
+    .slice(0, 3);
+  
+  if (top3Assiduos.length > 0) {
+    const texto = top3Assiduos
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.jogos} jogos)`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '🎯',
+      titulo: `TOP 3 - Mais Assíduos${mes ? ' do Ano' : ''}`,
+      texto: texto
+    });
+  }
+  
+  // 3. TOP 3 - % de Vitórias (mínimo 5 jogos)
+  const top3Percentagem = [...statsCom5Jogos]
+    .sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)
+    .slice(0, 3);
+  
+  if (top3Percentagem.length > 0) {
+    const texto = top3Percentagem
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.percentagem_vitorias}%)`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '👑',
+      titulo: 'TOP 3 - % de Vitórias',
+      texto: texto
+    });
+  }
+  
+  // 4. TOP 3 - Goal Average (mínimo 5 jogos)
+  const top3GoalAverage = [...statsCom5Jogos]
+    .filter(stat => stat.diferenca_golos > 0)
+    .sort((a, b) => b.diferenca_golos - a.diferenca_golos)
+    .slice(0, 3);
+  
+  if (top3GoalAverage.length > 0) {
+    const texto = top3GoalAverage
+      .map((stat, i) => `${i + 1}º ${stat.nome} (+${stat.diferenca_golos})`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '⚡',
+      titulo: 'TOP 3 - Goal Average',
+      texto: texto
+    });
+  }
+  
+  // 5. TOP 3 - Golos Marcados (mínimo 5 jogos)
+  const top3GolosMarcados = [...statsCom5Jogos]
+    .sort((a, b) => b.golos_marcados - a.golos_marcados)
+    .slice(0, 3);
+  
+  if (top3GolosMarcados.length > 0 && top3GolosMarcados[0].golos_marcados > 0) {
+    const texto = top3GolosMarcados
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.golos_marcados} golos)`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '⚽',
+      titulo: 'TOP 3 - Golos Marcados',
+      texto: texto
+    });
+  }
+  
+  // 6. TOP 3 - Golos Sofridos (mínimo 5 jogos) - Os que mais sofreram golos
+  const top3GolosSofridos = [...statsCom5Jogos]
+    .sort((a, b) => b.golos_sofridos - a.golos_sofridos)
+    .slice(0, 3);
+  
+  if (top3GolosSofridos.length > 0 && top3GolosSofridos[0].golos_sofridos > 0) {
+    const texto = top3GolosSofridos
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.golos_sofridos} golos)`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '💥',
+      titulo: 'TOP 3 - Golos Sofridos',
+      texto: texto
+    });
+  }
+  
+  // 7. TOP 3 - Melhor Ataque (mínimo 5 jogos) - NOVO: Média de golos marcados por jogo
+  const top3MelhorAtaque = [...statsCom5Jogos]
+    .map(stat => ({
+      ...stat,
+      media_golos_marcados: stat.jogos > 0 ? (stat.golos_marcados / stat.jogos).toFixed(2) : 0
+    }))
+    .sort((a, b) => parseFloat(b.media_golos_marcados) - parseFloat(a.media_golos_marcados))
+    .slice(0, 3);
+  
+  if (top3MelhorAtaque.length > 0) {
+    const texto = top3MelhorAtaque
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.media_golos_marcados} golos/jogo)`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '🚀',
+      titulo: 'TOP 3 - Melhor Ataque',
+      texto: texto
+    });
+  }
+  
+  // 8. TOP 3 - Melhor Defesa (mínimo 5 jogos)
+  const top3Defesa = [...statsCom5Jogos]
+    .map(stat => ({
+      ...stat,
+      media_golos_sofridos: stat.jogos > 0 ? (stat.golos_sofridos / stat.jogos).toFixed(2) : 0
+    }))
+    .sort((a, b) => parseFloat(a.media_golos_sofridos) - parseFloat(b.media_golos_sofridos))
+    .slice(0, 3);
+  
+  if (top3Defesa.length > 0) {
+    const texto = top3Defesa
+      .map((stat, i) => `${i + 1}º ${stat.nome} (${stat.media_golos_sofridos} golos/jogo)`)
+      .join(' • ');
+    curiosidades.push({
+      icone: '🛡️',
+      titulo: 'TOP 3 - Melhor Defesa',
       texto: texto
     });
   }

@@ -1,122 +1,161 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Convocatória - Peladas das Quintas Feiras</title>
-  <link rel="stylesheet" href="/style.base.css">
-  <link rel="stylesheet" href="/style.layout.css">
-  <link rel="stylesheet" href="/style.tables.css">
-  <link rel="stylesheet" href="/style.cards.css">
-  <link rel="stylesheet" href="/style.forms.css">
-  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+<head>  <title>Convocatória - Peladas das Quintas Feiras</title>
+  <link rel="stylesheet" href="/style.css?v=20250101">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="shortcut icon" href="/logo.svg">
 </head>
 <body class="main-bg">  
 <%- include('partials/header', { user: user }) %>
 
-    <div class="convocatoria-header">
-      <h2 class="section-title">Convocatória</h2>
-      <div class="convocatoria-actions">
+  <main class="container">
+    <div class="convocatoria-header-modern">
+      <div class="header-content">
+        <h2 class="section-title">📋 Convocatória</h2>
+        <p class="section-subtitle">Gestão de convocados e reservas</p>
+      </div>
+      <div class="convocatoria-actions-modern">
         <% if (convocados.length > 10) { %>
           <form method="POST" action="/convocatoria/migrar-para-10" style="display: inline;" 
                 onsubmit="return confirm('Migrar para 10 convocados? Os últimos 4 convocados serão movidos para reservas.')">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn-action-modern btn-warning">
               ⚡ Migrar para 10
             </button>
           </form>
         <% } %>
         <form method="POST" action="/convocatoria/configuracao-final" style="display: inline;" 
               onsubmit="return confirm('Aplicar configuração final? Isto irá limpar as faltas de teste e definir a ordem específica dos jogadores.')">
-          <button type="submit" class="btn btn-success">
-            ✅ Configuração Final
+          <button type="submit" class="btn-action-modern btn-success-modern">
+            ✅ Config Final
           </button>
         </form>
         <form method="POST" action="/convocatoria/reset" style="display: inline;" 
               onsubmit="return confirm('Tem certeza que deseja resetar a convocatória?')">
-          <button type="submit" class="btn btn-secondary">
-            🔄 Resetar Convocatória
+          <button type="submit" class="btn-action-modern btn-secondary-modern">
+            🔄 Resetar
           </button>
         </form>
       </div>
     </div>
 
-    <div class="convocatoria-info">
-      <div class="info-card">        <h3>ℹ️ Como Funciona</h3>
-        <ul>
-          <li><strong>Convocados:</strong> <%= config.max_convocados || 10 %> jogadores principais</li>
-          <li><strong>Reservas:</strong> Jogadores em lista de espera</li>
-          <li><strong>Falta:</strong> Quando um convocado falta, vai para o final das reservas</li>
-          <li><strong>Promoção:</strong> O primeiro reserva sobe automaticamente para convocado</li>
-          <li><strong>Reordenar:</strong> Use as setas para alterar a ordem das reservas</li>
-        </ul>
+    <div class="info-card-modern">
+      <h3 class="info-title">ℹ️ Como Funciona</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-icon">🏆</span>
+          <div>
+            <strong>Convocados</strong>
+            <p><%= config.max_convocados || 10 %> jogadores principais</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">⏳</span>
+          <div>
+            <strong>Reservas</strong>
+            <p>Lista de espera automática</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🚫</span>
+          <div>
+            <strong>Falta</strong>
+            <p>Desce para fim das reservas</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">⬆️</span>
+          <div>
+            <strong>Promoção</strong>
+            <p>1º reserva sobe automaticamente</p>
+          </div>
+        </div>
       </div>
-    </div>
-
-    <div class="convocatoria-tables">      <!-- Tabela de Convocados -->
-      <div class="convocados-section">
-        <h3 class="table-title">🏆 Convocados (<%= convocados.length %>/<%= config.max_convocados || 10 %>)</h3>
-        <div class="table-container card-visual">
-          <table class="convocatoria-table stats-table">
+    </div>    <div class="convocatoria-grid-modern">
+      <!-- Tabela de Convocados -->
+      <div class="convocados-card">
+        <div class="card-header-modern convocados-header">
+          <h3 class="card-title-modern">🏆 Convocados</h3>
+          <span class="count-badge convocados-badge"><%= convocados.length %>/<%= config.max_convocados || 10 %></span>
+        </div>
+        <div class="table-wrapper-modern">
+          <table class="table-modern convocados-table">
             <thead>
               <tr>
                 <th>#</th>
                 <th>Nome</th>
                 <th>Faltas</th>
-                <th>Confirmação</th>
+                <th>Status</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
-              <% if (convocados && convocados.length > 0) { %>
-                <% convocados.forEach((jogador, index) => { %>                  <tr class="convocado-row <%= index % 2 === 0 ? 'zebra' : '' %>">
-                    <td class="posicao-number"><%= jogador.posicao %></td>
-                    <td class="jogador-nome">
-                      <span class="nome-convocado">🟢 <%= jogador.nome %></span>
+              <% if (convocados && convocados.length > 0) { %>                <% convocados.forEach((jogador, index) => { %>
+                  <tr class="table-row-modern <%= jogador.confirmado ? 'confirmed-row' : '' %>">
+                    <td class="position-cell"><strong>#<%= jogador.posicao %></strong></td>
+                    <td class="player-cell">
+                      <span class="player-name-badge">
+                        <%= jogador.confirmado ? '✅' : '🟡' %> <%= jogador.nome %>
+                      </span>
                     </td>
-                    <td class="faltas-count">
-                      <span class="badge-faltas"><%= jogador.total_faltas || 0 %></span>
+                    <td class="faltas-cell">
+                      <span class="badge-faltas-modern <%= jogador.total_faltas > 2 ? 'high-faltas' : '' %>">
+                        🚫 <%= jogador.total_faltas || 0 %>
+                      </span>
                     </td>
-                    <td class="confirmacao-status">
+                    <td class="status-cell">
                       <% if (jogador.confirmado) { %>
-                        <span class="status-confirmado">✅ Confirmado</span>
-                        <% if (jogador.data_confirmacao) { %>
-                          <small class="data-confirmacao">
-                            <%= new Date(jogador.data_confirmacao).toLocaleDateString('pt-PT') %> 
-                            <%= new Date(jogador.data_confirmacao).toLocaleTimeString('pt-PT', {hour: '2-digit', minute: '2-digit'}) %>
-                          </small>
-                        <% } %>
+                        <div class="status-confirmed">
+                          <span class="status-label">✅ Confirmado</span>
+                          <% if (jogador.data_confirmacao) { %>
+                            <small class="status-date">
+                              <%= new Date(jogador.data_confirmacao).toLocaleDateString('pt-PT', {day: '2-digit', month: '2-digit'}) %> 
+                              <%= new Date(jogador.data_confirmacao).toLocaleTimeString('pt-PT', {hour: '2-digit', minute: '2-digit'}) %>
+                            </small>
+                          <% } %>
+                        </div>
                       <% } else { %>
-                        <span class="status-pendente">⏳ Pendente</span>
+                        <span class="status-pending">⏳ Pendente</span>
                       <% } %>
-                      <form method="POST" action="/convocatoria/confirmar-presenca/<%= jogador.id %>" style="display: inline; margin-left: 10px;">
-                        <button type="submit" class="btn-toggle-confirmacao <%= jogador.confirmado ? 'btn-desconfirmar' : 'btn-confirmar' %>" 
-                                title="<%= jogador.confirmado ? 'Desconfirmar presença' : 'Confirmar presença' %>">
-                          <%= jogador.confirmado ? '❌' : '✅' %>
-                        </button>
-                      </form>
                     </td>
-                    <td class="acoes-convocado">
-                      <form method="POST" action="/convocatoria/marcar-falta/<%= jogador.id %>" 
-                            style="display: inline;" 
-                            onsubmit="return confirm('Marcar <%= jogador.nome %> como faltoso?')">
-                        <button type="submit" class="btn-small btn-falta">
-                          ❌ Falta
-                        </button>
-                      </form>
+                    <td class="actions-cell">                      <div class="action-buttons-modern">
+                        <form method="POST" action="/convocatoria/confirmar-presenca/<%= jogador.id %>" style="display: inline;">
+                          <button type="submit" class="btn-mini <%= jogador.confirmado ? 'btn-mini-danger' : 'btn-mini-success' %>" 
+                                  title="<%= jogador.confirmado ? 'Desconfirmar' : 'Confirmar' %>">
+                            <%= jogador.confirmado ? '✖️' : '✔️' %>
+                          </button>
+                        </form>
+                        <form method="POST" action="/convocatoria/marcar-falta/<%= jogador.id %>" 
+                              style="display: inline;" 
+                              onsubmit="return confirm('Marcar <%= jogador.nome %> como faltoso?')">
+                          <button type="submit" class="btn-mini btn-mini-warning">
+                            🚫 Falta
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 <% }) %>
-              <% } else { %>                <tr>
-                  <td colspan="5" class="no-data">Nenhum jogador convocado</td>
+              <% } else { %>
+                <tr>
+                  <td colspan="5" class="empty-row">
+                    <span class="empty-icon">👥</span>
+                    <p>Nenhum jogador convocado</p>
+                  </td>
                 </tr>
               <% } %>
             </tbody>
           </table>
         </div>
-      </div>      <!-- Tabela de Reservas -->
-      <div class="reservas-section">
-        <h3 class="table-title">⏳ Reservas (<%= reservas.length %>)</h3>
-        <div class="table-container card-visual">
-          <table class="convocatoria-table stats-table">
+      </div>
+
+      <!-- Tabela de Reservas -->
+      <div class="reservas-card">
+        <div class="card-header-modern reservas-header">
+          <h3 class="card-title-modern">⏳ Reservas</h3>
+          <span class="count-badge reservas-badge"><%= reservas.length %></span>
+        </div>
+        <div class="table-wrapper-modern">
+          <table class="table-modern reservas-table">
             <thead>
               <tr>
                 <th>#</th>
@@ -126,41 +165,49 @@
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody>
-              <% if (reservas && reservas.length > 0) { %>
+            <tbody>              <% if (reservas && reservas.length > 0) { %>
                 <% reservas.forEach((jogador, index) => { %>
-                  <tr class="reserva-row <%= index % 2 === 0 ? 'zebra' : '' %> <%= index === 0 ? 'proximo-convocado' : '' %>">
-                    <td class="posicao-number"><%= jogador.posicao %></td>
-                    <td class="jogador-nome">
-                      <span class="nome-reserva">
-                        <%= index === 0 ? '🔥' : '🟡' %> <%= jogador.nome %>
+                  <tr class="table-row-modern <%= index === 0 ? 'next-player-row' : '' %>">
+                    <td class="position-cell"><strong>#<%= jogador.posicao %></strong></td>
+                    <td class="player-cell">
+                      <span class="player-name-badge <%= index === 0 ? 'next-badge' : '' %>">
+                        <%= index === 0 ? '🔥' : '⏳' %> <%= jogador.nome %>
                       </span>
-                    </td>
-                    <td class="faltas-count">
-                      <span class="badge-faltas"><%= jogador.total_faltas || 0 %></span>
-                    </td>
-                    <td class="reordenar-actions">
-                      <% if (jogador.posicao > 1) { %>
-                        <form method="POST" action="/convocatoria/mover-reserva/<%= jogador.id %>/up" style="display: inline;">
-                          <button type="submit" class="btn-seta btn-up" title="Mover para cima">▲</button>
-                        </form>
-                      <% } %>
-                      <% if (index < reservas.length - 1) { %>
-                        <form method="POST" action="/convocatoria/mover-reserva/<%= jogador.id %>/down" style="display: inline;">
-                          <button type="submit" class="btn-seta btn-down" title="Mover para baixo">▼</button>
-                        </form>
+                      <% if (index === 0) { %>
+                        <span class="next-indicator">← Próximo</span>
                       <% } %>
                     </td>
-                    <td class="status-reserva">
-                      <span class="status-badge <%= index === 0 ? 'proximo' : 'reserva' %>">
-                        <%= index === 0 ? 'Próximo' : 'Reserva' %>
+                    <td class="faltas-cell">
+                      <span class="badge-faltas-modern <%= jogador.total_faltas > 2 ? 'high-faltas' : '' %>">
+                        🚫 <%= jogador.total_faltas || 0 %>
                       </span>
                     </td>
-                  </tr>
-                <% }) %>
+                    <td class="reorder-cell">
+                      <div class="reorder-buttons">
+                        <% if (jogador.posicao > 1) { %>
+                          <form method="POST" action="/convocatoria/mover-reserva/<%= jogador.id %>/up" style="display: inline;">
+                            <button type="submit" class="btn-arrow btn-arrow-up" title="Mover para cima">▲</button>
+                          </form>
+                        <% } %>
+                        <% if (index < reservas.length - 1) { %>
+                          <form method="POST" action="/convocatoria/mover-reserva/<%= jogador.id %>/down" style="display: inline;">
+                            <button type="submit" class="btn-arrow btn-arrow-down" title="Mover para baixo">▼</button>
+                          </form>
+                        <% } %>
+                      </div>
+                    </td>
+                    <td class="status-cell">
+                      <span class="badge-status-modern <%= index === 0 ? 'badge-next' : 'badge-waiting' %>">
+                        <%= index === 0 ? '⭐ Próximo' : '⏳ Reserva' %>
+                      </span>
+                    </td>
+                  </tr>                <% }) %>
               <% } else { %>
                 <tr>
-                  <td colspan="5" class="no-data">Nenhum jogador nas reservas</td>
+                  <td colspan="5" class="empty-row">
+                    <span class="empty-icon">⏳</span>
+                    <p>Nenhuma reserva</p>
+                  </td>
                 </tr>
               <% } %>
             </tbody>
@@ -168,6 +215,7 @@
         </div>
       </div>
     </div>
+  </main>
 
     <div class="convocatoria-stats">
       <div class="stats-summary">

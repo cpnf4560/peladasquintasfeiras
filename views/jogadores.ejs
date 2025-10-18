@@ -1,74 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Peladas das Quintas Feiras</title>
-  <link rel="stylesheet" href="/style.base.css">
-  <link rel="stylesheet" href="/style.layout.css">
-  <link rel="stylesheet" href="/style.tables.css">
-  <link rel="stylesheet" href="/style.cards.css">
-  <link rel="stylesheet" href="/style.forms.css">
-  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+  <title>Administração de Jogadores - Peladas das Quintas Feiras</title>
+  <link rel="stylesheet" href="/style.css?v=20250101">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="shortcut icon" href="/logo.svg">
 </head>
 <body class="main-bg">  
 
 <%- include('partials/header', { user: user }) %>
 
-  <h2 class="section-title">Administração de Jogadores</h2>
-
-  <form method="POST" action="/jogadores" class="form-add-player">
-    <div class="form-group">
-      <label for="nome">Nome do Jogador:</label>
-      <input type="text" id="nome" name="nome" required>
+  <main class="container">
+    <div class="admin-header">
+      <h2 class="section-title">⚙️ Administração de Jogadores</h2>
+      <p class="section-subtitle">Gerir jogadores da equipa</p>
     </div>
-    <button type="submit" class="btn">Adicionar Jogador</button>
-  </form>
 
-  <div class="players-table-container">
-    <table class="players-table">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Estado</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (jogadores && jogadores.length > 0) { %>
-          <% jogadores.forEach(jogador => { %>
-            <tr class="<%= jogador.suspenso ? 'player-suspended' : '' %>">
-              <td>
-                <span class="player-name-display" id="name-display-<%= jogador.id %>"><%= jogador.nome %></span>
-                <input type="text" class="player-name-edit" id="name-edit-<%= jogador.id %>" value="<%= jogador.nome %>" style="display: none;">
-              </td>
-              <td>
-                <span class="player-status <%= jogador.suspenso ? 'status-suspended' : 'status-active' %>">
-                  <%= jogador.suspenso ? 'Inativo' : 'Ativo' %>
-                </span>
-              </td>
-              <td class="player-actions">
-                <button class="btn-small btn-edit" data-player-id="<%= jogador.id %>">Editar</button>
-                <button class="btn-small btn-save" data-player-id="<%= jogador.id %>" style="display: none;">Guardar</button>
-                <button class="btn-small btn-cancel" data-player-id="<%= jogador.id %>" style="display: none;">Cancelar</button>
-                <form method="POST" action="/jogadores/<%= jogador.id %>/toggle-suspension" style="display: inline;">
-                  <button type="submit" class="btn-small <%= jogador.suspenso ? 'btn-activate' : 'btn-suspend' %>">
-                    <%= jogador.suspenso ? 'Ativar' : 'Inativar' %>
-                  </button>
-                </form>
-                <form method="POST" action="/jogadores/<%= jogador.id %>/delete" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja eliminar este jogador?')">
-                  <button type="submit" class="btn-small btn-delete">Eliminar</button>
-                </form>
-              </td>
+    <div class="admin-card">
+      <h3 class="card-title">➕ Adicionar Novo Jogador</h3>
+      <form method="POST" action="/jogadores" class="form-add-player-modern">
+        <div class="form-group-inline">
+          <input type="text" id="nome" name="nome" placeholder="Nome do jogador..." required class="input-modern">
+          <button type="submit" class="btn btn-primary">
+            <span>➕</span> Adicionar
+          </button>
+        </div>
+      </form>
+    </div>
+    <div class="admin-card">
+      <h3 class="card-title">👥 Lista de Jogadores (<%= jogadores.length %>)</h3>
+      <div class="players-table-container">
+        <table class="players-table-modern">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome</th>
+              <th>Estado</th>
+              <th>Ações</th>
             </tr>
-          <% }) %>
-        <% } else { %>
-          <tr>
-            <td colspan="3" style="text-align: center;">Nenhum jogador encontrado</td>
-          </tr>
-        <% } %>
-      </tbody>
-    </table>
-  </div>
+          </thead>          <tbody>
+            <% if (jogadores && jogadores.length > 0) { %>
+              <% jogadores.forEach((jogador, index) => { %>
+                <tr class="player-row <%= jogador.suspenso ? 'player-suspended' : '' %>">
+                  <td class="player-number"><strong><%= index + 1 %></strong></td>
+                  <td class="player-name-cell">
+                    <span class="player-name-display" id="name-display-<%= jogador.id %>">
+                      <%= jogador.suspenso ? '🚫 ' : '✓ ' %><%= jogador.nome %>
+                    </span>
+                    <input type="text" class="player-name-edit" id="name-edit-<%= jogador.id %>" value="<%= jogador.nome %>" style="display: none;">
+                  </td>
+                  <td>
+                    <span class="badge-status <%= jogador.suspenso ? 'badge-inactive' : 'badge-active' %>">
+                      <%= jogador.suspenso ? '⛔ Inativo' : '✅ Ativo' %>
+                    </span>
+                  </td>
+                  <td class="player-actions">
+                    <button class="btn-action btn-edit" data-player-id="<%= jogador.id %>" title="Editar nome">
+                      ✏️ Editar
+                    </button>
+                    <button class="btn-action btn-save" data-player-id="<%= jogador.id %>" style="display: none;" title="Guardar alterações">
+                      💾 Guardar
+                    </button>
+                    <button class="btn-action btn-cancel" data-player-id="<%= jogador.id %>" style="display: none;" title="Cancelar edição">
+                      ❌ Cancelar
+                    </button>
+                    <form method="POST" action="/jogadores/<%= jogador.id %>/toggle-suspension" style="display: inline;">
+                      <button type="submit" class="btn-action <%= jogador.suspenso ? 'btn-activate' : 'btn-deactivate' %>" title="<%= jogador.suspenso ? 'Ativar jogador' : 'Desativar jogador' %>">
+                        <%= jogador.suspenso ? '🔓 Ativar' : '🔒 Inativar' %>
+                      </button>
+                    </form>
+                    <form method="POST" action="/jogadores/<%= jogador.id %>/delete" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja eliminar <%= jogador.nome %>?\n\nEsta ação é irreversível!')">
+                      <button type="submit" class="btn-action btn-delete" title="Eliminar jogador">
+                        🗑️ Eliminar
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              <% }) %>            <% } else { %>
+              <tr>
+                <td colspan="4" class="empty-state">
+                  <div class="empty-message">
+                    <span class="empty-icon">👥</span>
+                    <p>Nenhum jogador encontrado</p>
+                    <small>Adiciona o primeiro jogador acima</small>
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
 
   <script>
   // Event delegation for player row actions (edit/save/cancel)

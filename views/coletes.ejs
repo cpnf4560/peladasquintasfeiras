@@ -2,32 +2,36 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Coletes - Peladas das Quintas Feiras</title>
-  <link rel="stylesheet" href="/style.base.css">
-  <link rel="stylesheet" href="/style.layout.css">
-  <link rel="stylesheet" href="/style.tables.css">
-  <link rel="stylesheet" href="/style.cards.css">
-  <link rel="stylesheet" href="/style.forms.css">
-  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Gestão de Coletes - Peladas das Quintas Feiras</title>
+  <link rel="stylesheet" href="/style.css?v=20250101">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="shortcut icon" href="/logo.svg">
 </head>
-<body class="main-bg">
-  <%- include('partials/header', { user: user }) %>
+<body class="main-bg">  <%- include('partials/header', { user: user }) %>
 
   <main class="container">
-    <h2>Gestão de Coletes</h2>
-    <!-- Estado actual dos coletes -->
-    <div class="coletes-status">
+    <div class="coletes-header-modern">
+      <h2 class="section-title">🏐 Gestão de Coletes</h2>
+      <p class="section-subtitle">Controlo de quem leva os coletes</p>
+    </div>
+    
+    <!-- Estado actual dos coletes -->    <div class="coletes-status-modern">
       <% if (coletesActuais) { %>
-        <div class="alert alert-info">
-          <h3>🥅 Coletes actualmente com:</h3>
-          <p><strong><%= coletesActuais.jogador_nome %></strong></p>
-          <p>Desde: <%= new Date(coletesActuais.data_levou).toLocaleDateString('pt-PT') %></p>
+        <div class="status-card current-holder">
+          <div class="status-icon">🏐</div>
+          <div class="status-content">
+            <h3>Coletes actualmente com:</h3>
+            <p class="holder-name"><%= coletesActuais.jogador_nome %></p>
+            <p class="holder-date">📅 Desde: <%= new Date(coletesActuais.data_levou).toLocaleDateString('pt-PT') %></p>
+          </div>
         </div>
       <% } else { %>
-        <div class="alert alert-warning">
-          <h3>⚠️ Coletes disponíveis</h3>
-          <p>Ninguém tem os coletes neste momento.</p>
+        <div class="status-card available">
+          <div class="status-icon">✅</div>
+          <div class="status-content">
+            <h3>Coletes Disponíveis</h3>
+            <p>Ninguém tem os coletes neste momento</p>
+          </div>
         </div>
       <% } %>
       
