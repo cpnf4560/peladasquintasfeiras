@@ -348,23 +348,54 @@ table {
   margin-top: 2rem;
   background: #ffffff !important;
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 th, td {
-  padding: 1rem;
+  padding: 1rem 1.25rem;
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #e9ecef;
 }
 
 th {
-  background-color: #e9ecef !important;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+  color: white !important;
   font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+td {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+tbody tr {
+  transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
 tbody tr:hover {
-  background-color: #f1f3f5 !important;
+  background-color: rgba(0, 123, 255, 0.04) !important;
+  transform: scale(1.002);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Alternating row colors for better readability */
+tbody tr:nth-child(even) {
+  background-color: rgba(248, 249, 250, 0.5);
+}
+
+tbody tr:nth-child(even):hover {
+  background-color: rgba(0, 123, 255, 0.04) !important;
 }
 
 /* Forms */
@@ -376,18 +407,49 @@ form {
   margin-bottom: 1.5rem;
 }
 
-/* Filters */
+/* Filters - Horizontal layout */
 .stats-filters {
   display: flex;
   gap: 2rem;
-  align-items: center;
+  align-items: flex-end;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
 .filter-group {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.5rem;
+  min-width: 150px;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.filter-group select {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: white;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+}
+
+.filter-group select:hover {
+  border-color: var(--accent);
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
 }
 
 label {
@@ -431,39 +493,77 @@ button:hover {
 }
 
 /* Curiosidades Section */
+/* Curiosidades Section */
 .curiosidades-section {
-  margin-top: 1rem;
+  margin: 2.5rem 0;
 }
 
 .curiosidades-title {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  color: var(--text);
+  margin-bottom: 1.5rem;
 }
 
 .curiosidades-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  gap: 1.5rem;
+}
+
+@media (max-width: 992px) {
+  .curiosidades-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .curiosidades-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .curiosidade-card {
-  background: #ffffff !important;
+  background: rgba(248, 249, 250, 0.5) !important;
   border-radius: 10px !important;
-  padding: 1rem;
+  padding: 1.25rem;
   border: 1px solid var(--border) !important;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  transition: all 0.2s ease;
+  display: flex;
+  gap: 1rem;
 }
 
 .curiosidade-card:hover {
-  transform: translateY(-6px) !important;
-  box-shadow: 0 12px 28px rgba(17,24,39,0.06) !important;
-  border-color: rgba(16, 52, 102, 0.06) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+  background: rgba(255, 255, 255, 1) !important;
+  border-color: rgba(0, 123, 255, 0.2) !important;
 }
 
-.curiosidade-card .curiosidade-icon { font-size: 1.1rem !important; }
-.curiosidade-card .curiosidade-content p { color: var(--muted) !important; }
+.curiosidade-icon {
+  font-size: 2rem !important;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.curiosidade-content {
+  flex: 1;
+}
+
+.curiosidade-content h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.5rem 0;
+}
+
+.curiosidade-content p {
+  font-size: 0.9rem;
+  color: var(--muted) !important;
+  margin: 0;
+  line-height: 1.5;
+}
 
 .dupla-card,
 .dupla-extrema-card,
