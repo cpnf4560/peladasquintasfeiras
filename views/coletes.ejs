@@ -8,17 +8,15 @@
   <link rel="shortcut icon" href="/logo.svg">
 </head>
 <body class="main-bg">  <%- include('partials/header', { user: user }) %>
-
   <main class="container">
     <div class="coletes-header-modern">
-      <h2 class="section-title">🏐 Gestão de Coletes</h2>
+      <h2 class="section-title">🟢🔴 Gestão de Coletes</h2>
       <p class="section-subtitle">Controlo de quem leva os coletes</p>
     </div>
-    
-    <!-- Estado actual dos coletes -->    <div class="coletes-status-modern">
+      <!-- Estado actual dos coletes -->    <div class="coletes-status-modern">
       <% if (coletesActuais) { %>
         <div class="status-card current-holder">
-          <div class="status-icon">🏐</div>
+          <div class="status-icon">👕</div>
           <div class="status-content">
             <h3>Coletes actualmente com:</h3>
             <p class="holder-name"><%= coletesActuais.jogador_nome %></p>
