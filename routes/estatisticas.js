@@ -250,25 +250,29 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
       
       if (duplas && duplas.length > 0) {
         console.log('🔍 [DUPLAS DEBUG] Primeira dupla:', duplas[0]);
-      }      
-      let duplasProcessadas = null;
+      }        let duplasProcessadas = null;
         if (!errDuplas && duplas && duplas.length > 0) {
-        console.log('✅ [DUPLAS DEBUG] A processar', duplas.length, 'duplas');        // TOP 3 - Melhor % de vitórias
-        const top3MelhorVitorias = [...duplas]
+        console.log('✅ [DUPLAS DEBUG] A processar', duplas.length, 'duplas');
+        
+        // Filtrar duplas com pelo menos 3 jogos juntos (para % vitórias)
+        const duplasComMinimo3Jogos = duplas.filter(d => d.jogos_juntos >= 3);
+        
+        // TOP 3 - Melhor % de vitórias (mínimo 3 jogos)
+        const top3MelhorVitorias = [...duplasComMinimo3Jogos]
           .sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)
           .slice(0, 3);
         
-        // TOP 3 - Pior % de vitórias
-        const top3PiorVitorias = [...duplas]
+        // TOP 3 - Pior % de vitórias (mínimo 3 jogos)
+        const top3PiorVitorias = [...duplasComMinimo3Jogos]
           .sort((a, b) => a.percentagem_vitorias - b.percentagem_vitorias)
           .slice(0, 3);
         
-        // TOP 3 - Mais jogos juntos
+        // TOP 3 - Mais jogos juntos (sem mínimo)
         const top3MaisJogos = [...duplas]
           .sort((a, b) => b.jogos_juntos - a.jogos_juntos)
           .slice(0, 3);
         
-        // TOP 3 - Menos jogos juntos
+        // TOP 3 - Menos jogos juntos (sem mínimo)
         const top3MenosJogos = [...duplas]
           .sort((a, b) => a.jogos_juntos - b.jogos_juntos)
           .slice(0, 3);
@@ -278,7 +282,7 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
           piorVitorias: top3PiorVitorias,
           maisJogos: top3MaisJogos,
           menosJogos: top3MenosJogos
-        };        console.log('📊 [DUPLAS DEBUG] Objeto criado:');
+        };console.log('📊 [DUPLAS DEBUG] Objeto criado:');
         console.log('   melhorVitorias:', top3MelhorVitorias.length);
         console.log('   piorVitorias:', top3PiorVitorias.length);
         console.log('   maisJogos:', top3MaisJogos.length);
