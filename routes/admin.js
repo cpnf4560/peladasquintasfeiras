@@ -224,13 +224,232 @@ router.get('/fix-rui-lopes', async (req, res) => {
       </body>
       </html>
     `);
-    
-  } catch (error) {
+      } catch (error) {
     res.status(500).send(`
       <h1>❌ Erro</h1>
       <p>${error.message}</p>
       <pre>${log.join('\n')}</pre>
       <a href="/admin/import-history">← Voltar</a>
+    `);
+  }
+});
+
+// Rota para configurar ordem dos coletes (executar uma vez)
+router.get('/setup-coletes', requireAdmin, async (req, res) => {
+  const log = [];
+  
+  try {
+    log.push('🔄 Iniciando configuração dos coletes...\n');
+    
+    // Ordem definida no WhatsApp
+    const jogadoresOrdem = [
+      { busca: 'Rogério', posicao: 1 },
+      { busca: 'Cesaro', posicao: 2 },
+      { busca: 'Carlos Silva', posicao: 3 },
+      { busca: 'Nuno', posicao: 4 },
+      { busca: 'Joel', posicao: 5 },
+      { busca: 'Carlos Cruz', posicao: 6 },
+      { busca: 'Joaquim', posicao: 7 },
+      { busca: 'Ismael', posicao: 8 },
+      { busca: 'João', posicao: 9 },
+      { busca: 'Rui', posicao: 10 },
+      { busca: 'Ricardo', posicao: 11 },
+      { busca: 'Valter', posicao: 12 },
+      { busca: 'Serafim', posicao: 13 },
+      { busca: 'Hugo', posicao: 14 },
+      { busca: 'Paulo', posicao: 15 },
+      { busca: 'Flávio', posicao: 16 },
+      { busca: 'Manuel', posicao: 17 },
+      { busca: 'Pedro', posicao: 18 }
+    ];
+    
+    // Passo 1: Limpar convocatória
+    await new Promise((resolve, reject) => {
+      db.query('DELETE FROM convocatoria', [], (err) => {
+        if (err) return reject(err);
+        log.push('✅ Convocatória limpa');
+        resolve();
+      });
+    });
+    
+    // Passo 2: Limpar histórico de coletes
+    await new Promise((resolve, reject) => {
+      db.query('DELETE FROM coletes', [], (err) => {
+        if (err) return reject(err);
+        log.push('✅ Histórico de coletes limpo\n');
+        resolve();
+      });
+    });
+    
+    // Passo 3: Buscar todos os jogadores
+    const jogadores = await new Promise((resolve, reject) => {
+      db.query('SELECT id, nome FROM jogadores ORDER BY nome', [], (err, rows) => {
+        if (err) return reject(err);
+        resolve(rows);
+      });
+    });
+    
+    log.push('📋 Configurando nova ordem:\n');
+    
+    // Passo 4: Inserir jogadores na ordem correta
+    for (const item of jogadoresOrdem) {
+      const jogador = jogadores.find(j => {
+        const nome = j.nome.toLowerCase();
+        const busca = item.busca.toLowerCase();
+        
+        // Match exato
+        if (nome === busca) return true;
+        
+        // Match por primeiro nome
+        const primeiroNome = nome.split(' ')[0];
+        if (primeiroNome === busca) return true;
+        
+        // Match por partes do nome
+        const partes = busca.split(' ');
+        return partes.every(parte => nome.includes(parte));
+      });
+      
+      if (!jogador) {
+        log.push(`⚠️  ${item.posicao}º - "${item.busca}" não encontrado`);
+        continue;
+      }
+      
+      const tipo = item.posicao <= 10 ? 'convocado' : 'reserva';
+      
+      await new Promise((resolve, reject) => {
+        db.query(
+          'INSERT INTO convocatoria (jogador_id, posicao, tipo) VALUES (?, ?, ?)',
+          [jogador.id, item.posicao, tipo],
+          (err) => {
+            if (err) return reject(err);
+            log.push(`✅ ${item.posicao}º - ${jogador.nome} (${tipo})`);
+            resolve();
+          }
+        );
+      });
+    }
+    
+    log.push('\n📊 Configurando histórico de coletes:\n');
+    
+    // Passo 5: Adicionar histórico de coletes
+    const rogerio = jogadores.find(j => j.nome.toLowerCase().includes('rogério'));
+    const cesaro = jogadores.find(j => j.nome.toLowerCase().includes('cesaro') || j.nome.toLowerCase().includes('césar'));
+    const carlosSilva = jogadores.find(j => j.nome.toLowerCase() === 'carlos silva');
+    
+    if (rogerio) {
+      await new Promise((resolve, reject) => {
+        db.query(
+          'INSERT INTO coletes (jogador_id, levou_em, devolveu_em) VALUES (?, ?, ?)',
+          [rogerio.id, '2024-10-02', '2024-10-09'],
+          (err) => {
+            if (err) return reject(err);
+            log.push(`✅ ${rogerio.nome}: levou 02/10/2024, devolveu 09/10/2024`);
+            resolve();
+          }
+        );
+      });
+    }
+    
+    if (cesaro) {
+      await new Promise((resolve, reject) => {
+        db.query(
+          'INSERT INTO coletes (jogador_id, levou_em, devolveu_em) VALUES (?, ?, ?)',
+          [cesaro.id, '2024-10-09', '2024-10-16'],
+          (err) => {
+            if (err) return reject(err);
+            log.push(`✅ ${cesaro.nome}: levou 09/10/2024, devolveu 16/10/2024`);
+            resolve();
+          }
+        );
+      });
+    }
+    
+    if (carlosSilva) {
+      await new Promise((resolve, reject) => {
+        db.query(
+          'INSERT INTO coletes (jogador_id, levou_em, devolveu_em) VALUES (?, ?, ?)',
+          [carlosSilva.id, '2024-10-16', null],
+          (err) => {
+            if (err) return reject(err);
+            log.push(`✅ ${carlosSilva.nome}: TEM ATUALMENTE desde 16/10/2024`);
+            resolve();
+          }
+        );
+      });
+    }
+    
+    log.push('\n✅ CONFIGURAÇÃO CONCLUÍDA COM SUCESSO!');
+    log.push('\n🔗 Acede à página de coletes para verificar: /coletes');
+    
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Setup Coletes - Concluído</title>
+        <style>
+          body { font-family: Inter, sans-serif; max-width: 900px; margin: 50px auto; padding: 20px; background: #f8f9fa; }
+          .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 20px rgba(0,0,0,0.1); }
+          h1 { color: #28a745; margin-bottom: 30px; }
+          .log { background: #f8f9fa; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; 
+                 white-space: pre-wrap; line-height: 1.6; font-size: 14px; margin: 20px 0; 
+                 max-height: 600px; overflow-y: auto; border: 1px solid #dee2e6; }
+          .success { background: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 30px 0; border-radius: 4px; }
+          .btn { display: inline-block; margin: 10px 10px 0 0; padding: 12px 24px; background: #007bff; 
+                 color: white; text-decoration: none; border-radius: 6px; font-weight: 500; }
+          .btn:hover { background: #0056b3; }
+          .btn-secondary { background: #6c757d; }
+          .btn-secondary:hover { background: #545b62; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>✅ Configuração dos Coletes Concluída!</h1>
+          <div class="success">
+            <strong>🎉 Sucesso!</strong> A ordem dos coletes e o histórico foram configurados na base de dados.
+          </div>
+          <h3>📝 Log da Execução:</h3>
+          <div class="log">${log.join('\n')}</div>
+          <div>
+            <a href="/coletes" class="btn">🟢🔴 Ver Página de Coletes</a>
+            <a href="/admin/dashboard" class="btn btn-secondary">← Voltar ao Admin</a>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+    
+  } catch (error) {
+    log.push(`\n❌ ERRO: ${error.message}`);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Erro - Setup Coletes</title>
+        <style>
+          body { font-family: Inter, sans-serif; max-width: 900px; margin: 50px auto; padding: 20px; background: #f8f9fa; }
+          .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 20px rgba(0,0,0,0.1); }
+          h1 { color: #dc3545; }
+          .error { background: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; margin: 30px 0; border-radius: 4px; }
+          .log { background: #f8f9fa; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; 
+                 white-space: pre-wrap; line-height: 1.6; font-size: 14px; margin: 20px 0; 
+                 max-height: 600px; overflow-y: auto; border: 1px solid #dee2e6; }
+          .btn { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #6c757d; 
+                 color: white; text-decoration: none; border-radius: 6px; font-weight: 500; }
+          .btn:hover { background: #545b62; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>❌ Erro na Configuração</h1>
+          <div class="error">
+            <strong>Erro:</strong> ${error.message}
+          </div>
+          <h3>📝 Log da Execução:</h3>
+          <div class="log">${log.join('\n')}</div>
+          <a href="/admin/dashboard" class="btn">← Voltar ao Admin</a>
+        </div>
+      </body>
+      </html>
     `);
   }
 });
