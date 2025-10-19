@@ -8,25 +8,38 @@ A configuração dos coletes precisa ser aplicada **diretamente no servidor Rend
 
 ## 📝 PASSO A PASSO
 
-### 1. Fazer commit e push das alterações
+### 1. Fazer commit e push do script
 
 ```bash
-git add package.json aplicar_coletes_postgres.js APLICAR_COLETES_RENDER.md
-git commit -m "feat: Adicionar comando para configurar coletes no Render"
+git add aplicar_coletes_postgres.js
+git commit -m "feat: Script para configurar ordem de coletes no PostgreSQL"
 git push
 ```
 
-### 2. Aguardar o deploy automático no Render
-O Render vai fazer deploy automático após o push. Aguarda 2-3 minutos.
+### 2. Executar no Render
 
-### 3. Executar o comando no Render
+Tens **duas opções**:
 
-Como não tens acesso ao Shell (conta gratuita), vais usar uma **rota temporária**:
+#### Opção A: Usar o Shell do Render (Recomendado)
+1. Acede ao dashboard do Render: https://dashboard.render.com
+2. Vai ao teu serviço "futsal-manager"
+3. Clica em "Shell" no menu lateral
+4. Executa:
+   ```bash
+   node aplicar_coletes_postgres.js
+   ```
 
-1. Vou criar uma rota GET `/admin/setup-coletes` que executa o script
-2. Depois de fazer deploy, acede a: `https://teu-site.onrender.com/admin/setup-coletes`
-3. O script será executado e verás o resultado na página
-4. Depois remove a rota (por segurança)
+#### Opção B: Adicionar comando temporário ao package.json
+1. Adiciona ao `package.json`:
+   ```json
+   "scripts": {
+     "setup-coletes": "node aplicar_coletes_postgres.js"
+   }
+   ```
+2. No Shell do Render, executa:
+   ```bash
+   npm run setup-coletes
+   ```
 
 ---
 

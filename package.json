@@ -2,11 +2,11 @@
   "name": "futsal-manager",
   "version": "2.0.0",
   "description": "Sistema completo de gestão de futsal com autenticação e dashboard personalizado",
-  "main": "server.js",  "scripts": {
+  "main": "server.js",
+  "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "npm rebuild sqlite3",
-    "setup-coletes": "node aplicar_coletes_postgres.js"
+    "build": "npm rebuild sqlite3"
   },
   "engines": {
     "node": ">=16.0.0",
