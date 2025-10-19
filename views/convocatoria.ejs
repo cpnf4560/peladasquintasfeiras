@@ -268,24 +268,23 @@
     <% } %>
 
     <!-- Seção de Equipas Equilibradas -->
-    <% if (typeof equipas !== 'undefined' && equipas) { %>
-      <div class="equipas-section">        <h3>🏟️ Equipas Equilibradas</h3>
-        <p class="equipas-info">Equipas geradas automaticamente baseadas na <strong>percentagem de vitórias</strong> dos jogadores para máximo equilíbrio.</p>
+    <% if (typeof equipas !== 'undefined' && equipas) { %>      <div class="equipas-section">        <h3>🏟️ Equipas Equilibradas</h3>
+        <p class="equipas-info">Equipas geradas automaticamente baseadas na <strong>média de pontos</strong> dos jogadores para máximo equilíbrio.</p>
         
         <div class="equipas-container">
           <div class="equipa-card equipa-verde card-visual">
             <div class="equipa-header">
               <h4>🟢 Equipa 1 - Coletes Verdes</h4>
               <div class="equipa-stats">
-                <span>% Vitórias: <%= equipas.equipa1.percentagem_vitorias_media.toFixed(1) %>%</span>
-                <span>Pontos: <%= equipas.equipa1.pontos_totais %></span>
+                <span>Média: <%= equipas.equipa1.media_pontos.toFixed(2) %> pts/jogo</span>
+                <span>Pontos Totais: <%= equipas.equipa1.pontos_totais %></span>
               </div>
             </div>
             <div class="jogadores-equipa">              <% equipas.equipa1.jogadores.forEach((jogador, index) => { %>
                 <div class="jogador-equipa-item" data-jogador-id="<%= jogador.id %>" data-equipa="1">
                   <span class="jogador-posicao"><%= index + 1 %>.</span>
                   <span class="jogador-nome"><%= jogador.nome %></span>
-                  <span class="jogador-pontos"><%= (jogador.percentagem_vitorias || 0).toFixed(1) %>%</span>
+                  <span class="jogador-pontos"><%= (jogador.media_pontos || 0).toFixed(2) %> pts</span>
                   <% if (user && user.role === 'admin') { %>
                   <button class="btn-trocar" onclick="prepararTroca('<%= jogador.id %>', 1)">🔄</button>
                   <% } %>
@@ -297,15 +296,15 @@
             <div class="equipa-header">
               <h4>🔴 Equipa 2 - Coletes Vermelhos</h4>
               <div class="equipa-stats">
-                <span>% Vitórias: <%= equipas.equipa2.percentagem_vitorias_media.toFixed(1) %>%</span>
-                <span>Pontos: <%= equipas.equipa2.pontos_totais %></span>
+                <span>Média: <%= equipas.equipa2.media_pontos.toFixed(2) %> pts/jogo</span>
+                <span>Pontos Totais: <%= equipas.equipa2.pontos_totais %></span>
               </div>
             </div>
             <div class="jogadores-equipa">              <% equipas.equipa2.jogadores.forEach((jogador, index) => { %>
                 <div class="jogador-equipa-item" data-jogador-id="<%= jogador.id %>" data-equipa="2">
                   <span class="jogador-posicao"><%= index + 1 %>.</span>
                   <span class="jogador-nome"><%= jogador.nome %></span>
-                  <span class="jogador-pontos"><%= (jogador.percentagem_vitorias || 0).toFixed(1) %>%</span>
+                  <span class="jogador-pontos"><%= (jogador.media_pontos || 0).toFixed(2) %> pts</span>
                   <% if (user && user.role === 'admin') { %>
                   <button class="btn-trocar" onclick="prepararTroca('<%= jogador.id %>', 2)">🔄</button>
                   <% } %>

@@ -141,9 +141,7 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
       return res.status(400).send('Não há convocados suficientes confirmados');
     }
 
-    console.log(`📋 ${convocados.length} convocados encontrados`);
-
-    // 2. Buscar estatísticas do ano atual para cada jogador
+    console.log(`📋 ${convocados.length} convocados encontrados`);    // 2. Buscar estatísticas do ano atual para cada jogador
     const anoAtual = new Date().getFullYear().toString();
     const queryEstatisticas = `
       SELECT 
@@ -153,13 +151,23 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
         SUM(CASE 
           WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
                (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
-          THEN 1 ELSE 0 END) as vitorias,
+          THEN 3
+          WHEN (p.equipa = 1 AND j.equipa1_golos = j.equipa2_golos) OR 
+               (p.equipa = 2 AND j.equipa2_golos = j.equipa1_golos)
+          THEN 1
+          ELSE 0 
+        END) as pontos_totais,
         ROUND(
           (SUM(CASE 
             WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
                  (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
-            THEN 1 ELSE 0 END) * 100.0) / COUNT(DISTINCT j.id), 1
-        ) as percentagem_vitorias
+            THEN 3
+            WHEN (p.equipa = 1 AND j.equipa1_golos = j.equipa2_golos) OR 
+                 (p.equipa = 2 AND j.equipa2_golos = j.equipa1_golos)
+            THEN 1
+            ELSE 0 
+          END) * 1.0) / NULLIF(COUNT(DISTINCT j.id), 0), 2
+        ) as media_pontos
       FROM jogadores jog
       LEFT JOIN presencas p ON jog.id = p.jogador_id
       LEFT JOIN jogos j ON p.jogo_id = j.id
@@ -172,32 +180,30 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
       if (err) {
         console.error('Erro ao buscar estatísticas:', err);
         return res.status(500).send('Erro ao buscar estatísticas');
-      }
-
-      // 3. Criar mapa de estatísticas
+      }      // 3. Criar mapa de estatísticas
       const statsMap = {};
       (estatisticas || []).forEach(stat => {
         statsMap[stat.id] = {
           jogos: stat.jogos || 0,
-          vitorias: stat.vitorias || 0,
-          percentagem_vitorias: stat.percentagem_vitorias || 0
+          pontos_totais: stat.pontos_totais || 0,
+          media_pontos: stat.media_pontos || 0
         };
       });
 
       // 4. Enriquecer convocados com estatísticas
       const jogadoresComStats = convocados.map(jogador => ({
         ...jogador,
-        ...(statsMap[jogador.id] || { jogos: 0, vitorias: 0, percentagem_vitorias: 0 })
+        ...(statsMap[jogador.id] || { jogos: 0, pontos_totais: 0, media_pontos: 0 })
       }));
 
       // 5. Algoritmo de geração de equipas equilibradas
-      // Ordenar jogadores por percentagem de vitórias (do melhor ao pior)
-      jogadoresComStats.sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias);
+      // Ordenar jogadores por média de pontos (do melhor ao pior)
+      jogadoresComStats.sort((a, b) => b.media_pontos - a.media_pontos);
 
       const equipa1 = [];
       const equipa2 = [];
-      let somaPercentagemEquipa1 = 0;
-      let somaPercentagemEquipa2 = 0;
+      let somaPontosEquipa1 = 0;
+      let somaPontosEquipa2 = 0;
 
       // Distribuir jogadores alternadamente, mas ajustando para equilíbrio
       jogadoresComStats.forEach((jogador, index) => {
@@ -205,36 +211,34 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
         if (index % 4 < 2) {
           if (equipa1.length <= equipa2.length) {
             equipa1.push(jogador);
-            somaPercentagemEquipa1 += jogador.percentagem_vitorias;
+            somaPontosEquipa1 += jogador.media_pontos;
           } else {
             equipa2.push(jogador);
-            somaPercentagemEquipa2 += jogador.percentagem_vitorias;
+            somaPontosEquipa2 += jogador.media_pontos;
           }
         } else {
           if (equipa2.length <= equipa1.length) {
             equipa2.push(jogador);
-            somaPercentagemEquipa2 += jogador.percentagem_vitorias;
+            somaPontosEquipa2 += jogador.media_pontos;
           } else {
             equipa1.push(jogador);
-            somaPercentagemEquipa1 += jogador.percentagem_vitorias;
+            somaPontosEquipa1 += jogador.media_pontos;
           }
         }
       });
 
       // 6. Calcular médias
-      const mediaEquipa1 = equipa1.length > 0 ? somaPercentagemEquipa1 / equipa1.length : 0;
-      const mediaEquipa2 = equipa2.length > 0 ? somaPercentagemEquipa2 / equipa2.length : 0;
-
-      const equipasGeradas = {
+      const mediaPontosEquipa1 = equipa1.length > 0 ? somaPontosEquipa1 / equipa1.length : 0;
+      const mediaPontosEquipa2 = equipa2.length > 0 ? somaPontosEquipa2 / equipa2.length : 0;      const equipasGeradas = {
         equipa1: {
           jogadores: equipa1,
-          percentagem_vitorias_media: mediaEquipa1,
-          pontos_totais: equipa1.reduce((sum, j) => sum + (j.vitorias * 3), 0)
+          media_pontos: mediaPontosEquipa1,
+          pontos_totais: equipa1.reduce((sum, j) => sum + j.pontos_totais, 0)
         },
         equipa2: {
           jogadores: equipa2,
-          percentagem_vitorias_media: mediaEquipa2,
-          pontos_totais: equipa2.reduce((sum, j) => sum + (j.vitorias * 3), 0)
+          media_pontos: mediaPontosEquipa2,
+          pontos_totais: equipa2.reduce((sum, j) => sum + j.pontos_totais, 0)
         }
       };
 
@@ -242,8 +246,8 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
       global.equipasGeradas = equipasGeradas;
 
       console.log('✅ Equipas geradas com sucesso');
-      console.log(`Equipa 1: ${equipa1.length} jogadores, média ${mediaEquipa1.toFixed(1)}%`);
-      console.log(`Equipa 2: ${equipa2.length} jogadores, média ${mediaEquipa2.toFixed(1)}%`);
+      console.log(`Equipa 1: ${equipa1.length} jogadores, média ${mediaPontosEquipa1.toFixed(2)} pontos`);
+      console.log(`Equipa 2: ${equipa2.length} jogadores, média ${mediaPontosEquipa2.toFixed(2)} pontos`);
 
       // 8. Redirecionar de volta para convocatória
       res.redirect('/convocatoria');
