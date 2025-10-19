@@ -240,15 +240,14 @@ router.get('/setup-coletes', requireAdmin, async (req, res) => {
   
   try {
     log.push('🔄 Iniciando configuração dos coletes...\n');
-    
-    // Ordem definida no WhatsApp
+      // Ordem definida no WhatsApp
     const jogadoresOrdem = [
       { busca: 'Rogério', posicao: 1 },
-      { busca: 'Cesaro', posicao: 2 },
+      { busca: 'Césaro Cruz', posicao: 2 },
       { busca: 'Carlos Silva', posicao: 3 },
       { busca: 'Nuno', posicao: 4 },
       { busca: 'Joel', posicao: 5 },
-      { busca: 'Carlos Cruz', posicao: 6 },
+      { busca: 'Carlos Correia', posicao: 6 },
       { busca: 'Joaquim', posicao: 7 },
       { busca: 'Ismael', posicao: 8 },
       { busca: 'João', posicao: 9 },
@@ -290,8 +289,7 @@ router.get('/setup-coletes', requireAdmin, async (req, res) => {
     });
     
     log.push('📋 Configurando nova ordem:\n');
-    
-    // Passo 4: Inserir jogadores na ordem correta
+      // Passo 4: Inserir jogadores na ordem correta
     for (const item of jogadoresOrdem) {
       const jogador = jogadores.find(j => {
         const nome = j.nome.toLowerCase();
@@ -303,6 +301,15 @@ router.get('/setup-coletes', requireAdmin, async (req, res) => {
         // Match por primeiro nome
         const primeiroNome = nome.split(' ')[0];
         if (primeiroNome === busca) return true;
+        
+        // Match especial para "Cesaro" → "Césaro Cruz" ou similar
+        if (busca === 'cesaro' && (nome.includes('cesar') || nome.includes('césar'))) return true;
+        
+        // Match especial para "Carlos Cruz" → buscar por sobrenome
+        if (busca === 'carlos cruz') {
+          const partes = nome.split(' ');
+          return partes.includes('carlos') && (partes.includes('cruz') || partes.includes('correia'));
+        }
         
         // Match por partes do nome
         const partes = busca.split(' ');
@@ -335,11 +342,10 @@ router.get('/setup-coletes', requireAdmin, async (req, res) => {
     const rogerio = jogadores.find(j => j.nome.toLowerCase().includes('rogério'));
     const cesaro = jogadores.find(j => j.nome.toLowerCase().includes('cesaro') || j.nome.toLowerCase().includes('césar'));
     const carlosSilva = jogadores.find(j => j.nome.toLowerCase() === 'carlos silva');
-    
-    if (rogerio) {
+      if (rogerio) {
       await new Promise((resolve, reject) => {
         db.query(
-          'INSERT INTO coletes (jogador_id, levou_em, devolveu_em) VALUES (?, ?, ?)',
+          'INSERT INTO coletes (jogador_id, data_levou, data_devolveu) VALUES (?, ?, ?)',
           [rogerio.id, '2024-10-02', '2024-10-09'],
           (err) => {
             if (err) return reject(err);
@@ -353,7 +359,7 @@ router.get('/setup-coletes', requireAdmin, async (req, res) => {
     if (cesaro) {
       await new Promise((resolve, reject) => {
         db.query(
-          'INSERT INTO coletes (jogador_id, levou_em, devolveu_em) VALUES (?, ?, ?)',
+          'INSERT INTO coletes (jogador_id, data_levou, data_devolveu) VALUES (?, ?, ?)',
           [cesaro.id, '2024-10-09', '2024-10-16'],
           (err) => {
             if (err) return reject(err);
@@ -367,7 +373,7 @@ router.get('/setup-coletes', requireAdmin, async (req, res) => {
     if (carlosSilva) {
       await new Promise((resolve, reject) => {
         db.query(
-          'INSERT INTO coletes (jogador_id, levou_em, devolveu_em) VALUES (?, ?, ?)',
+          'INSERT INTO coletes (jogador_id, data_levou, data_devolveu) VALUES (?, ?, ?)',
           [carlosSilva.id, '2024-10-16', null],
           (err) => {
             if (err) return reject(err);

@@ -186,8 +186,7 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
 
     // Combinar: primeiro os com mínimo, depois os sem
     const estatisticasOrdenadas = [...comMinimoJogos, ...semMinimoJogos];    const { gerarCuriosidades } = require('../server');
-    
-    // Query para duplas - incluir apenas jogadores com pelo menos 25% de presenças
+      // Query para duplas - incluir apenas jogadores com pelo menos 25% de presenças
     const queryDuplas = `
       WITH jogadores_ativos AS (
         SELECT 
@@ -211,23 +210,28 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
           THEN 1 ELSE 0 END) as vitorias,
         SUM(CASE 
           WHEN (p1.equipa = p2.equipa AND jogo.equipa1_golos = jogo.equipa2_golos) 
-          THEN 1 ELSE 0 END) as empates,
-        SUM(CASE 
+          THEN 1 ELSE 0 END) as empates,        SUM(CASE 
           WHEN (p1.equipa = p2.equipa AND p1.equipa = 1 AND jogo.equipa1_golos < jogo.equipa2_golos) OR 
                (p1.equipa = p2.equipa AND p1.equipa = 2 AND jogo.equipa2_golos < jogo.equipa1_golos) 
-          THEN 1 ELSE 0 END) as derrotas,        ROUND(
-          (SUM(CASE 
-            WHEN (p1.equipa = p2.equipa AND p1.equipa = 1 AND jogo.equipa1_golos > jogo.equipa2_golos) OR 
-                 (p1.equipa = p2.equipa AND p1.equipa = 2 AND jogo.equipa2_golos > jogo.equipa1_golos) 
-            THEN 1 ELSE 0 END) * 100.0) / COUNT(DISTINCT jogo.id), 1
-        ) as percentagem_vitorias      FROM presencas p1
+          THEN 1 ELSE 0 END) as derrotas,
+        ROUND(
+          CAST(
+            (SUM(CASE 
+              WHEN (p1.equipa = p2.equipa AND p1.equipa = 1 AND jogo.equipa1_golos > jogo.equipa2_golos) OR 
+                   (p1.equipa = p2.equipa AND p1.equipa = 2 AND jogo.equipa2_golos > jogo.equipa1_golos) 
+              THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(DISTINCT jogo.id), 0)
+            AS ${USE_POSTGRES ? 'NUMERIC' : 'REAL'}
+          ), 1
+        ) as percentagem_vitorias
+      FROM presencas p1
       JOIN presencas p2 ON p1.jogo_id = p2.jogo_id AND p1.equipa = p2.equipa AND p1.jogador_id < p2.jogador_id
       JOIN jogadores_ativos j1 ON p1.jogador_id = j1.id
-      JOIN jogadores_ativos j2 ON p2.jogador_id = j2.id      JOIN jogos jogo ON p1.jogo_id = jogo.id
+      JOIN jogadores_ativos j2 ON p2.jogador_id = j2.id
+      JOIN jogos jogo ON p1.jogo_id = jogo.id
       WHERE jogo.equipa1_golos IS NOT NULL 
         AND jogo.equipa2_golos IS NOT NULL
         ${filtroDataDuplas}
-      GROUP BY j1.id, j2.id, j1.nome, j2.nome
+      GROUP BY j1.nome, j2.nome
       ORDER BY percentagem_vitorias DESC
     `;
     
