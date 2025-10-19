@@ -17,8 +17,7 @@
     <div class="info-note-modern">
       <span class="info-icon">ℹ️</span>
       <p><strong>Nota:</strong> Registos desde outubro de 2025, ordem de acordo com o definido no WhatsApp</p>
-    </div>
-      <!-- Estado actual dos coletes --><div class="coletes-status-modern">
+    </div>    <!-- Estado actual dos coletes --><div class="coletes-status-modern">
       <% if (coletesActuais) { %>
         <div class="status-card current-holder">
           <div class="status-icon">👕</div>
@@ -26,6 +25,57 @@
             <h3>Coletes actualmente com:</h3>
             <p class="holder-name"><%= coletesActuais.jogador_nome %></p>
             <p class="holder-date">📅 Desde: <%= new Date(coletesActuais.data_levou).toLocaleDateString('pt-PT') %></p>
+            
+            <% if (user && user.role === 'admin') { %>
+              <!-- Botão para confirmar devolução -->
+              <div style="margin-top: 20px;">
+                <button type="button" class="btn btn-success" onclick="document.getElementById('formDevolucao').style.display='block'; this.style.display='none';">
+                  ✅ Confirmar Devolução
+                </button>
+              </div>
+              
+              <!-- Formulário de devolução (inicialmente escondido) -->
+              <div id="formDevolucao" style="display:none; margin-top: 20px; padding: 15px; background-color: #f0f9ff; border-radius: 8px; border: 2px solid #3b82f6;">
+                <h4 style="margin-top: 0; color: #1e40af;">👤 Quem levou os coletes?</h4>
+                <form method="POST" action="/coletes/confirmar">
+                  <div style="margin-bottom: 15px;">
+                    <label for="jogador_select" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                      Selecionar jogador:
+                    </label>
+                    <select name="jogador_id" id="jogador_select" required 
+                            style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #cbd5e1; font-size: 16px;">
+                      <% if (proximoConvocado) { %>
+                        <option value="<%= proximoConvocado.id %>" selected>
+                          🎯 <%= proximoConvocado.nome %> (Sugestão: próximo da lista)
+                        </option>
+                      <% } %>
+                      <% 
+                        const convocados = estatisticas.filter(j => j.tipo === 'convocado');
+                        convocados.forEach(jogador => { 
+                          if (!proximoConvocado || jogador.id !== proximoConvocado.id) { 
+                      %>
+                        <option value="<%= jogador.id %>">
+                          <%= jogador.nome %> (Levou <%= jogador.vezes_levou %>x)
+                        </option>
+                      <% 
+                          }
+                        }); 
+                      %>
+                    </select>
+                  </div>
+                  
+                  <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                      💾 Confirmar
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;" 
+                            onclick="document.getElementById('formDevolucao').style.display='none'; document.querySelector('.btn-success').style.display='inline-block';">
+                      ❌ Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            <% } %>
           </div>
         </div>
       <% } else { %>

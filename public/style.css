@@ -2327,6 +2327,98 @@ button:hover {
 }
 
 /* ========================================
+   FORMULÁRIO DE DEVOLUÇÃO DE COLETES
+======================================== */
+
+#formDevolucao {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f0f9ff;
+  border-radius: 8px;
+  border: 2px solid #3b82f6;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#formDevolucao h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #1e40af;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+#formDevolucao label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+#formDevolucao select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #cbd5e1;
+  font-size: 16px;
+  background-color: white;
+  color: #1f2937;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+#formDevolucao select:hover {
+  border-color: #3b82f6;
+}
+
+#formDevolucao select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#formDevolucao .btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+#formDevolucao .btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+#formDevolucao .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+#formDevolucao .btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+#formDevolucao .btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+/* ========================================
    COLETES - JOGADORES RESERVA
 ======================================== */
 
