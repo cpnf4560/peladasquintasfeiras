@@ -11,10 +11,35 @@
     <div class="page-header-modern">
       <h2 class="section-title">⚽ Histórico de Resultados</h2>
       <p class="section-subtitle-modern">Todos os jogos registados, ordenados do mais recente para o mais antigo</p>
-    </div>
-
-    <!-- Estatísticas TOP 3 -->
+    </div>    <!-- Estatísticas TOP 3 -->
     <% 
+      // Criar mapa global de todos os jogadores para identificar nomes duplicados
+      const allUniqueFirstNames = {};
+      jogos.forEach(jogo => {
+        [...(jogo.jogadores_equipa1 || []), ...(jogo.jogadores_equipa2 || [])].forEach(p => {
+          const firstName = p.nome.split(' ')[0];
+          if (!allUniqueFirstNames[firstName]) {
+            allUniqueFirstNames[firstName] = new Set();
+          }
+          allUniqueFirstNames[firstName].add(p.nome);
+        });
+      });
+      
+      // Função para formatar nomes (primeiro nome + inicial se houver duplicados)
+      function formatPlayerNames(players) {
+        if (!players || players.length === 0) return [];
+        return players.map(p => {
+          const firstName = p.nome.split(' ')[0];
+          const lastName = p.nome.split(' ').slice(-1)[0];
+          
+          // Se há mais de 1 pessoa com este primeiro nome, adicionar inicial do último nome
+          if (allUniqueFirstNames[firstName] && allUniqueFirstNames[firstName].size > 1) {
+            return `${firstName} ${lastName.charAt(0)}.`;
+          }
+          return firstName;
+        });
+      }
+      
       // Calcular estatísticas
       const jogosComDiferenca = jogos.map(j => ({
         ...j,
@@ -44,13 +69,24 @@
           <div class="stat-top3-header">
             <span class="stat-top3-icon">🔥</span>
             <h3 class="stat-top3-title">Maiores Goleadas</h3>
-          </div>
-          <div class="stat-top3-list">
+          </div>          <div class="stat-top3-list">
             <% top3Goleadas.forEach((jogo, idx) => { %>
               <div class="stat-top3-item">
                 <span class="stat-rank">#<%= idx + 1 %></span>
                 <span class="stat-score"><%= jogo.equipa1_golos %> - <%= jogo.equipa2_golos %></span>
                 <span class="stat-detail">(<%= jogo.diferenca %> golos)</span>
+                <% if (jogo.jogadores_equipa1 && jogo.jogadores_equipa1.length > 0) { %>
+                  <div class="stat-players">
+                    <div class="stat-team">
+                      <span class="team-dot green"></span>
+                      <%= formatPlayerNames(jogo.jogadores_equipa1).join(', ') %>
+                    </div>
+                    <div class="stat-team">
+                      <span class="team-dot red"></span>
+                      <%= formatPlayerNames(jogo.jogadores_equipa2).join(', ') %>
+                    </div>
+                  </div>
+                <% } %>
               </div>
             <% }) %>
           </div>
@@ -61,13 +97,24 @@
           <div class="stat-top3-header">
             <span class="stat-top3-icon">⚽</span>
             <h3 class="stat-top3-title">Mais Golos</h3>
-          </div>
-          <div class="stat-top3-list">
+          </div>          <div class="stat-top3-list">
             <% top3MaisGolos.forEach((jogo, idx) => { %>
               <div class="stat-top3-item">
                 <span class="stat-rank">#<%= idx + 1 %></span>
                 <span class="stat-score"><%= jogo.equipa1_golos %> - <%= jogo.equipa2_golos %></span>
                 <span class="stat-detail">(<%= jogo.totalGolos %> golos)</span>
+                <% if (jogo.jogadores_equipa1 && jogo.jogadores_equipa1.length > 0) { %>
+                  <div class="stat-players">
+                    <div class="stat-team">
+                      <span class="team-dot green"></span>
+                      <%= formatPlayerNames(jogo.jogadores_equipa1).join(', ') %>
+                    </div>
+                    <div class="stat-team">
+                      <span class="team-dot red"></span>
+                      <%= formatPlayerNames(jogo.jogadores_equipa2).join(', ') %>
+                    </div>
+                  </div>
+                <% } %>
               </div>
             <% }) %>
           </div>
@@ -78,13 +125,24 @@
           <div class="stat-top3-header">
             <span class="stat-top3-icon">🛡️</span>
             <h3 class="stat-top3-title">Menos Golos</h3>
-          </div>
-          <div class="stat-top3-list">
+          </div>          <div class="stat-top3-list">
             <% top3MenosGolos.forEach((jogo, idx) => { %>
               <div class="stat-top3-item">
                 <span class="stat-rank">#<%= idx + 1 %></span>
                 <span class="stat-score"><%= jogo.equipa1_golos %> - <%= jogo.equipa2_golos %></span>
                 <span class="stat-detail">(<%= jogo.totalGolos %> golos)</span>
+                <% if (jogo.jogadores_equipa1 && jogo.jogadores_equipa1.length > 0) { %>
+                  <div class="stat-players">
+                    <div class="stat-team">
+                      <span class="team-dot green"></span>
+                      <%= formatPlayerNames(jogo.jogadores_equipa1).join(', ') %>
+                    </div>
+                    <div class="stat-team">
+                      <span class="team-dot red"></span>
+                      <%= formatPlayerNames(jogo.jogadores_equipa2).join(', ') %>
+                    </div>
+                  </div>
+                <% } %>
               </div>
             <% }) %>
           </div>

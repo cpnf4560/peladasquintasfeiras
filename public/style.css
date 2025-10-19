@@ -3243,6 +3243,41 @@ table td.position {
   font-weight: 500;
 }
 
+/* Player names in TOP 3 stats */
+.stat-players {
+  width: 100%;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.team-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.team-dot.green {
+  background-color: #059669;
+}
+
+.team-dot.red {
+  background-color: #dc2626;
+}
+
 /* Responsive adjustments for TOP 3 cards */
 @media (max-width: 1024px) {
   .stats-top3-container {
