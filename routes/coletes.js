@@ -11,22 +11,25 @@ router.get('/coletes', optionalAuth, (req, res) => {
       console.error('Erro ao adicionar coluna suspenso:', err);
     } else {
       console.log('Coluna suspenso verificada/adicionada');
-    }
-
-    db.query(`
+    }    db.query(`
       SELECT 
         j.id,
         j.nome,
         COALESCE(j.suspenso, 0) as suspenso,
         COUNT(c.id) as vezes_levou,
         MAX(c.data_levou) as ultima_vez,
-        conv.posicao
+        conv.posicao,
+        conv.tipo
       FROM jogadores j
-      JOIN convocatoria conv ON j.id = conv.jogador_id AND conv.tipo = 'convocado'
+      LEFT JOIN convocatoria conv ON j.id = conv.jogador_id
       LEFT JOIN coletes c ON j.id = c.jogador_id
-      WHERE COALESCE(j.suspenso, 0) = 0
-      GROUP BY j.id, j.nome, j.suspenso, conv.posicao
-      ORDER BY vezes_levou ASC, ultima_vez ASC NULLS FIRST, conv.posicao ASC
+      WHERE COALESCE(j.suspenso, 0) = 0 AND conv.id IS NOT NULL
+      GROUP BY j.id, j.nome, j.suspenso, conv.posicao, conv.tipo
+      ORDER BY 
+        CASE WHEN conv.tipo = 'convocado' THEN 0 ELSE 1 END,
+        vezes_levou ASC, 
+        ultima_vez ASC NULLS FIRST, 
+        conv.posicao ASC
     `, [], (err, estatisticas) => {
       if (err) {
         console.error('Erro SQL na consulta de estatísticas:', err.message);

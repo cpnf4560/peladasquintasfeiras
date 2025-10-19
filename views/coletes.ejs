@@ -62,6 +62,10 @@
       <h3>📊 Estatísticas dos Convocados</h3>
       <p><em>Apenas os 10 convocados podem levar os coletes</em></p>
       <% if (estatisticas.length > 0) { %>
+        <% 
+          const convocados = estatisticas.filter(j => j.tipo === 'convocado');
+          const reservas = estatisticas.filter(j => j.tipo === 'reserva');
+        %>
         <table class="table stats-table">
           <thead>
             <tr>
@@ -75,7 +79,7 @@
             </tr>
           </thead>
           <tbody>
-            <% estatisticas.forEach((jogador, index) => { %>
+            <% convocados.forEach((jogador, index) => { %>
               <tr class="<%= index < 3 ? 'priority-high' : '' %> <%= index % 2 === 0 ? 'zebra' : '' %>">
                 <td><%= index + 1 %>º</td>
                 <td><%= jogador.nome %></td>
@@ -110,6 +114,27 @@
                 </td>
               </tr>
             <% }) %>
+            <% if (reservas.length > 0) { %>
+              <% reservas.forEach((jogador, index) => { %>
+                <tr class="jogador-reserva">
+                  <td>-</td>
+                  <td><%= jogador.nome %></td>
+                  <td><%= jogador.posicao %>º Reserva</td>
+                  <td><%= jogador.vezes_levou %></td>
+                  <td>
+                    <% if (jogador.ultima_vez) { %>
+                      <%= new Date(jogador.ultima_vez).toLocaleDateString('pt-PT') %>
+                    <% } else { %>
+                      <em>Nunca</em>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="priority-badge none">-</span>
+                  </td>
+                  <td>-</td>
+                </tr>
+              <% }) %>
+            <% } %>
           </tbody>
         </table>
       <% } else { %>

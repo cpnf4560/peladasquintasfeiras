@@ -2327,6 +2327,31 @@ button:hover {
 }
 
 /* ========================================
+   COLETES - JOGADORES RESERVA
+======================================== */
+
+/* Linha de jogador reserva com fundo cinza e cor clara */
+.jogador-reserva {
+  background-color: #e5e7eb !important;
+  color: #9ca3af !important;
+  opacity: 0.75;
+}
+
+.jogador-reserva td {
+  color: #6b7280 !important;
+  font-weight: 400;
+}
+
+.jogador-reserva:hover {
+  background-color: #d1d5db !important;
+  opacity: 0.85;
+}
+
+.jogador-reserva:hover td {
+  color: #4b5563 !important;
+}
+
+/* ========================================
    ESTATÍSTICAS TABLE IMPROVEMENTS
 ======================================== */
 
@@ -2442,14 +2467,25 @@ table tr.mvp-row:hover {
 /* Jogadores sem mínimo de jogos (25%) */
 .stats-table tr.sem-minimo-jogos,
 table tr.sem-minimo-jogos {
-  background-color: #f5f5f5 !important;
-  opacity: 0.8;
+  background-color: #e5e7eb !important;
+  color: #374151 !important;
+  font-weight: 500;
+}
+
+.stats-table tr.sem-minimo-jogos td,
+table tr.sem-minimo-jogos td {
+  color: #374151 !important;
 }
 
 .stats-table tr.sem-minimo-jogos:hover,
 table tr.sem-minimo-jogos:hover {
-  background-color: #eeeeee !important;
-  opacity: 0.9;
+  background-color: #d1d5db !important;
+  color: #1f2937 !important;
+}
+
+.stats-table tr.sem-minimo-jogos:hover td,
+table tr.sem-minimo-jogos:hover td {
+  color: #1f2937 !important;
 }
 
 /* Nota explicativa sobre mínimo de jogos */
