@@ -2468,24 +2468,24 @@ table tr.mvp-row:hover {
 .stats-table tr.sem-minimo-jogos,
 table tr.sem-minimo-jogos {
   background-color: #e5e7eb !important;
-  color: #374151 !important;
+  color: #9ca3af !important;
   font-weight: 500;
 }
 
 .stats-table tr.sem-minimo-jogos td,
 table tr.sem-minimo-jogos td {
-  color: #374151 !important;
+  color: #9ca3af !important;
 }
 
 .stats-table tr.sem-minimo-jogos:hover,
 table tr.sem-minimo-jogos:hover {
   background-color: #d1d5db !important;
-  color: #1f2937 !important;
+  color: #6b7280 !important;
 }
 
 .stats-table tr.sem-minimo-jogos:hover td,
 table tr.sem-minimo-jogos:hover td {
-  color: #1f2937 !important;
+  color: #6b7280 !important;
 }
 
 /* Nota explicativa sobre mínimo de jogos */
