@@ -8,12 +8,17 @@
   <link rel="shortcut icon" href="/logo.svg">
 </head>
 <body class="main-bg">  <%- include('partials/header', { user: user }) %>
-  <main class="container">
-    <div class="coletes-header-modern">
+  <main class="container">    <div class="coletes-header-modern">
       <h2 class="section-title">🟢🔴 Gestão de Coletes</h2>
       <p class="section-subtitle">Controlo de quem leva os coletes</p>
     </div>
-      <!-- Estado actual dos coletes -->    <div class="coletes-status-modern">
+
+    <!-- Nota informativa -->
+    <div class="info-note-modern">
+      <span class="info-icon">ℹ️</span>
+      <p><strong>Nota:</strong> Registos desde outubro de 2025, ordem de acordo com o definido no WhatsApp</p>
+    </div>
+      <!-- Estado actual dos coletes --><div class="coletes-status-modern">
       <% if (coletesActuais) { %>
         <div class="status-card current-holder">
           <div class="status-icon">👕</div>
