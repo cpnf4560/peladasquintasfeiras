@@ -217,19 +217,18 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
       JOIN jogos jogo ON p1.jogo_id = jogo.id
       WHERE jogo.equipa1_golos IS NOT NULL 
         AND jogo.equipa2_golos IS NOT NULL
-        ${filtroDataDuplas}
-      GROUP BY j1.id, j1.nome, j2.id, j2.nome
+        ${filtroDataDuplas}      GROUP BY j1.id, j1.nome, j2.id, j2.nome
       HAVING (
         SELECT COUNT(DISTINCT jp1.jogo_id) 
         FROM presencas jp1 
         JOIN jogos jg1 ON jp1.jogo_id = jg1.id 
-        WHERE jp1.jogador_id = j1.id ${filtroData}
+        WHERE jp1.jogador_id = j1.id ${filtroData.replace(/j\.data/g, 'jg1.data')}
       ) >= ${minimoJogos}
       AND (
         SELECT COUNT(DISTINCT jp2.jogo_id) 
         FROM presencas jp2 
         JOIN jogos jg2 ON jp2.jogo_id = jg2.id 
-        WHERE jp2.jogador_id = j2.id ${filtroData}
+        WHERE jp2.jogador_id = j2.id ${filtroData.replace(/j\.data/g, 'jg2.data')}
       ) >= ${minimoJogos}
       ORDER BY percentagem_vitorias DESC
     `;    console.log('🔍 Query de duplas com mínimo de jogos:', minimoJogos);
