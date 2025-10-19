@@ -223,12 +223,11 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
         ) as percentagem_vitorias      FROM presencas p1
       JOIN presencas p2 ON p1.jogo_id = p2.jogo_id AND p1.equipa = p2.equipa AND p1.jogador_id < p2.jogador_id
       JOIN jogadores_ativos j1 ON p1.jogador_id = j1.id
-      JOIN jogadores_ativos j2 ON p2.jogador_id = j2.id
-      JOIN jogos jogo ON p1.jogo_id = jogo.id
+      JOIN jogadores_ativos j2 ON p2.jogador_id = j2.id      JOIN jogos jogo ON p1.jogo_id = jogo.id
       WHERE jogo.equipa1_golos IS NOT NULL 
         AND jogo.equipa2_golos IS NOT NULL
         ${filtroDataDuplas}
-      GROUP BY j1.id, j2.id, j1.nome, j2.nome      HAVING COUNT(DISTINCT jogo.id) >= 3
+      GROUP BY j1.id, j2.id, j1.nome, j2.nome
       ORDER BY percentagem_vitorias DESC
     `;
     
