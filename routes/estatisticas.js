@@ -234,12 +234,19 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
       GROUP BY j1.nome, j2.nome
       ORDER BY percentagem_vitorias DESC
     `;
-    
-    console.log('🔍 Query de duplas com mínimo de jogos:', minimoJogos);
+      console.log('🔍 Query de duplas com mínimo de jogos:', minimoJogos);
+    console.log('📝 QUERY DUPLAS:\n', queryDuplas);
     
     db.query(queryDuplas, [], (errDuplas, duplasResult) => {
+      if (errDuplas) {
+        console.log('❌ [DUPLAS ERROR]:', errDuplas.message);
+        console.log('Stack:', errDuplas.stack);
+      }
       console.log('🔍 [DUPLAS DEBUG] Erro?', errDuplas ? errDuplas.message : 'Nenhum');
       console.log('🔍 [DUPLAS DEBUG] Resultados:', duplasResult ? duplasResult.length : 0);
+      if (duplasResult && duplasResult.length > 0) {
+        console.log('🔍 [DUPLAS DEBUG] Primeira dupla:', duplasResult[0]);
+      }
       
       let duplasProcessadas = null;
         if (!errDuplas && duplasResult && duplasResult.length > 0) {

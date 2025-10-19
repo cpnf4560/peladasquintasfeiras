@@ -36,20 +36,22 @@ router.get('/coletes', optionalAuth, (req, res) => {
         return res.status(500).send(`Erro ao buscar dados: ${err.message}`);
       }
 
-      console.log('Estatísticas encontradas:', estatisticas);
-
-      db.query(`
+      console.log('Estatísticas encontradas:', estatisticas);      db.query(`
         SELECT c.*, j.nome as jogador_nome, c.data_levou
         FROM coletes c
         JOIN jogadores j ON c.jogador_id = j.id
         WHERE c.data_devolveu IS NULL
         ORDER BY c.data_levou DESC
         LIMIT 1
-      `, [], (err, coletesActuais) => {
+      `, [], (err, coletesActuaisResult) => {
         if (err) {
           console.error('Erro ao buscar coletes actuais:', err);
-          coletesActuais = null;
         }
+
+        // Extrair o primeiro resultado (se existir)
+        const coletesActuais = coletesActuaisResult && coletesActuaisResult.length > 0 
+          ? coletesActuaisResult[0] 
+          : null;
 
         console.log('Coletes actuais:', coletesActuais);
 
@@ -60,7 +62,7 @@ router.get('/coletes', optionalAuth, (req, res) => {
           } else {
             proximoConvocado = estatisticas[0];
           }
-        }        console.log('Próximo convocado:', proximoConvocado);
+        }console.log('Próximo convocado:', proximoConvocado);
         res.render('coletes', {
           user: req.session.user || null,
           activePage: 'coletes',
