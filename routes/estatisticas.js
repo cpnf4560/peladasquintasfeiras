@@ -182,11 +182,13 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
         if (a.golos_marcados !== b.golos_marcados) return b.golos_marcados - a.golos_marcados;
         return b.jogos - a.jogos;
       });
-    }
-
-    // Combinar: primeiro os com mínimo, depois os sem
-    const estatisticasOrdenadas = [...comMinimoJogos, ...semMinimoJogos];    const { gerarCuriosidades } = require('../server');
-      // Query para duplas - incluir apenas jogadores com pelo menos 25% de presenças    const queryDuplas = `
+    }    // Combinar: primeiro os com mínimo, depois os sem
+    const estatisticasOrdenadas = [...comMinimoJogos, ...semMinimoJogos];
+    
+    const { gerarCuriosidades } = require('../server');
+    
+    // Query para duplas - incluir apenas jogadores com pelo menos 25% de presenças
+    const queryDuplas = `
       WITH jogadores_ativos AS (
         SELECT 
           jog.id as id,
