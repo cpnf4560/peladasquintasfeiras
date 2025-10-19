@@ -233,9 +233,7 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
         ${filtroDataDuplas}
       GROUP BY j1.nome, j2.nome
       ORDER BY percentagem_vitorias DESC
-    `;
-      console.log('🔍 Query de duplas com mínimo de jogos:', minimoJogos);
-    console.log('📝 QUERY DUPLAS:\n', queryDuplas);
+    `;    console.log('🔍 Query de duplas com mínimo de jogos:', minimoJogos);
     
     db.query(queryDuplas, [], (errDuplas, duplasResult) => {
       if (errDuplas) {
@@ -243,30 +241,37 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
         console.log('Stack:', errDuplas.stack);
       }
       console.log('🔍 [DUPLAS DEBUG] Erro?', errDuplas ? errDuplas.message : 'Nenhum');
+      console.log('🔍 [DUPLAS DEBUG] Tipo de duplasResult:', typeof duplasResult);
+      console.log('🔍 [DUPLAS DEBUG] É array?', Array.isArray(duplasResult));
+      console.log('🔍 [DUPLAS DEBUG] duplasResult:', JSON.stringify(duplasResult).substring(0, 200));
       console.log('🔍 [DUPLAS DEBUG] Resultados:', duplasResult ? duplasResult.length : 0);
-      if (duplasResult && duplasResult.length > 0) {
-        console.log('🔍 [DUPLAS DEBUG] Primeira dupla:', duplasResult[0]);
-      }
       
+      // Normalizar resultado (PostgreSQL retorna objeto diferente)
+      const duplas = Array.isArray(duplasResult) ? duplasResult : (duplasResult?.rows || []);
+      console.log('🔍 [DUPLAS DEBUG] Após normalização:', duplas.length);
+      
+      if (duplas && duplas.length > 0) {
+        console.log('🔍 [DUPLAS DEBUG] Primeira dupla:', duplas[0]);
+      }      
       let duplasProcessadas = null;
-        if (!errDuplas && duplasResult && duplasResult.length > 0) {
-        console.log('✅ [DUPLAS DEBUG] A processar', duplasResult.length, 'duplas');        // TOP 3 - Melhor % de vitórias
-        const top3MelhorVitorias = [...duplasResult]
+        if (!errDuplas && duplas && duplas.length > 0) {
+        console.log('✅ [DUPLAS DEBUG] A processar', duplas.length, 'duplas');        // TOP 3 - Melhor % de vitórias
+        const top3MelhorVitorias = [...duplas]
           .sort((a, b) => b.percentagem_vitorias - a.percentagem_vitorias)
           .slice(0, 3);
         
         // TOP 3 - Pior % de vitórias
-        const top3PiorVitorias = [...duplasResult]
+        const top3PiorVitorias = [...duplas]
           .sort((a, b) => a.percentagem_vitorias - b.percentagem_vitorias)
           .slice(0, 3);
         
         // TOP 3 - Mais jogos juntos
-        const top3MaisJogos = [...duplasResult]
+        const top3MaisJogos = [...duplas]
           .sort((a, b) => b.jogos_juntos - a.jogos_juntos)
           .slice(0, 3);
         
         // TOP 3 - Menos jogos juntos
-        const top3MenosJogos = [...duplasResult]
+        const top3MenosJogos = [...duplas]
           .sort((a, b) => a.jogos_juntos - b.jogos_juntos)
           .slice(0, 3);
         
@@ -283,9 +288,9 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
       } else {
         console.log('❌ [DUPLAS DEBUG] Nenhuma dupla processada - condição falhou');
         console.log('   errDuplas?', !!errDuplas);
-        console.log('   duplasResult existe?', !!duplasResult);
-        console.log('   duplasResult.length:', duplasResult ? duplasResult.length : 'N/A');
-      }      // Buscar estatísticas do ano completo se estiver filtrado por mês
+        console.log('   duplas existe?', !!duplas);
+        console.log('   duplas.length:', duplas ? duplas.length : 'N/A');
+      }// Buscar estatísticas do ano completo se estiver filtrado por mês
     if (mesSelecionado) {
       db.query(queryEstatisticasAno, [], (errAno, estatisticasAno) => {
         const statsAnoProcessadas = (estatisticasAno || []).map(stat => ({
