@@ -278,6 +278,7 @@ const jogosRoutes = require('./routes/jogos');
 const coletesRoutes = require('./routes/coletes');
 const convocatoriaRoutes = require('./routes/convocatoria');
 const estatisticasRoutes = require('./routes/estatisticas');
+const comparacaoRoutes = require('./routes/comparacao');
 const adminRoutes = require('./routes/admin');
 const backupRoutes = require('./routes/backup');
 
@@ -296,6 +297,9 @@ app.use('/', convocatoriaRoutes);
 
 // ROTAS DE ESTATÍSTICAS
 app.use('/', estatisticasRoutes);
+
+// ROTAS DE COMPARAÇÃO
+app.use('/', comparacaoRoutes);
 
 // ROTAS ADMIN (temporárias para importação)
 app.use('/admin', adminRoutes);

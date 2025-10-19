@@ -2,21 +2,21 @@ const { db } = require('./db');
 
 console.log('🔄 Limpando e reconfigurando coletes...\n');
 
-// Mapear nomes exatos
+// Mapear nomes exatos - CORRIGIDOS
 const jogadoresOrdem = [
   { busca: 'Rogério', posicao: 1 },
-  { busca: 'Cesaro', posicao: 2 },
+  { busca: 'Césaro', posicao: 2 },
   { busca: 'Carlos Silva', posicao: 3 },
   { busca: 'Nuno', posicao: 4 },
   { busca: 'Joel', posicao: 5 },
-  { busca: 'Carlos Cruz', posicao: 6 },
+  { busca: 'Carlos Correia', posicao: 6 },
   { busca: 'Joaquim', posicao: 7 },
   { busca: 'Ismael', posicao: 8 },
   { busca: 'João', posicao: 9 },
   { busca: 'Rui', posicao: 10 },
   { busca: 'Ricardo', posicao: 11 },
   { busca: 'Valter', posicao: 12 },
-  { busca: 'Serafim', posicao: 13 },
+  { busca: 'Leonardo', posicao: 13 },
   { busca: 'Hugo', posicao: 14 },
   { busca: 'Paulo', posicao: 15 },
   { busca: 'Flávio', posicao: 16 },
@@ -100,8 +100,8 @@ function inserirHistoricoColetes(jogadores) {
   // Rogério - levou em 02/10/2024, devolveu em 09/10/2024
   const rogerio = jogadores.find(j => j.nome.toLowerCase().includes('rogério'));
   
-  // Cesaro - levou em 09/10/2024, devolveu em 16/10/2024
-  const cesaro = jogadores.find(j => j.nome.toLowerCase().includes('cesar') || j.nome.toLowerCase().includes('césaro'));
+  // Césaro - levou em 09/10/2024, devolveu em 16/10/2024
+  const cesaro = jogadores.find(j => j.nome.toLowerCase().includes('césaro'));
   
   // Carlos Silva - tem atualmente desde 16/10/2024
   const carlosSilva = jogadores.find(j => {
@@ -137,7 +137,7 @@ function inserirHistoricoColetes(jogadores) {
       [cesaro.id, '2024-10-09', '2024-10-16'],
       (err) => {
         if (err) {
-          console.error('❌ Erro ao registar Cesaro:', err);
+          console.error('❌ Erro ao registar Césaro:', err);
         } else {
           console.log(`✅ ${cesaro.nome} - levou em 09/10/2024, devolveu em 16/10/2024`);
         }
@@ -146,19 +146,19 @@ function inserirHistoricoColetes(jogadores) {
       }
     );
   } else {
-    console.log('⚠️  Cesaro não encontrado');
+    console.log('⚠️  Césaro não encontrado');
     historicoInserido++;
   }
 
   if (carlosSilva) {
     db.query(
       'INSERT INTO coletes (jogador_id, data_levou, data_devolveu) VALUES (?, ?, ?)',
-      [carlosSilva.id, '2024-10-16', NULL],
+      [carlosSilva.id, '2024-10-16', null],
       (err) => {
         if (err) {
           console.error('❌ Erro ao registar Carlos Silva:', err);
         } else {
-          console.log(`✅ ${carlosSilva.nome} - TEM ATUALMENTE desde 16/10/2024`);
+          console.log(`✅ ${carlosSilva.nome} - tem atualmente desde 16/10/2024`);
         }
         historicoInserido++;
         if (historicoInserido === totalHistorico) finalizarVerificacao();
@@ -171,46 +171,52 @@ function inserirHistoricoColetes(jogadores) {
 }
 
 function finalizarVerificacao() {
-  console.log('\n🔍 Verificando resultado final:\n');
+  setTimeout(() => {
+    console.log('\n🔍 VERIFICAÇÃO FINAL:\n');
+    
+    db.query(
+      `SELECT c.posicao, c.tipo, j.nome
+       FROM convocatoria c
+       JOIN jogadores j ON c.jogador_id = j.id
+       ORDER BY c.posicao`,
+      [],
+      (err, resultado) => {
+        if (err) {
+          console.error('❌ Erro na verificação:', err);
+          process.exit(1);
+        }
 
-  db.query(`
-    SELECT c.posicao, c.tipo, j.nome
-    FROM convocatoria c
-    JOIN jogadores j ON c.jogador_id = j.id
-    ORDER BY c.posicao ASC
-  `, [], (err, conv) => {
-    if (err) {
-      console.error('❌ Erro:', err);
-      process.exit(1);
-    }
+        console.log('CONVOCATÓRIA CONFIGURADA:');
+        resultado.forEach(r => {
+          const emoji = r.tipo === 'convocado' ? '🟢' : '⚪';
+          console.log(`  ${emoji} ${r.posicao}º - ${r.nome}`);
+        });
 
-    console.log('📋 CONVOCATÓRIA (TOP 10 podem levar coletes):');
-    conv.forEach(c => {
-      const emoji = c.tipo === 'convocado' ? '🟢' : '⚪';
-      console.log(`  ${emoji} ${c.posicao}º - ${c.nome}`);
-    });
+        db.query(
+          `SELECT j.nome, c.data_levou, c.data_devolveu
+           FROM coletes c
+           JOIN jogadores j ON c.jogador_id = j.id
+           ORDER BY c.data_levou`,
+          [],
+          (err, historico) => {
+            if (err) {
+              console.error('❌ Erro ao verificar histórico:', err);
+              process.exit(1);
+            }
 
-    db.query(`
-      SELECT j.nome, c.data_levou, c.data_devolveu
-      FROM coletes c
-      JOIN jogadores j ON c.jogador_id = j.id
-      ORDER BY c.data_levou ASC
-    `, [], (err, hist) => {
-      if (err) {
-        console.error('❌ Erro:', err);
-        process.exit(1);
+            console.log('\nHISTÓRICO DE COLETES:');
+            historico.forEach(h => {
+              const status = h.data_devolveu ? 
+                `Devolveu: ${new Date(h.data_devolveu).toLocaleDateString('pt-PT')}` :
+                '✅ TEM ATUALMENTE';
+              console.log(`  ${h.nome} - ${new Date(h.data_levou).toLocaleDateString('pt-PT')} | ${status}`);
+            });
+
+            console.log('\n🎉 CONFIGURAÇÃO APLICADA COM SUCESSO!\n');
+            process.exit(0);
+          }
+        );
       }
-
-      console.log('\n📊 HISTÓRICO DE COLETES:');
-      hist.forEach(h => {
-        const status = h.data_devolveu ? 
-          `Devolveu: ${new Date(h.data_devolveu).toLocaleDateString('pt-PT')}` : 
-          '✅ TEM ATUALMENTE';
-        console.log(`  ${h.nome} - Levou: ${new Date(h.data_levou).toLocaleDateString('pt-PT')} | ${status}`);
-      });
-
-      console.log('\n🎉 CONFIGURAÇÃO COMPLETA!\n');
-      process.exit(0);
-    });
-  });
+    );
+  }, 500);
 }

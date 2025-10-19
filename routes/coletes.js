@@ -96,10 +96,50 @@ router.post('/coletes/atribuir', requireAdmin, (req, res) => {
       if (err) {
         console.error('Erro ao atribuir coletes:', err);
         return res.status(500).send('Erro ao atribuir coletes');
-      }
-
-      res.redirect('/coletes');
+      }      res.redirect('/coletes');
     });
+  });
+});
+
+// Rota para devolver coletes (marca data_devolveu)
+router.post('/coletes/devolver', requireAdmin, (req, res) => {
+  const dataHoje = new Date().toISOString().split('T')[0];
+
+  db.query(`
+    UPDATE coletes 
+    SET data_devolveu = ? 
+    WHERE data_devolveu IS NULL
+  `, [dataHoje], (err) => {
+    if (err) {
+      console.error('❌ Erro ao marcar devolução:', err);
+      return res.status(500).send('Erro ao devolver coletes');
+    }
+
+    console.log('✅ Coletes devolvidos com sucesso');
+    res.redirect('/coletes');
+  });
+});
+
+// Rota para confirmar que alguém levou os coletes (com opção de escolher)
+router.post('/coletes/confirmar', requireAdmin, (req, res) => {
+  const { jogador_id } = req.body;
+  const dataHoje = new Date().toISOString().split('T')[0];
+
+  if (!jogador_id) {
+    return res.status(400).send('Jogador não selecionado');
+  }
+
+  db.query(`
+    INSERT INTO coletes (jogador_id, data_levou, data_devolveu) 
+    VALUES (?, ?, NULL)
+  `, [jogador_id, dataHoje], (err) => {
+    if (err) {
+      console.error('❌ Erro ao confirmar que levou coletes:', err);
+      return res.status(500).send('Erro ao confirmar');
+    }
+
+    console.log('✅ Confirmado que jogador', jogador_id, 'levou os coletes');
+    res.redirect('/coletes');
   });
 });
 

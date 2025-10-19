@@ -2,12 +2,12 @@
   <div class="logo-area">
     <img src="/logo.svg" alt="Logo" class="logo-image">
     <span class="logo-text">Peladas das<br>Quintas Feiras</span>
-  </div>
-  <nav class="navbar">
+  </div>  <nav class="navbar">
     <a href="/convocatoria" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'convocatoria' ? 'active' : '' %>">Convocatória</a>
     <a href="/coletes" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'coletes' ? 'active' : '' %>">Coletes</a>
     <a href="/" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'resultados' ? 'active' : '' %>">Resultados</a>
-    <a href="/estatisticas" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'estatisticas' ? 'active' : '' %>">Estatísticas</a>    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+    <a href="/estatisticas" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'estatisticas' ? 'active' : '' %>">Estatísticas</a>
+    <a href="/comparacao" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'comparacao' ? 'active' : '' %>">Comparação</a>    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
       <a href="/jogos/novo" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'novo-jogo' ? 'active' : '' %>">Registar Resultado</a>
       <a href="/admin/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'admin' ? 'active' : '' %>">Admin</a>
     <% } %>
