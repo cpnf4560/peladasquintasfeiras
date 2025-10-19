@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../db');
+const { db, USE_POSTGRES } = require('../db');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { normalizeRows } = require('../utils/helpers');
 
