@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin, optionalAuth } = require('../middleware/auth');
 
-router.get('/coletes', requireAuth, (req, res) => {
+router.get('/coletes', optionalAuth, (req, res) => {
   console.log('=== ROTA /coletes CHAMADA ===');
 
   db.query("ALTER TABLE jogadores ADD COLUMN suspenso INTEGER DEFAULT 0", (err) => {
@@ -57,11 +57,10 @@ router.get('/coletes', requireAuth, (req, res) => {
           } else {
             proximoConvocado = estatisticas[0];
           }
-        }
-
-        console.log('Próximo convocado:', proximoConvocado);
+        }        console.log('Próximo convocado:', proximoConvocado);
         res.render('coletes', {
-          user: req.session.user,
+          user: req.session.user || null,
+          activePage: 'coletes',
           estatisticas: estatisticas || [],
           coletesActuais: coletesActuais || null,
           proximoConvocado: proximoConvocado || null

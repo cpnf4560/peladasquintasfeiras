@@ -12,8 +12,8 @@
     <div class="convocatoria-header-modern">
       <div class="header-content">
         <h2 class="section-title">📋 Convocatória</h2>
-        <p class="section-subtitle">Gestão de convocados e reservas</p>
-      </div>
+        <p class="section-subtitle">Gestão de convocados e reservas</p>      </div>
+      <% if (user && user.role === 'admin') { %>
       <div class="convocatoria-actions-modern">
         <% if (convocados.length > 10) { %>
           <form method="POST" action="/convocatoria/migrar-para-10" style="display: inline;" 
@@ -36,6 +36,7 @@
           </button>
         </form>
       </div>
+      <% } %>
     </div>
 
     <div class="info-card-modern">
@@ -115,9 +116,10 @@
                         </div>
                       <% } else { %>
                         <span class="status-pending">⏳ Pendente</span>
-                      <% } %>
-                    </td>
-                    <td class="actions-cell">                      <div class="action-buttons-modern">
+                      <% } %>                    </td>
+                    <td class="actions-cell">
+                      <% if (user && user.role === 'admin') { %>
+                      <div class="action-buttons-modern">
                         <form method="POST" action="/convocatoria/confirmar-presenca/<%= jogador.id %>" style="display: inline;">
                           <button type="submit" class="btn-mini <%= jogador.confirmado ? 'btn-mini-danger' : 'btn-mini-success' %>" 
                                   title="<%= jogador.confirmado ? 'Desconfirmar' : 'Confirmar' %>">
@@ -132,6 +134,7 @@
                           </button>
                         </form>
                       </div>
+                      <% } %>
                     </td>
                   </tr>
                 <% }) %>
@@ -180,9 +183,9 @@
                     <td class="faltas-cell">
                       <span class="badge-faltas-modern <%= jogador.total_faltas > 2 ? 'high-faltas' : '' %>">
                         🚫 <%= jogador.total_faltas || 0 %>
-                      </span>
-                    </td>
+                      </span>                    </td>
                     <td class="reorder-cell">
+                      <% if (user && user.role === 'admin') { %>
                       <div class="reorder-buttons">
                         <% if (jogador.posicao > 1) { %>
                           <form method="POST" action="/convocatoria/mover-reserva/<%= jogador.id %>/up" style="display: inline;">
@@ -195,6 +198,7 @@
                           </form>
                         <% } %>
                       </div>
+                      <% } %>
                     </td>
                     <td class="status-cell">
                       <span class="badge-status-modern <%= index === 0 ? 'badge-next' : 'badge-waiting' %>">
@@ -232,10 +236,9 @@
           <span class="stat-label">Total Ativos</span>
         </div>
       </div>
-    </div>
-
-    <!-- Botão para confirmar convocados e gerar equipas -->
-    <% if (convocados.length >= 10) { %>
+    </div>    <!-- Botão para confirmar convocados e gerar equipas -->
+    <% if (user && user.role === 'admin') { %>
+      <% if (convocados.length >= 10) { %>
       <div class="confirmar-convocados-section">
         <h3>⚽ Formar Equipas</h3>
         <p>Com <strong><%= convocados.length %></strong> convocados confirmados, pode gerar automaticamente as equipas equilibradas.</p>
@@ -246,6 +249,7 @@
           </button>
         </form>
       </div>
+      <% } %>
     <% } %>
 
     <!-- Seção de Equipas Equilibradas -->
@@ -262,13 +266,14 @@
                 <span>Pontos: <%= equipas.equipa1.pontos_totais %></span>
               </div>
             </div>
-            <div class="jogadores-equipa">
-              <% equipas.equipa1.jogadores.forEach((jogador, index) => { %>
+            <div class="jogadores-equipa">              <% equipas.equipa1.jogadores.forEach((jogador, index) => { %>
                 <div class="jogador-equipa-item" data-jogador-id="<%= jogador.id %>" data-equipa="1">
                   <span class="jogador-posicao"><%= index + 1 %>.</span>
                   <span class="jogador-nome"><%= jogador.nome %></span>
                   <span class="jogador-pontos"><%= (jogador.percentagem_vitorias || 0).toFixed(1) %>%</span>
+                  <% if (user && user.role === 'admin') { %>
                   <button class="btn-trocar" onclick="prepararTroca('<%= jogador.id %>', 1)">🔄</button>
+                  <% } %>
                 </div>
               <% }) %>
             </div>
@@ -281,13 +286,14 @@
                 <span>Pontos: <%= equipas.equipa2.pontos_totais %></span>
               </div>
             </div>
-            <div class="jogadores-equipa">
-              <% equipas.equipa2.jogadores.forEach((jogador, index) => { %>
+            <div class="jogadores-equipa">              <% equipas.equipa2.jogadores.forEach((jogador, index) => { %>
                 <div class="jogador-equipa-item" data-jogador-id="<%= jogador.id %>" data-equipa="2">
                   <span class="jogador-posicao"><%= index + 1 %>.</span>
                   <span class="jogador-nome"><%= jogador.nome %></span>
                   <span class="jogador-pontos"><%= (jogador.percentagem_vitorias || 0).toFixed(1) %>%</span>
+                  <% if (user && user.role === 'admin') { %>
                   <button class="btn-trocar" onclick="prepararTroca('<%= jogador.id %>', 2)">🔄</button>
+                  <% } %>
                 </div>
               <% }) %>
             </div>

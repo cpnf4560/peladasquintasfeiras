@@ -304,7 +304,7 @@ app.use('/admin', adminRoutes);
 app.use('/admin', backupRoutes);
 
 // Ensure root path is handled — redirect to jogos index
-app.get('/', requireAuth, (req, res) => {
+app.get('/', (req, res) => {
   return res.redirect('/jogos');
 });
 

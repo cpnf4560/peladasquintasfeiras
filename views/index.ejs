@@ -107,8 +107,8 @@
             <div class="game-info-badges">
               <span class="game-badge date-badge">📅 <%= new Date(jogo.data).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) %></span>
               <span class="game-badge goals-badge">⚽ <%= totalGoals %> golos</span>
-            </div>
-            <div class="game-actions">
+            </div>            <div class="game-actions">
+              <% if (user && user.role === 'admin') { %>
               <button class="btn-obs-modern" onclick="toggleObs('<%= jogo.id %>')" title="Adicionar/editar observações">
                 📝
               </button>
@@ -117,6 +117,7 @@
                   🗑️
                 </button>
               </form>
+              <% } %>
             </div>
           </div>          <!-- Score Section -->
           <div class="game-score-modern">

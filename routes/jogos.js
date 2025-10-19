@@ -1,23 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin, optionalAuth } = require('../middleware/auth');
 
-// Rota para listar jogos (usada em /jogos)
-router.get('/', requireAuth, (req, res) => {
+// Rota para listar jogos (usada em /jogos) - AGORA PÚBLICA
+router.get('/', optionalAuth, (req, res) => {
   console.log('📋 Buscando lista de jogos...');
-  
-  db.query('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
+    db.query('SELECT * FROM jogos ORDER BY data DESC', [], (err, jogos) => {
     if (err) {
       console.error('❌ Erro ao buscar jogos:', err);
-      return res.render('index', { jogos: [], user: req.session.user });
+      return res.render('index', { 
+        jogos: [], 
+        user: req.session.user || null,
+        activePage: 'resultados'
+      });
     }
 
     console.log(`✅ Jogos encontrados: ${jogos?.length || 0}`);
 
     if (!jogos || jogos.length === 0) {
       console.log('⚠️  Nenhum jogo encontrado');
-      return res.render('index', { jogos: [], user: req.session.user });
+      return res.render('index', { 
+        jogos: [], 
+        user: req.session.user || null,
+        activePage: 'resultados'
+      });
     }
 
     const jogosComJogadores = [];
@@ -59,11 +66,13 @@ router.get('/', requireAuth, (req, res) => {
           }
 
           jogosComJogadores.push(jogo);
-          processedCount++;
-
-          if (processedCount === jogos.length) {
+          processedCount++;          if (processedCount === jogos.length) {
             jogosComJogadores.sort((a, b) => new Date(b.data) - new Date(a.data));
-            res.render('index', { jogos: jogosComJogadores, user: req.session.user });
+            res.render('index', { 
+              jogos: jogosComJogadores, 
+              user: req.session.user || null,
+              activePage: 'resultados'
+            });
           }
         }
       );

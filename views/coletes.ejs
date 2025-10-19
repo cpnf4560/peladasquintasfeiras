@@ -46,15 +46,16 @@
               | Última vez: <%= new Date(proximoConvocado.ultima_vez).toLocaleDateString('pt-PT') %>
             <% } else { %>
               | <em>Nunca levou os coletes</em>
-            <% } %>
-          </p>
-          <% if (!coletesActuais) { %>
+            <% } %>          </p>
+          <% if (user && user.role === 'admin') { %>
+            <% if (!coletesActuais) { %>
             <form method="POST" action="/coletes/atribuir" style="margin-top: 10px;">
               <input type="hidden" name="jogador_id" value="<%= proximoConvocado.id %>">
               <button type="submit" class="btn btn-primary">
                 📥 Atribuir Coletes a <%= proximoConvocado.nome %>
               </button>
             </form>
+            <% } %>
           <% } %>
         </div>
       <% } %>
@@ -96,16 +97,17 @@
                     <span class="priority-badge medium">⚡ MÉDIA</span>
                   <% } else { %>
                     <span class="priority-badge low">💤 BAIXA</span>
-                  <% } %>
-                </td>
+                  <% } %>                </td>
                 <td>
-                  <% if (!coletesActuais) { %>
+                  <% if (user && user.role === 'admin') { %>
+                    <% if (!coletesActuais) { %>
                     <form method="POST" action="/coletes/atribuir" style="display: inline;">
                       <input type="hidden" name="jogador_id" value="<%= jogador.id %>">
                       <button type="submit" class="btn btn-primary btn-sm">
                         📥 Atribuir Coletes
                       </button>
                     </form>
+                    <% } %>
                   <% } %>
                 </td>
               </tr>
@@ -127,16 +129,17 @@
             (Nunca levou os coletes)
           <% } else { %>
             (Levou <%= estatisticas[0].vezes_levou %> vez<%= estatisticas[0].vezes_levou > 1 ? 'es' : '' %>)
-          <% } %>
-        </p>
+          <% } %>        </p>
         
+        <% if (user && user.role === 'admin') { %>
         <form method="POST" action="/coletes/atribuir">
           <input type="hidden" name="jogador_id" value="<%= estatisticas[0].id %>">
           <button type="submit" class="btn btn-primary btn-large">
             🎯 Atribuir ao Próximo da Lista
           </button>
         </form>
-      </div>    <% } %>
+        <% } %>
+      </div><% } %>
   </main>
 
   <%- include('partials/footer') %>

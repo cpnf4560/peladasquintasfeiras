@@ -18,4 +18,10 @@ function requireAdmin(req, res, next) {
   });
 }
 
-module.exports = { requireAuth, requireAdmin };
+// Middleware opcional - permite acesso público mas passa user se existir
+function optionalAuth(req, res, next) {
+  // Simplesmente passa adiante, user estará disponível se logado
+  next();
+}
+
+module.exports = { requireAuth, requireAdmin, optionalAuth };

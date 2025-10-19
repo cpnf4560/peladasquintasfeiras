@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin, optionalAuth } = require('../middleware/auth');
 
 // Listar convocatória
-router.get('/convocatoria', requireAuth, (req, res) => {
+router.get('/convocatoria', optionalAuth, (req, res) => {
   console.log('=== ROTA /convocatoria CHAMADA ===');
   db.query('SELECT * FROM jogadores WHERE suspenso = 0 ORDER BY nome', (err, jogadores) => {
     if (err) return res.status(500).send('Erro ao buscar jogadores');
@@ -23,12 +23,11 @@ router.get('/convocatoria', requireAuth, (req, res) => {
         WHERE j.suspenso = 0 
         ORDER BY c.tipo, c.posicao
       `, (err, convocatoria) => {
-        if (err) return res.status(500).send('Erro ao buscar convocatória');
-
-        const convocados = convocatoria.filter(j => j.tipo === 'convocado');
+        if (err) return res.status(500).send('Erro ao buscar convocatória');        const convocados = convocatoria.filter(j => j.tipo === 'convocado');
         const reservas = convocatoria.filter(j => j.tipo === 'reserva');
         res.render('convocatoria', { 
-          user: req.session.user,
+          user: req.session.user || null,
+          activePage: 'convocatoria',
           convocados, 
           reservas, 
           config,

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { normalizeRows } = require('../utils/helpers');
 
 // Função auxiliar para renderizar a view
@@ -15,9 +15,9 @@ function renderView(res, req, estatisticasProcessadas, curiosidades, duplas, ano
     console.log('   melhorVitorias:', duplas.melhorVitorias ? duplas.melhorVitorias.length : 'undefined');
     console.log('   piorVitorias:', duplas.piorVitorias ? duplas.piorVitorias.length : 'undefined');
     console.log('   menosJogos:', duplas.menosJogos ? duplas.menosJogos.length : 'undefined');
-  }
-  res.render('estatisticas', {
-    user: req.session.user,
+  }  res.render('estatisticas', {
+    user: req.session.user || null,
+    activePage: 'estatisticas',
     estatisticas: estatisticasProcessadas,
     anoSelecionado,
     mesSelecionado,
@@ -32,7 +32,7 @@ function renderView(res, req, estatisticasProcessadas, curiosidades, duplas, ano
   });
 }
 
-router.get('/estatisticas', requireAuth, (req, res) => {
+router.get('/estatisticas', optionalAuth, (req, res) => {
   const anoSelecionado = req.query.ano || '2025';
   const mesSelecionado = req.query.mes || '';
   const ordenacaoSelecionada = req.query.ordenacao || 'mediaPontos';
