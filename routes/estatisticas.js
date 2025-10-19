@@ -186,12 +186,11 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
 
     // Combinar: primeiro os com mínimo, depois os sem
     const estatisticasOrdenadas = [...comMinimoJogos, ...semMinimoJogos];    const { gerarCuriosidades } = require('../server');
-      // Query para duplas - incluir apenas jogadores com pelo menos 25% de presenças
-    const queryDuplas = `
+      // Query para duplas - incluir apenas jogadores com pelo menos 25% de presenças    const queryDuplas = `
       WITH jogadores_ativos AS (
         SELECT 
-          jog.id,
-          jog.nome,
+          jog.id as id,
+          jog.nome as nome,
           COUNT(DISTINCT j.id) as total_jogos
         FROM jogadores jog
         LEFT JOIN presencas p ON jog.id = p.jogador_id
@@ -200,7 +199,7 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
         GROUP BY jog.id, jog.nome
         HAVING COUNT(DISTINCT j.id) >= ${minimoJogos}
       )
-      SELECT 
+      SELECT
         j1.nome as jogador1,
         j2.nome as jogador2,
         COUNT(DISTINCT jogo.id) as jogos_juntos,
