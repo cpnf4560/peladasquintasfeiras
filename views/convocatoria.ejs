@@ -7,8 +7,18 @@
 </head>
 <body class="main-bg">  
 <%- include('partials/header', { user: user }) %>
-
   <main class="container">
+    <!-- Mensagem de sucesso -->
+    <% if (typeof msg !== 'undefined' && msg === 'faltas_limpas') { %>
+      <div class="success-message" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 2rem;">✅</span>
+        <div>
+          <strong style="font-size: 1.1rem;">Faltas Limpas com Sucesso!</strong>
+          <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">Todos os jogadores agora têm 0 faltas.</p>
+        </div>
+      </div>
+    <% } %>
+    
     <div class="convocatoria-header-modern">
       <div class="header-content">
         <h2 class="section-title">📋 Convocatória</h2>
@@ -22,7 +32,12 @@
               ⚡ Migrar para 10
             </button>
           </form>
-        <% } %>
+        <% } %>        <form method="POST" action="/convocatoria/limpar-todas-faltas" style="display: inline;" 
+              onsubmit="return confirm('⚠️ Limpar TODAS as faltas de TODOS os jogadores? Esta ação não pode ser desfeita.')">
+          <button type="submit" class="btn-action-modern btn-danger" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+            🧹 Limpar Faltas
+          </button>
+        </form>
         <form method="POST" action="/convocatoria/configuracao-final" style="display: inline;" 
               onsubmit="return confirm('Aplicar configuração final? Isto irá limpar as faltas de teste e definir a ordem específica dos jogadores.')">
           <button type="submit" class="btn-action-modern btn-success-modern">

@@ -75,15 +75,15 @@ function carregarConvocatoria(req, res) {
       const reservas = convocatoria.filter(j => j.tipo === 'reserva');
       
       console.log(`📊 Convocados: ${convocados.length}, Reservas: ${reservas.length}, Total: ${convocatoria.length}`);
-      
-      res.render('convocatoria', { 
+        res.render('convocatoria', { 
         user: req.session.user || null,
         activePage: 'convocatoria',
         convocados, 
         reservas, 
         config,
         equipas: global.equipasGeradas || null,
-        title: 'Convocatória - Peladas das Quintas Feiras'
+        title: 'Convocatória - Peladas das Quintas Feiras',
+        msg: req.query.msg || null
       });
     });
   });
@@ -463,6 +463,35 @@ router.post('/convocatoria/migrar-para-10', requireAdmin, (req, res) => {
         console.log(`✅ ${convocadosExtra.length} jogadores movidos para reservas`);
         res.redirect('/convocatoria');
       });
+    });
+  });
+});
+
+// Rota para limpar TODAS as faltas (reset completo)
+router.post('/convocatoria/limpar-todas-faltas', requireAdmin, (req, res) => {
+  console.log('🧹 Limpando TODAS as faltas...');
+  
+  // Contar faltas antes
+  db.query('SELECT COUNT(*) as total FROM faltas_historico', [], (err, result) => {
+    if (err) {
+      console.error('Erro ao contar faltas:', err);
+      return res.status(500).send('Erro ao verificar faltas');
+    }
+    
+    const totalAntes = result[0].total;
+    console.log(`📊 Total de faltas antes: ${totalAntes}`);
+    
+    // Limpar todas as faltas
+    db.query('DELETE FROM faltas_historico', [], (err) => {
+      if (err) {
+        console.error('Erro ao limpar faltas:', err);
+        return res.status(500).send('Erro ao limpar faltas');
+      }
+      
+      console.log('✅ Todas as faltas foram limpas!');
+      
+      // Redirecionar com mensagem de sucesso
+      res.redirect('/convocatoria?msg=faltas_limpas');
     });
   });
 });
