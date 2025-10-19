@@ -186,21 +186,8 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
     const estatisticasOrdenadas = [...comMinimoJogos, ...semMinimoJogos];
     
     const { gerarCuriosidades } = require('../server');
-    
-    // Query para duplas - incluir apenas jogadores com pelo menos 25% de presenças
+      // Query para duplas - SIMPLIFICADA (sem CTE)
     const queryDuplas = `
-      WITH jogadores_ativos AS (
-        SELECT 
-          jog.id as id,
-          jog.nome as nome,
-          COUNT(DISTINCT j.id) as total_jogos
-        FROM jogadores jog
-        LEFT JOIN presencas p ON jog.id = p.jogador_id
-        LEFT JOIN jogos j ON p.jogo_id = j.id
-        WHERE jog.suspenso = 0 ${filtroData}
-        GROUP BY jog.id, jog.nome
-        HAVING COUNT(DISTINCT j.id) >= ${minimoJogos}
-      )
       SELECT
         j1.nome as jogador1,
         j2.nome as jogador2,
@@ -223,16 +210,27 @@ router.get('/estatisticas', optionalAuth, (req, res) => {
               THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(DISTINCT jogo.id), 0)
             AS ${USE_POSTGRES ? 'NUMERIC' : 'REAL'}
           ), 1
-        ) as percentagem_vitorias
-      FROM presencas p1
+        ) as percentagem_vitorias      FROM presencas p1
       JOIN presencas p2 ON p1.jogo_id = p2.jogo_id AND p1.equipa = p2.equipa AND p1.jogador_id < p2.jogador_id
-      JOIN jogadores_ativos j1 ON p1.jogador_id = j1.id
-      JOIN jogadores_ativos j2 ON p2.jogador_id = j2.id
+      JOIN jogadores j1 ON p1.jogador_id = j1.id AND j1.suspenso = 0
+      JOIN jogadores j2 ON p2.jogador_id = j2.id AND j2.suspenso = 0
       JOIN jogos jogo ON p1.jogo_id = jogo.id
       WHERE jogo.equipa1_golos IS NOT NULL 
         AND jogo.equipa2_golos IS NOT NULL
         ${filtroDataDuplas}
-      GROUP BY j1.nome, j2.nome
+      GROUP BY j1.id, j1.nome, j2.id, j2.nome
+      HAVING (
+        SELECT COUNT(DISTINCT jp1.jogo_id) 
+        FROM presencas jp1 
+        JOIN jogos jg1 ON jp1.jogo_id = jg1.id 
+        WHERE jp1.jogador_id = j1.id ${filtroData}
+      ) >= ${minimoJogos}
+      AND (
+        SELECT COUNT(DISTINCT jp2.jogo_id) 
+        FROM presencas jp2 
+        JOIN jogos jg2 ON jp2.jogo_id = jg2.id 
+        WHERE jp2.jogador_id = j2.id ${filtroData}
+      ) >= ${minimoJogos}
       ORDER BY percentagem_vitorias DESC
     `;    console.log('🔍 Query de duplas com mínimo de jogos:', minimoJogos);
     
