@@ -883,8 +883,7 @@ router.post('/convocatoria/adicionar-indisponivel', requireAdmin, (req, res) => 
     if (!result || result.length === 0) {
       return res.status(400).send('Jogador não encontrado na convocatória');
     }
-    
-    const jogador = result[0];
+      const jogador = result[0];
     
     // Inserir na tabela de indisponíveis
     const dataInicio = new Date().toISOString().split('T')[0];
@@ -907,7 +906,59 @@ router.post('/convocatoria/adicionar-indisponivel', requireAdmin, (req, res) => 
       }
       
       console.log('✅ Jogador adicionado aos indisponíveis');
-      res.redirect('/convocatoria?msg=indisponivel_adicionado');
+      
+      // Se era convocado, promover próximo reserva
+      if (jogador.tipo === 'convocado') {
+        console.log('🔄 Jogador era convocado, promovendo próximo reserva...');
+        
+        // Buscar última posição de reserva
+        db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = ?', ['reserva'], (err, result) => {
+          if (err) {
+            console.error('Erro ao buscar max posição reserva:', err);
+            return res.redirect('/convocatoria?msg=indisponivel_adicionado');
+          }
+          
+          const novaPosicaoReserva = (result[0].max_pos || 0) + 1;
+          const posicaoVagaConvocado = jogador.posicao;
+          
+          // Mover jogador indisponível para última posição de reservas
+          db.query('UPDATE convocatoria SET tipo = ?, posicao = ?, confirmado = 0 WHERE jogador_id = ?',
+            ['reserva', novaPosicaoReserva, jogador_id], (err) => {
+            if (err) {
+              console.error('Erro ao mover indisponível para reservas:', err);
+              return res.redirect('/convocatoria?msg=indisponivel_adicionado');
+            }
+            
+            // Promover primeiro reserva (excluindo o jogador que acabou de ser movido)
+            db.query('SELECT * FROM convocatoria WHERE tipo = ? AND jogador_id != ? ORDER BY posicao LIMIT 1',
+              ['reserva', jogador_id], (err, primeiroReserva) => {
+              if (err || !primeiroReserva || primeiroReserva.length === 0) {
+                console.log('ℹ️ Nenhuma reserva disponível para promover');
+                return res.redirect('/convocatoria?msg=indisponivel_adicionado');
+              }
+              
+              // Promover reserva para a posição vaga
+              db.query('UPDATE convocatoria SET tipo = ?, posicao = ? WHERE id = ?',
+                ['convocado', posicaoVagaConvocado, primeiroReserva[0].id], (err) => {
+                if (err) {
+                  console.error('Erro ao promover reserva:', err);
+                  return res.redirect('/convocatoria?msg=indisponivel_adicionado');
+                }
+                
+                console.log(`✅ Reserva ${primeiroReserva[0].jogador_id} promovida para convocado (posição ${posicaoVagaConvocado})`);
+                
+                // Reorganizar reservas
+                reorganizarReservas(() => {
+                  res.redirect('/convocatoria?msg=indisponivel_adicionado');
+                });
+              });
+            });
+          });
+        });
+      } else {
+        // Era reserva, apenas redirecionar
+        res.redirect('/convocatoria?msg=indisponivel_adicionado');
+      }
     });
   });
 });
