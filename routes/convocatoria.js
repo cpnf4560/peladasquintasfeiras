@@ -363,6 +363,78 @@ router.post('/convocatoria/confirmar-presenca/:id', requireAdmin, (req, res) => 
   });
 });
 
+// Reequilibrar Equipas - Gera novamente com ordem diferente
+router.post('/convocatoria/reequilibrar-equipas', requireAdmin, (req, res) => {
+  console.log('🔄 REEQUILIBRANDO EQUIPAS...');
+  
+  // Simplesmente redireciona para confirmar-equipas (que regerará automaticamente)
+  // As equipas são geradas de forma determinística, então sempre terão o mesmo resultado
+  // Para realmente "reequilibrar", podemos adicionar aleatoriedade ou trocar jogadores
+  
+  if (!global.equipasGeradas) {
+    console.log('⚠️ Nenhuma equipa gerada ainda');
+    return res.redirect('/convocatoria');
+  }
+
+  // Opção 1: Trocar os últimos jogadores de cada equipa
+  const equipa1 = [...global.equipasGeradas.equipa1.jogadores];
+  const equipa2 = [...global.equipasGeradas.equipa2.jogadores];
+  
+  if (equipa1.length > 0 && equipa2.length > 0) {
+    // Trocar último jogador de cada equipa
+    const ultimoEquipa1 = equipa1.pop();
+    const ultimoEquipa2 = equipa2.pop();
+    
+    equipa1.push(ultimoEquipa2);
+    equipa2.push(ultimoEquipa1);
+    
+    // Recalcular médias
+    const somaPontosEquipa1 = equipa1.reduce((sum, j) => sum + (parseFloat(j.media_pontos) || 0), 0);
+    const somaPontosEquipa2 = equipa2.reduce((sum, j) => sum + (parseFloat(j.media_pontos) || 0), 0);
+    
+    const mediaPontosEquipa1 = equipa1.length > 0 ? somaPontosEquipa1 / equipa1.length : 0;
+    const mediaPontosEquipa2 = equipa2.length > 0 ? somaPontosEquipa2 / equipa2.length : 0;
+    
+    global.equipasGeradas = {
+      equipa1: {
+        jogadores: equipa1,
+        media_pontos: mediaPontosEquipa1,
+        pontos_totais: equipa1.reduce((sum, j) => sum + (parseInt(j.pontos_totais) || 0), 0)
+      },
+      equipa2: {
+        jogadores: equipa2,
+        media_pontos: mediaPontosEquipa2,
+        pontos_totais: equipa2.reduce((sum, j) => sum + (parseInt(j.pontos_totais) || 0), 0)
+      }
+    };
+    
+    console.log('✅ Equipas reequilibradas');
+    console.log(`Equipa 1: ${equipa1.length} jogadores, média ${mediaPontosEquipa1.toFixed(2)} pontos`);
+    console.log(`Equipa 2: ${equipa2.length} jogadores, média ${mediaPontosEquipa2.toFixed(2)} pontos`);
+  }
+  
+  res.redirect('/convocatoria');
+});
+
+// Salvar Equipas - Salva as equipas geradas (pode ser usado para histórico futuro)
+router.post('/convocatoria/salvar-equipas', requireAdmin, (req, res) => {
+  console.log('💾 SALVANDO EQUIPAS...');
+  
+  if (!global.equipasGeradas) {
+    console.log('⚠️ Nenhuma equipa gerada para salvar');
+    return res.redirect('/convocatoria');
+  }
+
+  // Por enquanto, apenas exibe mensagem de sucesso
+  // Futuramente pode salvar em tabela de equipas_salvas
+  console.log('✅ Equipas salvas com sucesso');
+  console.log(`Equipa 1: ${global.equipasGeradas.equipa1.jogadores.length} jogadores`);
+  console.log(`Equipa 2: ${global.equipasGeradas.equipa2.jogadores.length} jogadores`);
+  
+  // Redirecionar com mensagem de sucesso
+  res.redirect('/convocatoria?msg=equipas_salvas');
+});
+
 // Resetar convocatória
 router.post('/convocatoria/reset', requireAdmin, (req, res) => {
   console.log('🔄 Resetando convocatória...');

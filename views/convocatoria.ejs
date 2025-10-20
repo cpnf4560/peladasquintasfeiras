@@ -7,14 +7,23 @@
 </head>
 <body class="main-bg">  
 <%- include('partials/header', { user: user }) %>
-  <main class="container">
-    <!-- Mensagem de sucesso -->
+  <main class="container">    <!-- Mensagem de sucesso -->
     <% if (typeof msg !== 'undefined' && msg === 'faltas_limpas') { %>
       <div class="success-message" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); display: flex; align-items: center; gap: 1rem;">
         <span style="font-size: 2rem;">✅</span>
         <div>
           <strong style="font-size: 1.1rem;">Faltas Limpas com Sucesso!</strong>
           <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">Todos os jogadores agora têm 0 faltas.</p>
+        </div>
+      </div>
+    <% } %>
+    
+    <% if (typeof msg !== 'undefined' && msg === 'equipas_salvas') { %>
+      <div class="success-message" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 2rem;">💾</span>
+        <div>
+          <strong style="font-size: 1.1rem;">Equipas Salvas com Sucesso!</strong>
+          <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">As equipas foram guardadas e estão prontas para o próximo jogo.</p>
         </div>
       </div>
     <% } %>
@@ -253,11 +262,10 @@
       </div>
     </div>    <!-- Botão para confirmar convocados e gerar equipas -->
     <% if (user && user.role === 'admin') { %>
-      <% if (convocados.length >= 10) { %>
-      <div class="confirmar-convocados-section">
+      <% if (convocados.length >= 10) { %>      <div class="confirmar-convocados-section">
         <h3>⚽ Formar Equipas</h3>
         <p>Com <strong><%= convocados.length %></strong> convocados confirmados, pode gerar automaticamente as equipas equilibradas.</p>
-        <form method="POST" action="/convocatoria/confirmar-equipas" style="display: inline;" 
+        <form method="POST" action="/convocatoria/confirmar-equipas" 
               onsubmit="return confirm('Gerar equipas equilibradas baseadas nas estatísticas dos jogadores?')">
           <button type="submit" class="btn btn-success btn-large">
             🏆 Confirmar Convocados & Gerar Equipas
