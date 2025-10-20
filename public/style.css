@@ -4864,6 +4864,8 @@ img {
   .mobile-menu-toggle {
     display: flex !important;
   }
+  .navbar { background: #2c3e50 !important; }
+  .navbar ul li a { color: #ecf0f1 !important; }
 }
 
 /* Overlay - escondido por padrão */

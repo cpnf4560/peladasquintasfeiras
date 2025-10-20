@@ -9,26 +9,25 @@
   /* 1. Botão Menu Hamburger - TOPO ABSOLUTO */
   .mobile-menu-toggle,
   #mobileMenuToggle {
-    z-index: 1002 !important;
+    z-index: 1003 !important;
   }
   
   /* 2. Menu Lateral quando aberto */
   nav.active,
-  .navbar.active,
-  nav.navbar.active {
-    z-index: 1001 !important;
+  .navbar.active {
+    z-index: 1002 !important;
   }
   
   /* 3. Overlay (entre nav e header) */
   .mobile-menu-overlay.active {
-    z-index: 1000 !important;
+    z-index: 1001 !important;
   }
   
   /* 4. Header fixo */
   header,
   .header,
   header.header {
-    z-index: 999 !important;
+    z-index: 1002 !important;
   }
   
   /* 5. Botão de partilha */
@@ -44,6 +43,13 @@
   article,
   section {
     z-index: 1 !important;
+  }
+
+  /* Hide share button when menu is open */
+  body.menu-open #share-whatsapp-btn,
+  body.menu-open .share-button-floating {
+    display: none !important;
+    pointer-events: none !important;
   }
 }
 

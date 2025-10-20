@@ -75,16 +75,19 @@
   if (!toggle || !menu || !overlay) return;
 
   function toggleMenu() {
+    const willOpen = !menu.classList.contains('active');
     toggle.classList.toggle('active');
     menu.classList.toggle('active');
     overlay.classList.toggle('active');
-    document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : '';
+    document.body.classList.toggle('menu-open', willOpen);
+    document.body.style.overflow = willOpen ? 'hidden' : '';
   }
 
   function closeMenu() {
     toggle.classList.remove('active');
     menu.classList.remove('active');
     overlay.classList.remove('active');
+    document.body.classList.remove('menu-open');
     document.body.style.overflow = '';
   }
 
@@ -108,10 +111,10 @@
     }, 250);
   });
 })();
+</script>
 
-// ============================================
-// BOTÃO DE PARTILHA (INLINE - SEMPRE VISÍVEL)
-// ============================================
+<!-- Script para botão de partilha -->
+<script>
 (function() {
   console.log('🚀 Criando botão de partilha inline...');
   
