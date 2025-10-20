@@ -342,11 +342,6 @@ app.get('/', (req, res) => {
   return res.redirect('/jogos');
 });
 
-// Página de teste mobile
-app.get('/teste-mobile', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'teste-mobile.html'));
-});
-
 // Keep other routes as-is (they still reference requireAuth/requireAdmin from middleware when needed)
 
 // Função para gerar curiosidades baseadas em estatísticas

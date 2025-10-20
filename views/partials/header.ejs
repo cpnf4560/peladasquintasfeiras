@@ -1,68 +1,31 @@
-<!-- HEADER HÍBRIDO - DESKTOP + MOBILE -->
-<header class="header" style="position: fixed; top: 0; left: 0; right: 0; width: 100vw; height: 60px; background: #2c3e50; z-index: 99999; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; margin: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-  <a href="/jogos" class="logo-area logo-link" style="display: flex; align-items: center; text-decoration: none; color: white;">
-    <img src="/logo.svg" alt="Logo" class="logo-image logo-spin" style="width: 40px; height: 40px; margin-right: 8px;">
-    <span class="logo-text" style="font-size: 14px; font-weight: bold; line-height: 1.2;">Peladas das<br>Quintas Feiras</span>
+<header class="header">
+  <a href="/jogos" class="logo-area logo-link">
+    <img src="/logo.svg" alt="Logo" class="logo-image logo-spin">
+    <span class="logo-text">Peladas das<br>Quintas Feiras</span>
   </a>
-  
-  <!-- NAVEGAÇÃO DESKTOP - Visível apenas em desktop -->
-  <nav class="navbar desktop-nav" style="display: flex; align-items: center; gap: 20px;">
-    <a href="/convocatoria" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'convocatoria' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">⚽ Convocatória</a>
-    <a href="/coletes" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'coletes' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">👕 Coletes</a>
-    <a href="/jogos" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'resultados' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">🏆 Resultados</a>
-    <a href="/estatisticas" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'estatisticas' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">📊 Estatísticas</a>
-    <a href="/comparacao" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'comparacao' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">⚖️ Comparação</a>
-    
-    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-      <a href="/jogos/novo" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'novo-jogo' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">📝 Registar</a>
-      <a href="/admin/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'admin' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">🔧 Admin</a>
-    <% } %>
-  </nav>
-  
-  <!-- USER INFO DESKTOP -->
-  <div class="user-info desktop-user" style="display: flex; align-items: center; gap: 12px;">
-    <% if (typeof user !== 'undefined' && user) { %>
-      <span style="color: #ecf0f1; font-size: 14px;">👤 <%= user.username %></span>
-      <% if (user.role === 'admin') { %>
-        <span style="color: #3498db; font-size: 12px;">Admin</span>
-      <% } %>
-      <form method="POST" action="/logout" style="display: inline;">
-        <button type="submit" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">🚪 Logout</button>
-      </form>
-    <% } else { %>
-      <a href="/login" style="background: #27ae60; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px;">🔑 Login</a>
-    <% } %>
-  </div>
-  
-  <!-- HAMBURGER MOBILE - Visível apenas em mobile -->
-  <button 
-    id="mobileMenuToggle" 
-    class="mobile-toggle"
-    style="display: none; visibility: hidden; z-index: 100000; position: relative; flex-direction: column; justify-content: center; align-items: center; width: 40px; height: 40px; background: transparent; border: none; padding: 8px; cursor: pointer; pointer-events: auto;"
-  >
-    <span style="display: block; width: 24px; height: 2px; background: white; margin: 3px 0; transition: all 0.3s ease;"></span>
-    <span style="display: block; width: 24px; height: 2px; background: white; margin: 3px 0; transition: all 0.3s ease;"></span>
-    <span style="display: block; width: 24px; height: 2px; background: white; margin: 3px 0; transition: all 0.3s ease;"></span>
+
+  <!-- Menu Hamburger (Mobile) -->
+  <button class="mobile-menu-toggle" id="mobileMenuToggle" style="display: none;">
+    <span></span>
+    <span></span>
+    <span></span>
   </button>
-  <!-- NAV COM INLINE STYLES ABSOLUTOS -->
-  <nav 
-    id="navbarMenu" 
-    style="position: fixed; top: 0; left: -100%; width: 280px; max-width: 80vw; height: 100vh; background: #34495e; z-index: 99998; transition: left 0.3s ease; padding-top: 60px; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.3);"
-  >
-    <ul style="list-style: none; padding: 0; margin: 0;">
-      <li><a href="/convocatoria" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'convocatoria' ? 'active' : '' %>" style="display: block; padding: 16px 20px; color: #ecf0f1; text-decoration: none; font-size: 16px; transition: background 0.2s ease; border-bottom: 1px solid rgba(255,255,255,0.1);">⚽ Convocatória</a></li>
-      <li><a href="/coletes" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'coletes' ? 'active' : '' %>" style="display: block; padding: 16px 20px; color: #ecf0f1; text-decoration: none; font-size: 16px; transition: background 0.2s ease; border-bottom: 1px solid rgba(255,255,255,0.1);">👕 Coletes</a></li>
-      <li><a href="/jogos" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'resultados' ? 'active' : '' %>" style="display: block; padding: 16px 20px; color: #ecf0f1; text-decoration: none; font-size: 16px; transition: background 0.2s ease; border-bottom: 1px solid rgba(255,255,255,0.1);">🏆 Resultados</a></li>
-      <li><a href="/estatisticas" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'estatisticas' ? 'active' : '' %>" style="display: block; padding: 16px 20px; color: #ecf0f1; text-decoration: none; font-size: 16px; transition: background 0.2s ease; border-bottom: 1px solid rgba(255,255,255,0.1);">📊 Estatísticas</a></li>
-      <li><a href="/comparacao" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'comparacao' ? 'active' : '' %>" style="display: block; padding: 16px 20px; color: #ecf0f1; text-decoration: none; font-size: 16px; transition: background 0.2s ease; border-bottom: 1px solid rgba(255,255,255,0.1);">⚖️ Comparação</a></li>
+
+  <nav class="navbar" id="navbarMenu">
+    <ul>
+      <li><a href="/convocatoria" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'convocatoria' ? 'active' : '' %>">⚽ Convocatória</a></li>
+      <li><a href="/coletes" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'coletes' ? 'active' : '' %>">👕 Coletes</a></li>
+      <li><a href="/jogos" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'resultados' ? 'active' : '' %>">🏆 Resultados</a></li>
+      <li><a href="/estatisticas" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'estatisticas' ? 'active' : '' %>">📊 Estatísticas</a></li>
+      <li><a href="/comparacao" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'comparacao' ? 'active' : '' %>">⚖️ Comparação</a></li>
       
       <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-        <li><a href="/jogos/novo" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'novo-jogo' ? 'active' : '' %>" style="display: block; padding: 16px 20px; color: #ecf0f1; text-decoration: none; font-size: 16px; transition: background 0.2s ease; border-bottom: 1px solid rgba(255,255,255,0.1);">📝 Registar Resultado</a></li>
-        <li><a href="/admin/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'admin' ? 'active' : '' %>" style="display: block; padding: 16px 20px; color: #ecf0f1; text-decoration: none; font-size: 16px; transition: background 0.2s ease; border-bottom: 1px solid rgba(255,255,255,0.1);">🔧 Admin</a></li>
+        <li><a href="/jogos/novo" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'novo-jogo' ? 'active' : '' %>">📝 Registar Resultado</a></li>
+        <li><a href="/admin/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'admin' ? 'active' : '' %>">🔧 Admin</a></li>
       <% } %>
 
       <!-- User info no menu mobile -->
-      <li style="border-top: 2px solid rgba(255,255,255,0.2); margin-top: 12px; padding-top: 12px;">
+      <li class="show-mobile" style="display: none; border-top: 2px solid rgba(255,255,255,0.2); margin-top: 12px; padding-top: 12px;">
         <% if (typeof user !== 'undefined' && user) { %>
           <div style="padding: 12px 24px; color: #ecf0f1;">
             <div style="margin-bottom: 8px;">👤 <strong><%= user.username %></strong></div>
@@ -71,10 +34,10 @@
             <% } %>
           </div>
           <form method="POST" action="/logout">
-            <button type="submit" style="width: 100%; text-align: left; background: #e74c3c; color: white; border: none; padding: 16px 20px; font-size: 16px; cursor: pointer;">🚪 Logout</button>
+            <button type="submit" class="nav-link" style="width: 100%; text-align: left; background: #e74c3c; color: white;">🚪 Logout</button>
           </form>
         <% } else { %>
-          <a href="/login" style="display: block; padding: 16px 20px; background: #27ae60; color: white; text-decoration: none; font-size: 16px;">🔑 Login Admin</a>
+          <a href="/login" class="nav-link" style="background: #27ae60; color: white;">🔑 Login Admin</a>
         <% } %>
       </li>
     </ul>
@@ -100,151 +63,50 @@
   <% } %>
 </header>
 
-<!-- Overlay para fechar menu - INLINE STYLES ABSOLUTOS -->
-<div 
-  id="mobileMenuOverlay" 
-  style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 99997; pointer-events: auto;"
-></div>
+<!-- Overlay para fechar menu -->
+<div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
 
-<!-- Script para menu híbrido - DESKTOP + MOBILE - VERSÃO ROBUSTA -->
+<!-- Script para menu mobile -->
 <script>
 (function() {
-  console.log('🚀 Menu híbrido ROBUSTO - Desktop + Mobile');
+  const toggle = document.getElementById('mobileMenuToggle');
+  const menu = document.getElementById('navbarMenu');
+  const overlay = document.getElementById('mobileMenuOverlay');
   
-  let isInitialized = false;
-  
-  function initializeMenu() {
-    if (isInitialized) return;
-    
-    const toggle = document.getElementById('mobileMenuToggle');
-    const menu = document.getElementById('navbarMenu');
-    const overlay = document.getElementById('mobileMenuOverlay');
-    const desktopNav = document.querySelector('.desktop-nav');
-    const desktopUser = document.querySelector('.desktop-user');
-    
-    if (!toggle || !menu || !overlay) {
-      console.log('❌ Elementos não encontrados, tentando novamente...');
-      setTimeout(initializeMenu, 100);
-      return;
-    }
-    
-    isInitialized = true;
-    console.log('✅ Elementos encontrados, inicializando menu...');
-    
-    function updateLayout() {
-      const isMobile = window.innerWidth <= 768;
-      
-      // SEMPRE forçar body padding
-      document.body.style.paddingTop = '65px';
-      
-      if (isMobile) {
-        // MOBILE: Força absoluta
-        if (toggle) {
-          toggle.style.cssText = 'display: flex !important; visibility: visible !important; opacity: 1 !important; z-index: 100000 !important; position: relative !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; width: 40px !important; height: 40px !important; background: transparent !important; border: none !important; padding: 8px !important; cursor: pointer !important; pointer-events: auto !important;';
-        }
-        if (desktopNav) desktopNav.style.cssText = 'display: none !important; visibility: hidden !important;';
-        if (desktopUser) desktopUser.style.cssText = 'display: none !important; visibility: hidden !important;';
-        
-        console.log('📱 MOBILE forçado');
-      } else {
-        // DESKTOP: Força absoluta
-        if (toggle) {
-          toggle.style.cssText = 'display: none !important; visibility: hidden !important;';
-        }
-        if (desktopNav) desktopNav.style.cssText = 'display: flex !important; visibility: visible !important; align-items: center !important; gap: 15px !important;';
-        if (desktopUser) desktopUser.style.cssText = 'display: flex !important; visibility: visible !important; align-items: center !important; gap: 10px !important;';
-        
-        // Fechar menu mobile
-        if (menu) menu.style.left = '-100%';
-        if (overlay) overlay.style.display = 'none';
-        document.body.style.overflow = '';
-        
-        console.log('🖥️ DESKTOP forçado');
-      }
-    }
-    
-    // Funcionalidade do menu mobile
-    function toggleMenu() {
-      const isOpen = menu.style.left === '0px';
-      
-      if (isOpen) {
-        menu.style.left = '-100%';
-        overlay.style.display = 'none';
-        document.body.style.overflow = '';
-        console.log('❌ Menu fechado');
-      } else {
-        menu.style.left = '0px';
-        overlay.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-        console.log('✅ Menu aberto');
-      }
-    }
+  if (!toggle || !menu || !overlay) return;
 
-    function closeMenu() {
-      menu.style.left = '-100%';
-      overlay.style.display = 'none';
-      document.body.style.overflow = '';
-    }
-
-    // Event listeners
-    toggle.addEventListener('click', toggleMenu);
-    overlay.addEventListener('click', closeMenu);
-
-    // Fechar menu ao clicar em links
-    const navLinks = menu.querySelectorAll('a');
-    navLinks.forEach(link => {
-      link.addEventListener('click', closeMenu);
-    });
-
-    // Aplicar layout inicial e em resize
-    updateLayout();
-    window.addEventListener('resize', updateLayout);
-    
-    console.log('✅ Menu híbrido ROBUSTO configurado');
+  function toggleMenu() {
+    toggle.classList.toggle('active');
+    menu.classList.toggle('active');
+    overlay.classList.toggle('active');
+    document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : '';
   }
-  
-  // Múltiplas tentativas de inicialização
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeMenu);
-  } else {
-    initializeMenu();
+
+  function closeMenu() {
+    toggle.classList.remove('active');
+    menu.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
   }
-  
-  window.addEventListener('load', initializeMenu);
-  setTimeout(initializeMenu, 500); // Fallback
+
+  toggle.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', closeMenu);
+
+  // Fechar ao clicar em link
+  const navLinks = menu.querySelectorAll('.nav-link');
+  navLinks.forEach(link => {
+    link.addEventListener('click', closeMenu);
+  });
+
+  // Fechar ao redimensionar (evitar bugs)
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (window.innerWidth > 768) {
+        closeMenu();
+      }
+    }, 250);
+  });
 })();
-</script>
-
-<!-- Botão de partilha - INLINE ABSOLUTO -->
-<div 
-  id="share-whatsapp-btn" 
-  onclick="shareWhatsApp()" 
-  style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 12px 20px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
->
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px;">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-  </svg>
-  <span id="share-text">Partilhar</span>
-</div>
-
-<script>
-function shareWhatsApp() {
-  const text = `Peladas das Quintas Feiras - ${document.title}`;
-  const url = window.location.href;
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`;
-  window.open(whatsappUrl, '_blank');
-}
-
-// Responsive para mobile
-if (window.innerWidth <= 768) {
-  const shareBtn = document.getElementById('share-whatsapp-btn');
-  const shareText = document.getElementById('share-text');
-  if (shareBtn && shareText) {
-    shareText.style.display = 'none';
-    shareBtn.style.width = '56px';
-    shareBtn.style.height = '56px';
-    shareBtn.style.padding = '0';
-    shareBtn.style.borderRadius = '50%';
-  }
-}
 </script>

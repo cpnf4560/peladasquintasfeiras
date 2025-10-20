@@ -4855,17 +4855,9 @@ img {
   display: inline-block;
 }
 
-/* Mobile menu toggle - escondido em DESKTOP, visível em mobile */
+/* Mobile menu toggle - escondido por padrão */
 .mobile-menu-toggle {
   display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-menu-toggle {
-    display: flex !important;
-  }
-  .navbar { background: #2c3e50 !important; }
-  .navbar ul li a { color: #ecf0f1 !important; }
 }
 
 /* Overlay - escondido por padrão */
