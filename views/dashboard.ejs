@@ -105,6 +105,7 @@
   <% if (estatisticas && estatisticas.length > 0) { %>
     <div class="card">
       <h2>📊 Top 10 Estatísticas <%= anoAtual %></h2>
+      <div class="table-wrapper">
       <table style="width: 100%; border-collapse: collapse; background: #2a2e44;">
         <thead>
           <tr style="background: #181c27; color: #f9b233;">
@@ -126,9 +127,9 @@
               <td style="padding: 8px; border: 1px solid #444; text-align: center;"><strong><%= stat.pontos %></strong></td>
               <td style="padding: 8px; border: 1px solid #444; text-align: center;"><%= stat.percentagem_vitorias %>%</td>
             </tr>
-          <% }); %>
-        </tbody>
+          <% }); %>        </tbody>
       </table>
+      </div>
     </div>
   <% } %>
 

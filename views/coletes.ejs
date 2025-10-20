@@ -119,6 +119,8 @@
           const convocados = estatisticas.filter(j => j.tipo === 'convocado');
           const reservas = estatisticas.filter(j => j.tipo === 'reserva');
         %>
+        
+        <div class="table-wrapper">
         <table class="table stats-table">
           <thead>
             <tr>
@@ -190,6 +192,7 @@
             <% } %>
           </tbody>
         </table>
+        </div>
       <% } else { %>
         <p>Nenhum jogador disponível.</p>
       <% } %>

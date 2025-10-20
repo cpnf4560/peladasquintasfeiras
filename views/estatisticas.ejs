@@ -210,7 +210,10 @@
       <% if (mesSelecionado) { %>
         <p><strong>MVP Mensal:</strong> Jogador(es) com mais pontos tendo participado em pelo menos 75% dos jogos do mês</p>
       <% } %>
-    </div><table class="stats-table">
+    </div>
+    
+    <div class="table-wrapper">
+    <table class="stats-table">
       <thead>
         <tr>
           <th>Pos</th>
@@ -254,8 +257,8 @@
             <td colspan="12" style="text-align: center;">Nenhuma estatística encontrada para o período selecionado</td>
           </tr>
         <% } %>
-      </tbody>
-    </table>
+      </tbody>    </table>
+    </div>
 
     <% if (totalJogos && minimoJogos) { %>
       <div class="nota-minimo-jogos">
