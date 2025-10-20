@@ -5,9 +5,12 @@
 
 (function() {
   'use strict';
+  
+  console.log('📱 Script share-button.js carregado!');
 
   // Criar botão flutuante
   function createShareButton() {
+    console.log('🔨 Criando botão de partilha...');
     const button = document.createElement('button');
     button.id = 'share-button';
     button.className = 'share-button-floating';
@@ -20,13 +23,14 @@
         <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
       </svg>
       <span>Partilhar</span>
-    `;
-    button.title = 'Partilhar página no WhatsApp';
+    `;    button.title = 'Partilhar página no WhatsApp';
     
     document.body.appendChild(button);
+    console.log('✅ Botão adicionado ao DOM');
     
     // Event listener
     button.addEventListener('click', handleShare);
+    console.log('✅ Event listener adicionado');
   }
   // Handler de partilha
   async function handleShare() {
