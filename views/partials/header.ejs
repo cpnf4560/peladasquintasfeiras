@@ -1,14 +1,44 @@
-<!-- HEADER COM INLINE STYLES - FORÇA BRUTA ABSOLUTA -->
+<!-- HEADER HÍBRIDO - DESKTOP + MOBILE -->
 <header class="header" style="position: fixed; top: 0; left: 0; right: 0; width: 100vw; height: 60px; background: #2c3e50; z-index: 99999; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; margin: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
   <a href="/jogos" class="logo-area logo-link" style="display: flex; align-items: center; text-decoration: none; color: white;">
     <img src="/logo.svg" alt="Logo" class="logo-image logo-spin" style="width: 40px; height: 40px; margin-right: 8px;">
     <span class="logo-text" style="font-size: 14px; font-weight: bold; line-height: 1.2;">Peladas das<br>Quintas Feiras</span>
   </a>
   
-  <!-- Menu Hamburger (Mobile) - INLINE STYLES ABSOLUTOS -->
+  <!-- NAVEGAÇÃO DESKTOP - Visível apenas em desktop -->
+  <nav class="navbar desktop-nav" style="display: flex; align-items: center; gap: 20px;">
+    <a href="/convocatoria" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'convocatoria' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">⚽ Convocatória</a>
+    <a href="/coletes" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'coletes' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">👕 Coletes</a>
+    <a href="/jogos" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'resultados' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">🏆 Resultados</a>
+    <a href="/estatisticas" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'estatisticas' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">📊 Estatísticas</a>
+    <a href="/comparacao" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'comparacao' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">⚖️ Comparação</a>
+    
+    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+      <a href="/jogos/novo" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'novo-jogo' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">📝 Registar</a>
+      <a href="/admin/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'admin' ? 'active' : '' %>" style="color: #ecf0f1; text-decoration: none; font-size: 14px; padding: 8px 12px; border-radius: 4px; transition: background 0.2s;">🔧 Admin</a>
+    <% } %>
+  </nav>
+  
+  <!-- USER INFO DESKTOP -->
+  <div class="user-info desktop-user" style="display: flex; align-items: center; gap: 12px;">
+    <% if (typeof user !== 'undefined' && user) { %>
+      <span style="color: #ecf0f1; font-size: 14px;">👤 <%= user.username %></span>
+      <% if (user.role === 'admin') { %>
+        <span style="color: #3498db; font-size: 12px;">Admin</span>
+      <% } %>
+      <form method="POST" action="/logout" style="display: inline;">
+        <button type="submit" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">🚪 Logout</button>
+      </form>
+    <% } else { %>
+      <a href="/login" style="background: #27ae60; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px;">🔑 Login</a>
+    <% } %>
+  </div>
+  
+  <!-- HAMBURGER MOBILE - Visível apenas em mobile -->
   <button 
     id="mobileMenuToggle" 
-    style="display: flex; visibility: visible; opacity: 1; z-index: 100000; position: relative; flex-direction: column; justify-content: center; align-items: center; width: 40px; height: 40px; background: transparent; border: none; padding: 8px; cursor: pointer; pointer-events: auto;"
+    class="mobile-toggle"
+    style="display: none; visibility: hidden; z-index: 100000; position: relative; flex-direction: column; justify-content: center; align-items: center; width: 40px; height: 40px; background: transparent; border: none; padding: 8px; cursor: pointer; pointer-events: auto;"
   >
     <span style="display: block; width: 24px; height: 2px; background: white; margin: 3px 0; transition: all 0.3s ease;"></span>
     <span style="display: block; width: 24px; height: 2px; background: white; margin: 3px 0; transition: all 0.3s ease;"></span>
@@ -76,57 +106,89 @@
   style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 99997; pointer-events: auto;"
 ></div>
 
-<!-- Script para menu mobile - VERSÃO SIMPLIFICADA -->
+<!-- Script para menu híbrido - DESKTOP + MOBILE -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 Menu mobile - Força bruta com inline styles');
-  
-  // Forçar body padding para mobile
-  if (window.innerWidth <= 768) {
-    document.body.style.paddingTop = '65px';
-  }
+  console.log('🚀 Menu híbrido - Desktop + Mobile');
   
   const toggle = document.getElementById('mobileMenuToggle');
   const menu = document.getElementById('navbarMenu');
   const overlay = document.getElementById('mobileMenuOverlay');
+  const desktopNav = document.querySelector('.desktop-nav');
+  const desktopUser = document.querySelector('.desktop-user');
   
-  if (!toggle || !menu || !overlay) {
-    console.log('❌ Elementos não encontrados');
-    return;
-  }
-
-  function toggleMenu() {
-    const isOpen = menu.style.left === '0px';
+  function updateLayout() {
+    const isMobile = window.innerWidth <= 768;
     
-    if (isOpen) {
+    // Forçar body padding
+    document.body.style.paddingTop = '65px';
+    
+    if (isMobile) {
+      // MOBILE: Mostrar hamburger, esconder nav desktop
+      if (toggle) {
+        toggle.style.display = 'flex';
+        toggle.style.visibility = 'visible';
+      }
+      if (desktopNav) desktopNav.style.display = 'none';
+      if (desktopUser) desktopUser.style.display = 'none';
+      
+      console.log('📱 Modo mobile ativo');
+    } else {
+      // DESKTOP: Mostrar nav desktop, esconder hamburger
+      if (toggle) {
+        toggle.style.display = 'none';
+        toggle.style.visibility = 'hidden';
+      }
+      if (desktopNav) desktopNav.style.display = 'flex';
+      if (desktopUser) desktopUser.style.display = 'flex';
+      
+      // Fechar menu mobile se estiver aberto
+      if (menu) menu.style.left = '-100%';
+      if (overlay) overlay.style.display = 'none';
+      
+      console.log('🖥️ Modo desktop ativo');
+    }
+  }
+  
+  // Aplicar layout inicial e em resize
+  updateLayout();
+  window.addEventListener('resize', updateLayout);
+  
+  // Funcionalidade do menu mobile
+  if (toggle && menu && overlay) {
+    function toggleMenu() {
+      const isOpen = menu.style.left === '0px';
+      
+      if (isOpen) {
+        menu.style.left = '-100%';
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+        console.log('❌ Menu mobile fechado');
+      } else {
+        menu.style.left = '0px';
+        overlay.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        console.log('✅ Menu mobile aberto');
+      }
+    }
+
+    function closeMenu() {
       menu.style.left = '-100%';
       overlay.style.display = 'none';
       document.body.style.overflow = '';
-      console.log('❌ Menu fechado');
-    } else {
-      menu.style.left = '0px';
-      overlay.style.display = 'block';
-      document.body.style.overflow = 'hidden';
-      console.log('✅ Menu aberto');
     }
+
+    toggle.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', closeMenu);
+
+    // Fechar menu ao clicar em qualquer link
+    const navLinks = menu.querySelectorAll('a');
+    navLinks.forEach(link => {
+      link.addEventListener('click', closeMenu);
+    });
   }
 
-  function closeMenu() {
-    menu.style.left = '-100%';
-    overlay.style.display = 'none';
-    document.body.style.overflow = '';
-  }
-
-  toggle.addEventListener('click', toggleMenu);
-  overlay.addEventListener('click', closeMenu);
-
-  // Fechar menu ao clicar em qualquer link
-  const navLinks = menu.querySelectorAll('a');
-  navLinks.forEach(link => {
-    link.addEventListener('click', closeMenu);
-  });
-
-  console.log('✅ Menu mobile configurado');
+  console.log('✅ Menu híbrido configurado');
 });
 </script>
 
