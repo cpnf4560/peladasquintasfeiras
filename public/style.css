@@ -4855,9 +4855,15 @@ img {
   display: inline-block;
 }
 
-/* Mobile menu toggle - escondido por padrão */
+/* Mobile menu toggle - escondido em DESKTOP, visível em mobile */
 .mobile-menu-toggle {
   display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: flex !important;
+  }
 }
 
 /* Overlay - escondido por padrão */

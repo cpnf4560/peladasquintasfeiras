@@ -104,12 +104,15 @@
   .logo-text {
     display: none !important;
   }
-
   /* ============================================
-     MENU HAMBURGER - SEMPRE VISÍVEL
+     MENU HAMBURGER - SEMPRE VISÍVEL EM MOBILE
      ============================================ */
-  .mobile-menu-toggle {
+  .mobile-menu-toggle,
+  #mobileMenuToggle,
+  button.mobile-menu-toggle {
     display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
@@ -122,6 +125,7 @@
     cursor: pointer !important;
     z-index: 1002 !important; /* Acima do header */
     flex-shrink: 0 !important;
+    pointer-events: auto !important;
   }
   .mobile-menu-toggle span {
     display: block !important;
