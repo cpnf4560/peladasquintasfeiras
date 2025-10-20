@@ -5,26 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <meta name="description" content="Sistema de Gestão das Peladas das Quintas Feiras">
   <meta name="theme-color" content="#2c3e50">
-  <title>Peladas das Quintas Feiras</title>
+  <title><%= typeof title !== 'undefined' ? title : 'Peladas das Quintas Feiras' %></title>
   <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
   <link rel="stylesheet" href="/mobile.css?v=<%= Date.now() %>">
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <link rel="shortcut icon" href="/logo.svg">
 </head>
-<body class="main-bg"><header class="header">    <div class="logo-area">
-      <img src="/logo.svg" alt="Logo" class="logo-image">
-      <span class="logo-text">Peladas das<br>Quintas Feiras</span>
-    </div>    <nav class="navbar">
-      <a href="/convocatoria" class="nav-link">Convocatória</a>
-      <a href="/coletes" class="nav-link">Coletes</a>
-      <a href="/" class="nav-link">Resultados</a>
-      <a href="/estatisticas" class="nav-link">Estatísticas</a>
-      <a href="/jogos/novo" class="nav-link">Registar Resultado</a>
-      <a href="/admin/dashboard" class="nav-link">Admin</a>
-    </nav>
-  </header>
+<body class="main-bg">
+  <%- include('partials/header') %>
+  
   <main class="container">
     <%- body %>
   </main>
+  
+  <script>
+    // Helper: scroll to top on page load
+    (function(){
+      try { window.scrollTo(0,0); } catch(e){}
+    })();
+  </script>
 </body>
 </html>
