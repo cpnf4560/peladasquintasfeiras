@@ -1018,8 +1018,49 @@ router.post('/convocatoria/decrementar-jogos-indisponiveis', requireAdmin, (req,
           }
         });
       }
+    });  });
+});
+
+// ============================================
+// FUNÇÃO AUXILIAR: REORGANIZAR RESERVAS
+// ============================================
+
+/**
+ * Reorganiza as posições dos reservas para manter ordem sequencial (1, 2, 3...)
+ * Isso é útil após adicionar/remover jogadores da lista de reservas
+ */
+function reorganizarReservas(callback) {
+  console.log('🔄 Reorganizando posições dos reservas...');
+  
+  // Buscar todas as reservas ordenadas pela posição atual
+  db.query('SELECT id FROM convocatoria WHERE tipo = ? ORDER BY posicao', ['reserva'], (err, reservas) => {
+    if (err) {
+      console.error('Erro ao buscar reservas:', err);
+      if (callback) callback();
+      return;
+    }
+    
+    if (!reservas || reservas.length === 0) {
+      console.log('ℹ️ Nenhuma reserva para reorganizar');
+      if (callback) callback();
+      return;
+    }
+    
+    // Atualizar posições sequencialmente
+    const updates = reservas.map((reserva, index) => {
+      return new Promise((resolve) => {
+        db.query('UPDATE convocatoria SET posicao = ? WHERE id = ?', [index + 1, reserva.id], (err) => {
+          if (err) console.error('Erro ao atualizar posição:', err);
+          resolve();
+        });
+      });
+    });
+    
+    Promise.all(updates).then(() => {
+      console.log(`✅ ${reservas.length} reservas reorganizadas`);
+      if (callback) callback();
     });
   });
-});
+}
 
 module.exports = router;
