@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Coletes - Peladas das Quintas Feiras</title>
+  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
+  <link rel="stylesheet" href="/mobile.css?v=<%= Date.now() %>">
+  <link rel="stylesheet" href="/mobile-fix.css?v=<%= Date.now() %>">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="shortcut icon" href="/logo.svg">
+  <style>
+    @media (max-width: 768px) {
+      body { padding-top: 65px !important; }
+      header.header { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; background: #2c3e50 !important; z-index: 999 !important; }
+      #mobileMenuToggle { display: flex !important; z-index: 1002 !important; }
+      #navbarMenu { position: fixed !important; top: 0 !important; left: -100% !important; height: 100vh !important; z-index: 1001 !important; padding-top: 60px !important; }
+      #navbarMenu.active { left: 0 !important; }
+      #mobileMenuOverlay { display: none; }
+      #mobileMenuOverlay.active { display: block !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; background: rgba(0,0,0,0.6) !important; z-index: 1000 !important; }
+    }
+  </style>
+  <script>
+    (function(){
+      try {
+        var isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        var narrow = window.innerWidth <= 900;
+        if (isCoarse || isTouch || narrow) { document.documentElement.classList.add('mobile-real'); }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="main-bg">  <%- include('partials/header', { user: user }) %>
+  <main class="container">    <div class="coletes-header-modern">
+      <h2 class="section-title">🟢🔴 Gestão de Coletes</h2>
+      <p class="section-subtitle">Controlo de quem leva os coletes</p>
+    </div>    <!-- Nota informativa -->
+    <div class="info-note-modern">
+      <span class="info-icon">ℹ️</span>
+      <p><strong>Nota:</strong> Registos desde outubro de 2025, a ordem não está de acordo com o WhatsApp</p>
+    </div><!-- Estado actual dos coletes --><div class="coletes-status-modern">
+      <% if (coletesActuais) { %>
+        <div class="status-card current-holder">
+          <div class="status-icon">👕</div>
+          <div class="status-content">
+            <h3>Coletes actualmente com:</h3>
+            <p class="holder-name"><%= coletesActuais.jogador_nome %></p>
+            <p class="holder-date">📅 Desde: <%= new Date(coletesActuais.data_levou).toLocaleDateString('pt-PT') %></p>
+            
+            <% if (user && user.role === 'admin') { %>
+              <!-- Botão para confirmar devolução -->
+              <div style="margin-top: 20px;">
+                <button type="button" class="btn btn-success" onclick="document.getElementById('formDevolucao').style.display='block'; this.style.display='none';">
+                  ✅ Confirmar Devolução
+                </button>
+              </div>
+              
+              <!-- Formulário de devolução (inicialmente escondido) -->
+              <div id="formDevolucao" style="display:none; margin-top: 20px; padding: 15px; background-color: #f0f9ff; border-radius: 8px; border: 2px solid #3b82f6;">
+                <h4 style="margin-top: 0; color: #1e40af;">👤 Quem levou os coletes?</h4>
+                <form method="POST" action="/coletes/confirmar">
+                  <div style="margin-bottom: 15px;">
+                    <label for="jogador_select" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                      Selecionar jogador:
+                    </label>
+                    <select name="jogador_id" id="jogador_select" required 
+                            style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #cbd5e1; font-size: 16px;">
+                      <% if (proximoConvocado) { %>
+                        <option value="<%= proximoConvocado.id %>" selected>
+                          🎯 <%= proximoConvocado.nome %> (Sugestão: próximo da lista)
+                        </option>
+                      <% } %>
+                      <% 
+                        const convocados = estatisticas.filter(j => j.tipo === 'convocado');
+                        convocados.forEach(jogador => { 
+                          if (!proximoConvocado || jogador.id !== proximoConvocado.id) { 
+                      %>
+                        <option value="<%= jogador.id %>">
+                          <%= jogador.nome %> (Levou <%= jogador.vezes_levou %>x)
+                        </option>
+                      <% 
+                          }
+                        }); 
+                      %>
+                    </select>
+                  </div>
+                  
+                  <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                      💾 Confirmar
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;" 
+                            onclick="document.getElementById('formDevolucao').style.display='none'; document.querySelector('.btn-success').style.display='inline-block';">
+                      ❌ Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="status-card available">
+          <div class="status-icon">✅</div>
+          <div class="status-content">
+            <h3>Coletes Disponíveis</h3>
+            <p>Ninguém tem os coletes neste momento</p>
+          </div>
+        </div>
+      <% } %>
+      
+      <!-- Informação do próximo convocado -->
+      <% if (proximoConvocado) { %>
+        <div class="alert alert-success" style="margin-top: 15px;">
+          <h3>🎯 Próximo a levar os coletes:</h3>
+          <p><strong><%= proximoConvocado.nome %></strong></p>
+          <p>
+            Vezes que já levou: <strong><%= proximoConvocado.vezes_levou %></strong>
+            <% if (proximoConvocado.ultima_vez) { %>
+              | Última vez: <%= new Date(proximoConvocado.ultima_vez).toLocaleDateString('pt-PT') %>
+            <% } else { %>
+              | <em>Nunca levou os coletes</em>
+            <% } %>          </p>
+          <% if (user && user.role === 'admin') { %>
+            <% if (!coletesActuais) { %>
+            <form method="POST" action="/coletes/atribuir" style="margin-top: 10px;">
+              <input type="hidden" name="jogador_id" value="<%= proximoConvocado.id %>">
+              <button type="submit" class="btn btn-primary">
+                📥 Atribuir Coletes a <%= proximoConvocado.nome %>
+              </button>
+            </form>
+            <% } %>
+          <% } %>
+        </div>
+      <% } %>
+    </div>    <!-- Tabela de estatísticas -->
+    <div class="coletes-stats card-visual">
+      <h3>📊 Estatísticas dos Convocados</h3>
+      <p><em>Apenas os 10 convocados podem levar os coletes</em></p>
+      <% if (estatisticas.length > 0) { %>
+        <% 
+          const convocados = estatisticas.filter(j => j.tipo === 'convocado');
+          const reservas = estatisticas.filter(j => j.tipo === 'reserva');
+        %>
+        
+        <div class="table-wrapper">
+        <table class="table stats-table">
+          <thead>
+            <tr>
+              <th>Posição</th>
+              <th>Jogador</th>
+              <th>Posição Convocatória</th>
+              <th>Vezes que Levou</th>
+              <th>Última Vez</th>
+              <th>Prioridade</th>
+              <th>Acção</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% convocados.forEach((jogador, index) => { %>
+              <tr class="<%= index < 3 ? 'priority-high' : '' %> <%= index % 2 === 0 ? 'zebra' : '' %>">
+                <td><%= index + 1 %>º</td>
+                <td><%= jogador.nome %></td>
+                <td><%= jogador.posicao %>º Convocado</td>
+                <td><%= jogador.vezes_levou %></td>
+                <td>
+                  <% if (jogador.ultima_vez) { %>
+                    <%= new Date(jogador.ultima_vez).toLocaleDateString('pt-PT') %>
+                  <% } else { %>
+                    <em>Nunca</em>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (index === 0) { %>
+                    <span class="priority-badge high">🔥 ALTA</span>
+                  <% } else if (index < 3) { %>
+                    <span class="priority-badge medium">⚡ MÉDIA</span>
+                  <% } else { %>
+                    <span class="priority-badge low">💤 BAIXA</span>
+                  <% } %>                </td>
+                <td>
+                  <% if (user && user.role === 'admin') { %>
+                    <% if (!coletesActuais) { %>
+                    <form method="POST" action="/coletes/atribuir" style="display: inline;">
+                      <input type="hidden" name="jogador_id" value="<%= jogador.id %>">
+                      <button type="submit" class="btn btn-primary btn-sm">
+                        📥 Atribuir Coletes
+                      </button>
+                    </form>
+                    <% } %>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+            <% if (reservas.length > 0) { %>
+              <% reservas.forEach((jogador, index) => { %>
+                <tr class="jogador-reserva">
+                  <td>-</td>
+                  <td><%= jogador.nome %></td>
+                  <td><%= jogador.posicao %>º Reserva</td>
+                  <td><%= jogador.vezes_levou %></td>
+                  <td>
+                    <% if (jogador.ultima_vez) { %>
+                      <%= new Date(jogador.ultima_vez).toLocaleDateString('pt-PT') %>
+                    <% } else { %>
+                      <em>Nunca</em>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="priority-badge none">-</span>
+                  </td>
+                  <td>-</td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+        </div>
+      <% } else { %>
+        <p>Nenhum jogador disponível.</p>
+      <% } %>
+    </div>
+
+    <!-- Sugestão automática -->
+    <% if (!coletesActuais && estatisticas.length > 0) { %>
+      <div class="suggestion">
+        <h3>💡 Sugestão Automática</h3>
+        <p>Próximo jogador sugerido: <strong><%= estatisticas[0].nome %></strong></p>
+        <p>
+          <% if (estatisticas[0].vezes_levou === 0) { %>
+            (Nunca levou os coletes)
+          <% } else { %>
+            (Levou <%= estatisticas[0].vezes_levou %> vez<%= estatisticas[0].vezes_levou > 1 ? 'es' : '' %>)
+          <% } %>        </p>
+        
+        <% if (user && user.role === 'admin') { %>
+        <form method="POST" action="/coletes/atribuir">
+          <input type="hidden" name="jogador_id" value="<%= estatisticas[0].id %>">
+          <button type="submit" class="btn btn-primary btn-large">
+            🎯 Atribuir ao Próximo da Lista
+          </button>
+        </form>
+        <% } %>
+      </div><% } %>
+  </main>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

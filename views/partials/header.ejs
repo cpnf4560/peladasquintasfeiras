@@ -106,56 +106,64 @@
   style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 99997; pointer-events: auto;"
 ></div>
 
-<!-- Script para menu híbrido - DESKTOP + MOBILE -->
+<!-- Script para menu híbrido - DESKTOP + MOBILE - VERSÃO ROBUSTA -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 Menu híbrido - Desktop + Mobile');
+(function() {
+  console.log('🚀 Menu híbrido ROBUSTO - Desktop + Mobile');
   
-  const toggle = document.getElementById('mobileMenuToggle');
-  const menu = document.getElementById('navbarMenu');
-  const overlay = document.getElementById('mobileMenuOverlay');
-  const desktopNav = document.querySelector('.desktop-nav');
-  const desktopUser = document.querySelector('.desktop-user');
+  let isInitialized = false;
   
-  function updateLayout() {
-    const isMobile = window.innerWidth <= 768;
+  function initializeMenu() {
+    if (isInitialized) return;
     
-    // Forçar body padding
-    document.body.style.paddingTop = '65px';
+    const toggle = document.getElementById('mobileMenuToggle');
+    const menu = document.getElementById('navbarMenu');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const desktopNav = document.querySelector('.desktop-nav');
+    const desktopUser = document.querySelector('.desktop-user');
     
-    if (isMobile) {
-      // MOBILE: Mostrar hamburger, esconder nav desktop
-      if (toggle) {
-        toggle.style.display = 'flex';
-        toggle.style.visibility = 'visible';
-      }
-      if (desktopNav) desktopNav.style.display = 'none';
-      if (desktopUser) desktopUser.style.display = 'none';
-      
-      console.log('📱 Modo mobile ativo');
-    } else {
-      // DESKTOP: Mostrar nav desktop, esconder hamburger
-      if (toggle) {
-        toggle.style.display = 'none';
-        toggle.style.visibility = 'hidden';
-      }
-      if (desktopNav) desktopNav.style.display = 'flex';
-      if (desktopUser) desktopUser.style.display = 'flex';
-      
-      // Fechar menu mobile se estiver aberto
-      if (menu) menu.style.left = '-100%';
-      if (overlay) overlay.style.display = 'none';
-      
-      console.log('🖥️ Modo desktop ativo');
+    if (!toggle || !menu || !overlay) {
+      console.log('❌ Elementos não encontrados, tentando novamente...');
+      setTimeout(initializeMenu, 100);
+      return;
     }
-  }
-  
-  // Aplicar layout inicial e em resize
-  updateLayout();
-  window.addEventListener('resize', updateLayout);
-  
-  // Funcionalidade do menu mobile
-  if (toggle && menu && overlay) {
+    
+    isInitialized = true;
+    console.log('✅ Elementos encontrados, inicializando menu...');
+    
+    function updateLayout() {
+      const isMobile = window.innerWidth <= 768;
+      
+      // SEMPRE forçar body padding
+      document.body.style.paddingTop = '65px';
+      
+      if (isMobile) {
+        // MOBILE: Força absoluta
+        if (toggle) {
+          toggle.style.cssText = 'display: flex !important; visibility: visible !important; opacity: 1 !important; z-index: 100000 !important; position: relative !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; width: 40px !important; height: 40px !important; background: transparent !important; border: none !important; padding: 8px !important; cursor: pointer !important; pointer-events: auto !important;';
+        }
+        if (desktopNav) desktopNav.style.cssText = 'display: none !important; visibility: hidden !important;';
+        if (desktopUser) desktopUser.style.cssText = 'display: none !important; visibility: hidden !important;';
+        
+        console.log('📱 MOBILE forçado');
+      } else {
+        // DESKTOP: Força absoluta
+        if (toggle) {
+          toggle.style.cssText = 'display: none !important; visibility: hidden !important;';
+        }
+        if (desktopNav) desktopNav.style.cssText = 'display: flex !important; visibility: visible !important; align-items: center !important; gap: 15px !important;';
+        if (desktopUser) desktopUser.style.cssText = 'display: flex !important; visibility: visible !important; align-items: center !important; gap: 10px !important;';
+        
+        // Fechar menu mobile
+        if (menu) menu.style.left = '-100%';
+        if (overlay) overlay.style.display = 'none';
+        document.body.style.overflow = '';
+        
+        console.log('🖥️ DESKTOP forçado');
+      }
+    }
+    
+    // Funcionalidade do menu mobile
     function toggleMenu() {
       const isOpen = menu.style.left === '0px';
       
@@ -163,12 +171,12 @@ document.addEventListener('DOMContentLoaded', function() {
         menu.style.left = '-100%';
         overlay.style.display = 'none';
         document.body.style.overflow = '';
-        console.log('❌ Menu mobile fechado');
+        console.log('❌ Menu fechado');
       } else {
         menu.style.left = '0px';
         overlay.style.display = 'block';
         document.body.style.overflow = 'hidden';
-        console.log('✅ Menu mobile aberto');
+        console.log('✅ Menu aberto');
       }
     }
 
@@ -178,18 +186,33 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.style.overflow = '';
     }
 
+    // Event listeners
     toggle.addEventListener('click', toggleMenu);
     overlay.addEventListener('click', closeMenu);
 
-    // Fechar menu ao clicar em qualquer link
+    // Fechar menu ao clicar em links
     const navLinks = menu.querySelectorAll('a');
     navLinks.forEach(link => {
       link.addEventListener('click', closeMenu);
     });
-  }
 
-  console.log('✅ Menu híbrido configurado');
-});
+    // Aplicar layout inicial e em resize
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
+    
+    console.log('✅ Menu híbrido ROBUSTO configurado');
+  }
+  
+  // Múltiplas tentativas de inicialização
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeMenu);
+  } else {
+    initializeMenu();
+  }
+  
+  window.addEventListener('load', initializeMenu);
+  setTimeout(initializeMenu, 500); // Fallback
+})();
 </script>
 
 <!-- Botão de partilha - INLINE ABSOLUTO -->
