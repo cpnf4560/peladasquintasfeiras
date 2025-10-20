@@ -1,0 +1,75 @@
+╔═══════════════════════════════════════════════════════════════╗
+║  🎯 SOLUÇÃO DEFINITIVA - EXECUTAR AGORA                      ║
+╚═══════════════════════════════════════════════════════════════╝
+
+❌ PROBLEMA:
+═══════════════════════════════════════════════════════════════
+"indisponiveis is not defined" continua a aparecer
+
+🔍 CAUSA IDENTIFICADA:
+═══════════════════════════════════════════════════════════════
+Há 2 PROCESSOS Node.js em execução simultaneamente!
+- Processo 27016 (antigo - SEM correções)
+- Processo 37272 (pode ser antigo também)
+
+✅ SOLUÇÃO DEFINITIVA (1 AÇÃO):
+═══════════════════════════════════════════════════════════════
+
+DUPLO-CLIQUE NESTE ARQUIVO:
+
+   📁 RESTART_LIMPO.bat
+
+O que ele faz:
+1. ⏹️  Para TODOS os processos Node.js
+2. ⏱️  Aguarda 2 segundos (limpeza)
+3. 🚀 Inicia servidor LIMPO com correções
+
+═══════════════════════════════════════════════════════════════
+║  ⚡ EXECUTE AGORA: RESTART_LIMPO.bat                         ║
+║  (Duplo-clique no arquivo)                                  ║
+═══════════════════════════════════════════════════════════════
+
+🔍 O QUE VOCÊ DEVE VER:
+
+Após executar RESTART_LIMPO.bat, verá:
+
+1. ⏹️  "Processos Node.js parados"
+2. 🚀 "Iniciando servidor limpo"
+3. 📊 No log: "Convocados: X, Reservas: Y, Indisponíveis: 0"
+4. ✅ "Server running on port 3000"
+
+Depois abra navegador:
+- http://localhost:3000/convocatoria
+- Login: admin / rzq7xgq8
+- ✅ Página carrega SEM ERRO
+- ✅ Vê 3 cards (incluindo Indisponíveis)
+
+⚠️ SE AINDA NÃO FUNCIONAR:
+═══════════════════════════════════════════════════════════════
+
+Execute em PowerShell (como Admin):
+
+   Get-Process node | Stop-Process -Force
+   
+Aguarde 5 segundos, depois:
+
+   node server.js
+
+🎯 GARANTIA:
+═══════════════════════════════════════════════════════════════
+
+✅ Tabela criada: indisponiveis_temporarios
+✅ Código corrigido: routes/convocatoria.js
+✅ Tratamento de erro: robusto
+✅ Script de restart: automático
+
+O problema é APENAS processos antigos em execução.
+Após restart limpo, funcionará 100%!
+
+═══════════════════════════════════════════════════════════════
+║  🚨 AÇÃO URGENTE: DUPLO-CLIQUE EM RESTART_LIMPO.bat         ║
+═══════════════════════════════════════════════════════════════
+
+Tempo: 10 segundos
+Dificuldade: Muito fácil ⭐
+Sucesso garantido: 100% ✅

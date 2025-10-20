@@ -1895,7 +1895,7 @@ button:hover {
 .convocatoria-grid-modern {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  gap: 1.5rem; /* Reduzido de 2rem */
   margin-bottom: 2rem;
 }
 
@@ -1905,13 +1905,25 @@ button:hover {
   }
 }
 
+@media (max-width: 1400px) {
+  .convocatoria-grid-modern {
+    gap: 1rem; /* Menos gap em telas médias */
+  }
+}
+
 .convocados-card,
-.reservas-card {
+.reservas-card,
+.indisponiveis-card {
   background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   border: 1px solid #e5e7eb;
+}
+
+/* Card de indisponíveis ocupa largura total */
+.indisponiveis-card {
+  grid-column: 1 / -1;
 }
 
 .card-header-modern {
@@ -1954,6 +1966,51 @@ button:hover {
   color: white;
 }
 
+.indisponiveis-header {
+  background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+}
+
+.indisponiveis-badge {
+  background: #5b21b6;
+  color: white;
+}
+
+.badge-motivo {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #f3f4f6;
+  color: #4b5563;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-periodo {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.badge-jogos {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-data {
+  background: #fce7f3;
+  color: #9f1239;
+}
+
+.badge-indisponivel {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .table-wrapper-modern {
   overflow-x: auto;
 }
@@ -1961,6 +2018,7 @@ button:hover {
 .table-modern {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* Força colunas a respeitarem larguras definidas */
 }
 
 .table-modern thead {
@@ -1968,11 +2026,11 @@ button:hover {
 }
 
 .table-modern th {
-  padding: 0.875rem;
+  padding: 0.7rem 0.4rem; /* Mais compacto */
   text-align: left;
   font-weight: 700;
   color: #374151;
-  font-size: 0.8125rem;
+  font-size: 0.75rem; /* Menor */
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 2px solid #e5e7eb;
@@ -2004,24 +2062,27 @@ button:hover {
 }
 
 .table-modern td {
-  padding: 0.875rem;
+  padding: 0.5rem 0.4rem; /* Ainda mais compacto */
+  font-size: 0.875rem; /* Fonte menor */
 }
 
 .position-cell {
   font-weight: 700;
   color: #6b7280;
-  width: 60px;
+  width: 45px; /* Reduzido ainda mais */
 }
 
 .player-cell {
   font-weight: 600;
   color: #1f2937;
+  max-width: 130px; /* Reduzido de 150px */
 }
 
 .player-name-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem; /* Reduzido */
+  font-size: 0.8125rem; /* Ligeiramente menor */
 }
 
 .next-badge {
@@ -2034,21 +2095,21 @@ button:hover {
 }
 
 .next-indicator {
-  margin-left: 0.5rem;
-  font-size: 0.75rem;
+  margin-left: 0.3rem; /* Reduzido */
+  font-size: 0.65rem; /* Menor */
   color: #f59e0b;
   font-weight: 700;
 }
 
 .faltas-cell {
-  width: 100px;
+  width: 60px; /* Reduzido ainda mais */
 }
 
 .badge-faltas-modern {
   display: inline-block;
-  padding: 0.375rem 0.75rem;
+  padding: 0.2rem 0.4rem; /* Mais compacto */
   border-radius: 20px;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Menor */
   font-weight: 600;
   background: #f3f4f6;
   color: #6b7280;
@@ -2060,54 +2121,57 @@ button:hover {
 }
 
 .status-cell {
-  min-width: 140px;
+  min-width: 85px; /* Reduzido ainda mais */
+  max-width: 100px;
 }
 
 .status-confirmed {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.1rem; /* Menor gap */
 }
 
 .status-label {
   font-weight: 600;
   color: #065f46;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Menor */
 }
 
 .status-pending {
   font-weight: 600;
   color: #92400e;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Menor */
 }
 
 .status-date {
-  font-size: 0.75rem;
+  font-size: 0.65rem; /* Ainda menor */
   color: #6b7280;
+  white-space: nowrap;
 }
 
 .actions-cell {
-  width: 180px; /* Aumentado para acomodar botões lado a lado */
-  min-width: 180px;
+  width: 100px; /* Reduzido ainda mais - apenas ícones */
+  min-width: 100px;
   white-space: nowrap;
 }
 
 .action-buttons-modern {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: nowrap; /* Mantém botões lado a lado */
+  gap: 0.2rem; /* Reduzido ainda mais */
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
 }
 
 .btn-mini {
-  padding: 0.375rem 0.625rem;
+  padding: 0.2rem 0.4rem; /* Ainda mais compacto */
   border: none;
-  border-radius: 6px;
-  font-size: 0.8125rem;
+  border-radius: 3px; /* Menos arredondado */
+  font-size: 0.7rem; /* Menor */
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .btn-mini-success {
@@ -2140,21 +2204,31 @@ button:hover {
   transform: scale(1.05);
 }
 
+.btn-mini-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.btn-mini-info:hover {
+  background: #bfdbfe;
+  transform: scale(1.05);
+}
+
 .reorder-cell {
-  width: 100px;
+  width: 70px; /* Reduzido para caber melhor */
 }
 
 .reorder-buttons {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.15rem; /* Menor gap */
 }
 
 .btn-arrow {
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.4rem; /* Mais compacto */
   border: 1px solid #d1d5db;
   background: white;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  border-radius: 3px;
+  font-size: 0.7rem; /* Menor */
   cursor: pointer;
   transition: all 0.2s;
   color: #6b7280;
@@ -2168,9 +2242,9 @@ button:hover {
 
 .badge-status-modern {
   display: inline-block;
-  padding: 0.375rem 0.75rem;
+  padding: 0.25rem 0.5rem; /* Mais compacto */
   border-radius: 20px;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Menor */
   font-weight: 600;
 }
 
@@ -4534,5 +4608,196 @@ main.container {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ============================================
+   MODAL DE INDISPONÍVEIS
+   ============================================ */
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 2px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  color: #1f2937;
+  transform: scale(1.1);
+}
+
+.modal-form {
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9375rem;
+}
+
+.form-select,
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+  background: white;
+}
+
+.form-select:focus,
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+@media (max-width: 576px) {
+  .modal-content {
+    max-width: 100%;
+    margin: 1rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-actions button {
+    width: 100%;
   }
 }

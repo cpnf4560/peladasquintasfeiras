@@ -136,12 +136,24 @@ const initDatabase = async () => {
       data_falta DATE,
       created_at ${USE_POSTGRES ? 'TIMESTAMP DEFAULT NOW()' : "DATETIME DEFAULT CURRENT_TIMESTAMP"}
     )`,
-    
-    `CREATE TABLE IF NOT EXISTS users (
+      `CREATE TABLE IF NOT EXISTS users (
       id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'user',
+      created_at ${USE_POSTGRES ? 'TIMESTAMP DEFAULT NOW()' : "DATETIME DEFAULT CURRENT_TIMESTAMP"}
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS indisponiveis_temporarios (
+      id ${USE_POSTGRES ? 'SERIAL' : 'INTEGER'} PRIMARY KEY ${USE_POSTGRES ? '' : 'AUTOINCREMENT'},
+      jogador_id INTEGER NOT NULL,
+      data_inicio DATE NOT NULL,
+      data_fim DATE,
+      numero_jogos INTEGER,
+      motivo TEXT,
+      posicao_original INTEGER,
+      tipo_original TEXT,
+      ativo INTEGER DEFAULT 1,
       created_at ${USE_POSTGRES ? 'TIMESTAMP DEFAULT NOW()' : "DATETIME DEFAULT CURRENT_TIMESTAMP"}
     )`
   ];

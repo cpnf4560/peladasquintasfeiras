@@ -1,0 +1,101 @@
+╔═══════════════════════════════════════════════════════════════╗
+║  🔄 REINICIAR SERVIDOR - AÇÃO IMEDIATA                       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+❌ ERRO ATUAL:
+═══════════════════════════════════════════════════════════════
+"indisponiveis is not defined"
+
+✅ CAUSA:
+═══════════════════════════════════════════════════════════════
+O servidor está a correr com o código ANTIGO (antes das correções).
+A tabela já existe, mas o servidor precisa ser REINICIADO.
+
+🎯 SOLUÇÃO (2 PASSOS):
+═══════════════════════════════════════════════════════════════
+
+PASSO 1: PARAR O SERVIDOR ATUAL
+--------------------------------
+Na janela do servidor (PowerShell/CMD com node server.js):
+
+   Pressionar: Ctrl + C
+
+   Aguardar mensagem: "^C" ou servidor parar
+
+
+PASSO 2: INICIAR SERVIDOR NOVAMENTE
+------------------------------------
+Opção A - Duplo-clique:
+   
+   REINICIAR_SERVIDOR.bat
+
+Opção B - PowerShell:
+   
+   node server.js
+
+
+⏱️ TEMPO TOTAL: 10 SEGUNDOS
+═══════════════════════════════════════════════════════════════
+
+📋 CHECKLIST:
+═══════════════════════════════════════════════════════════════
+[ ] Parou servidor antigo (Ctrl+C)
+[ ] Iniciou servidor novo (REINICIAR_SERVIDOR.bat)
+[ ] Viu mensagem "Server running on port 3000"
+[ ] Abriu http://localhost:3000/convocatoria
+[ ] Página carrega SEM ERRO ✅
+[ ] Vê 3 cards (Convocados, Reservas, Indisponíveis) ✅
+
+🔍 VERIFICAÇÃO RÁPIDA:
+═══════════════════════════════════════════════════════════════
+Após reiniciar, deve ver nos logs do servidor:
+
+📊 Convocados: X, Reservas: Y, Indisponíveis: 0
+
+Se vir "Indisponíveis: 0" → SUCESSO! ✅
+
+⚠️ SE AINDA DER ERRO:
+═══════════════════════════════════════════════════════════════
+
+1. Verificar se parou TODAS as instâncias do servidor
+   
+   tasklist | findstr node
+   
+   Se aparecer node.exe, matar processo:
+   
+   taskkill /F /IM node.exe
+
+2. Verificar tabela existe
+   
+   node -e "const {db} = require('./db'); db.query('SELECT * FROM indisponiveis_temporarios', [], (e,r) => console.log(e?'ERRO':'OK'));"
+   
+   Deve retornar: OK
+
+3. Limpar cache do navegador
+   
+   Ctrl + Shift + R (Firefox/Chrome)
+   Ou Ctrl + F5
+
+🎯 RESUMO:
+═══════════════════════════════════════════════════════════════
+
+Status Atual:
+   ✅ Tabela criada
+   ✅ Código corrigido
+   ⚠️ Servidor com código ANTIGO
+
+Ação Necessária:
+   🔄 REINICIAR SERVIDOR (Ctrl+C → node server.js)
+
+Resultado Esperado:
+   ✅ Erro desaparece
+   ✅ Sistema funcional
+   ✅ Card de indisponíveis visível
+
+═══════════════════════════════════════════════════════════════
+║  🚀 EXECUTE AGORA: REINICIAR_SERVIDOR.bat                   ║
+═══════════════════════════════════════════════════════════════
+
+Data: 20/10/2025
+Tempo estimado: 10 segundos
+Dificuldade: Muito fácil ⭐

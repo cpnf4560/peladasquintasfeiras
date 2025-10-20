@@ -27,6 +27,57 @@
         </div>
       </div>
     <% } %>
+    
+    <% if (typeof msg !== 'undefined' && msg === 'indisponivel_adicionado') { %>
+      <div class="success-message" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3); display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 2rem;">⏸️</span>
+        <div>
+          <strong style="font-size: 1.1rem;">Jogador Adicionado aos Indisponíveis!</strong>
+          <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">O jogador não receberá faltas durante o período de ausência.</p>
+        </div>
+      </div>
+    <% } %>
+    
+    <% if (typeof msg !== 'undefined' && msg === 'indisponivel_removido') { %>
+      <div class="success-message" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 2rem;">🔙</span>
+        <div>
+          <strong style="font-size: 1.1rem;">Jogador Reativado!</strong>
+          <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">O jogador retornou à sua posição original na convocatória.</p>
+        </div>
+      </div>
+    <% } %>
+    
+    <% if (typeof msg !== 'undefined' && msg === 'jogos_decrementados') { %>
+      <div class="success-message" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 2rem;">⏬</span>
+        <div>
+          <strong style="font-size: 1.1rem;">Jogos Decrementados!</strong>
+          <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">Período de ausência atualizado para todos os indisponíveis.</p>
+        </div>
+      </div>
+    <% } %>
+    
+    <% if (typeof msg !== 'undefined' && msg === 'jogador_movido_reservas') { %>
+      <div class="success-message" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 2rem;">⬇️</span>
+        <div>
+          <strong style="font-size: 1.1rem;">Jogador Movido para Reservas!</strong>
+          <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">Jogador foi movido para reservas sem receber falta. Próximo reserva foi promovido.</p>
+        </div>
+      </div>
+    <% } %>
+    
+    <% if (typeof msg !== 'undefined' && msg === 'jogador_movido_convocados') { %>
+      <div class="success-message" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 2rem;">⬆️</span>
+        <div>
+          <strong style="font-size: 1.1rem;">Jogador Promovido para Convocados!</strong>
+          <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">Reserva foi promovido para a lista de convocados.</p>
+        </div>
+      </div>
+    <% } %>
+      
       <div class="convocatoria-header-modern">
       <div class="header-content">
         <h2 class="section-title">📋 Convocatória</h2>
@@ -65,9 +116,7 @@
         </form>
       </div>
       <% } %>
-    </div>
-
-    <div class="info-card-modern">
+    </div>    <div class="info-card-modern">
       <h3 class="info-title">ℹ️ Como Funciona</h3>
       <div class="info-grid">
         <div class="info-item">
@@ -85,6 +134,13 @@
           </div>
         </div>
         <div class="info-item">
+          <span class="info-icon">⏸️</span>
+          <div>
+            <strong>Indisponíveis</strong>
+            <p>Ausências temporárias sem faltas</p>
+          </div>
+        </div>
+        <div class="info-item">
           <span class="info-icon">🚫</span>
           <div>
             <strong>Falta</strong>
@@ -98,23 +154,29 @@
             <p>1º reserva sobe automaticamente</p>
           </div>
         </div>
+        <div class="info-item">
+          <span class="info-icon">🔙</span>
+          <div>
+            <strong>Retorno</strong>
+            <p>Volta à posição original</p>
+          </div>
+        </div>
       </div>
-    </div>    <div class="convocatoria-grid-modern">
+    </div><div class="convocatoria-grid-modern">
       <!-- Tabela de Convocados -->
       <div class="convocados-card">
         <div class="card-header-modern convocados-header">
           <h3 class="card-title-modern">🏆 Convocados</h3>
           <span class="count-badge convocados-badge"><%= convocados.length %>/<%= config.max_convocados || 10 %></span>
         </div>
-        <div class="table-wrapper-modern">
-          <table class="table-modern convocados-table">
+        <div class="table-wrapper-modern">          <table class="table-modern convocados-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Nome</th>
-                <th>Faltas</th>
-                <th>Status</th>
-                <th>Ações</th>
+                <th style="width: 45px;">#</th>
+                <th style="width: 35%;">Nome</th>
+                <th style="width: 60px;">Faltas</th>
+                <th style="width: 25%;">Status</th>
+                <th style="width: 100px;">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -144,9 +206,7 @@
                         </div>
                       <% } else { %>
                         <span class="status-pending">⏳ Pendente</span>
-                      <% } %>                    </td>
-                    <td class="actions-cell">
-                      <% if (user && user.role === 'admin') { %>
+                      <% } %>                    </td>                    <td class="actions-cell">                      <% if (user && user.role === 'admin') { %>
                       <div class="action-buttons-modern">
                         <form method="POST" action="/convocatoria/confirmar-presenca/<%= jogador.id %>" style="display: inline;">
                           <button type="submit" class="btn-mini <%= jogador.confirmado ? 'btn-mini-danger' : 'btn-mini-success' %>" 
@@ -154,11 +214,18 @@
                             <%= jogador.confirmado ? '✖️' : '✔️' %>
                           </button>
                         </form>
+                        <form method="POST" action="/convocatoria/mover-para-reservas/<%= jogador.id %>" 
+                              style="display: inline;" 
+                              onsubmit="return confirm('Mover <%= jogador.nome %> para reservas (sem falta)?')">
+                          <button type="submit" class="btn-mini btn-mini-info" title="Mover para Reservas">
+                            ⬇️
+                          </button>
+                        </form>
                         <form method="POST" action="/convocatoria/marcar-falta/<%= jogador.id %>" 
                               style="display: inline;" 
                               onsubmit="return confirm('Marcar <%= jogador.nome %> como faltoso?')">
-                          <button type="submit" class="btn-mini btn-mini-warning">
-                            🚫 Falta
+                          <button type="submit" class="btn-mini btn-mini-warning" title="Marcar Falta">
+                            🚫
                           </button>
                         </form>
                       </div>
@@ -185,15 +252,16 @@
           <h3 class="card-title-modern">⏳ Reservas</h3>
           <span class="count-badge reservas-badge"><%= reservas.length %></span>
         </div>
-        <div class="table-wrapper-modern">
-          <table class="table-modern reservas-table">
-            <thead>
+        <div class="table-wrapper-modern">          <table class="table-modern reservas-table">            <thead>
               <tr>
-                <th>#</th>
-                <th>Nome</th>
-                <th>Faltas</th>
-                <th>Reordenar</th>
-                <th>Status</th>
+                <th style="width: 45px;">#</th>
+                <th style="width: 28%;">Nome</th>
+                <th style="width: 60px;">Faltas</th>
+                <th style="width: 70px;">Reordenar</th>
+                <th style="width: 22%;">Status</th>
+                <% if (user && user.role === 'admin') { %>
+                <th style="width: 60px;">Ações</th>
+                <% } %>
               </tr>
             </thead>
             <tbody>              <% if (reservas && reservas.length > 0) { %>
@@ -227,18 +295,107 @@
                         <% } %>
                       </div>
                       <% } %>
-                    </td>
-                    <td class="status-cell">
+                    </td>                    <td class="status-cell">
                       <span class="badge-status-modern <%= index === 0 ? 'badge-next' : 'badge-waiting' %>">
                         <%= index === 0 ? '⭐ Próximo' : '⏳ Reserva' %>
                       </span>
+                    </td>                    <% if (user && user.role === 'admin') { %>
+                    <td class="actions-cell">
+                      <form method="POST" action="/convocatoria/mover-para-convocados/<%= jogador.id %>" 
+                            style="display: inline;" 
+                            onsubmit="return confirm('Promover <%= jogador.nome %> para convocados?')">
+                        <button type="submit" class="btn-mini btn-mini-success" title="Mover para Convocados">
+                          ⬆️
+                        </button>
+                      </form>
                     </td>
-                  </tr>                <% }) %>
-              <% } else { %>
+                    <% } %>
+                  </tr>                <% }) %>              <% } else { %>
                 <tr>
-                  <td colspan="5" class="empty-row">
+                  <td colspan="<%= user && user.role === 'admin' ? '6' : '5' %>" class="empty-row">
                     <span class="empty-icon">⏳</span>
                     <p>Nenhuma reserva</p>
+                  </td>
+                </tr>
+              <% } %></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Card de Indisponíveis Temporários -->
+      <div class="indisponiveis-card">
+        <div class="card-header-modern indisponiveis-header">
+          <h3 class="card-title-modern">⏸️ Indisponíveis Temporários</h3>
+          <span class="count-badge indisponiveis-badge"><%= indisponiveis.length %></span>
+        </div>
+        
+        <% if (user && user.role === 'admin') { %>
+        <div style="padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+          <button onclick="document.getElementById('modalIndisponivel').style.display='flex'" 
+                  class="btn-action-modern btn-primary" 
+                  style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+            ➕ Adicionar Indisponível
+          </button>
+        </div>
+        <% } %>
+        
+        <div class="table-wrapper-modern">
+          <table class="table-modern indisponiveis-table">
+            <thead>
+              <tr>
+                <th>Jogador</th>
+                <th>Motivo</th>
+                <th>Período</th>
+                <th>Status</th>
+                <% if (user && user.role === 'admin') { %>
+                <th>Ações</th>
+                <% } %>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (indisponiveis && indisponiveis.length > 0) { %>
+                <% indisponiveis.forEach((indisponivel) => { %>
+                  <tr class="table-row-modern">
+                    <td class="player-cell">
+                      <span class="player-name-badge">⏸️ <%= indisponivel.nome %></span>
+                    </td>
+                    <td class="motivo-cell">
+                      <span class="badge-motivo"><%= indisponivel.motivo %></span>
+                    </td>
+                    <td class="periodo-cell">
+                      <% if (indisponivel.numero_jogos && indisponivel.numero_jogos > 0) { %>
+                        <span class="badge-periodo badge-jogos">
+                          🎯 <%= indisponivel.numero_jogos %> <%= indisponivel.numero_jogos === 1 ? 'jogo' : 'jogos' %>
+                        </span>
+                      <% } else if (indisponivel.data_fim) { %>
+                        <span class="badge-periodo badge-data">
+                          📅 Até <%= new Date(indisponivel.data_fim).toLocaleDateString('pt-PT') %>
+                        </span>
+                      <% } else { %>
+                        <span class="badge-periodo">⏳ Indefinido</span>
+                      <% } %>
+                    </td>
+                    <td class="status-cell">
+                      <span class="badge-status-modern badge-indisponivel">🚫 Indisponível</span>
+                    </td>
+                    <% if (user && user.role === 'admin') { %>
+                    <td class="actions-cell">
+                      <form method="POST" action="/convocatoria/remover-indisponivel/<%= indisponivel.id %>" 
+                            style="display: inline;"
+                            onsubmit="return confirm('Remover <%= indisponivel.nome %> dos indisponíveis? Ele retornará à posição original.')">
+                        <button type="submit" class="btn-mini btn-mini-success" title="Reativar">
+                          🔙 Reativar
+                        </button>
+                      </form>
+                    </td>
+                    <% } %>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="<%= user && user.role === 'admin' ? '5' : '4' %>" class="empty-row">
+                    <span class="empty-icon">✅</span>
+                    <p>Todos os jogadores disponíveis</p>
                   </td>
                 </tr>
               <% } %>
@@ -247,6 +404,87 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal para Adicionar Indisponível -->
+    <% if (user && user.role === 'admin') { %>
+    <div id="modalIndisponivel" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>➕ Adicionar Jogador aos Indisponíveis</h3>
+          <button class="modal-close" onclick="document.getElementById('modalIndisponivel').style.display='none'">✖</button>
+        </div>
+        
+        <form method="POST" action="/convocatoria/adicionar-indisponivel" class="modal-form">
+          <div class="form-group">
+            <label for="jogador_id">🎯 Jogador</label>
+            <select id="jogador_id" name="jogador_id" required class="form-select">
+              <option value="">Selecione um jogador...</option>
+              <% [...convocados, ...reservas].forEach(jogador => { %>
+                <option value="<%= jogador.id %>"><%= jogador.nome %> (<%= jogador.tipo === 'convocado' ? 'Convocado' : 'Reserva' %>)</option>
+              <% }) %>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="tipo_periodo">⏱️ Tipo de Período</label>
+            <select id="tipo_periodo" name="tipo_periodo" required class="form-select" onchange="togglePeriodoInputs()">
+              <option value="jogos">Por número de jogos</option>
+              <option value="data">Por data específica</option>
+            </select>
+          </div>
+          
+          <div class="form-group" id="campo_jogos">
+            <label for="numero_jogos">🎯 Número de Jogos</label>
+            <input type="number" id="numero_jogos" name="numero_jogos" min="1" max="50" placeholder="Ex: 3" class="form-input">
+            <small class="form-hint">Quantos jogos o jogador estará ausente</small>
+          </div>
+          
+          <div class="form-group" id="campo_data" style="display: none;">
+            <label for="data_fim">📅 Data de Retorno</label>
+            <input type="date" id="data_fim" name="data_fim" class="form-input">
+            <small class="form-hint">Data em que o jogador retorna</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="motivo">📝 Motivo</label>
+            <textarea id="motivo" name="motivo" required rows="3" placeholder="Ex: Formação profissional, Lesão, Viagem..." class="form-textarea"></textarea>
+            <small class="form-hint">Descreva o motivo da ausência</small>
+          </div>
+          
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="document.getElementById('modalIndisponivel').style.display='none'">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary">
+              ✅ Adicionar aos Indisponíveis
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <script>
+      function togglePeriodoInputs() {
+        const tipo = document.getElementById('tipo_periodo').value;
+        const campoJogos = document.getElementById('campo_jogos');
+        const campoData = document.getElementById('campo_data');
+        const inputJogos = document.getElementById('numero_jogos');
+        const inputData = document.getElementById('data_fim');
+        
+        if (tipo === 'jogos') {
+          campoJogos.style.display = 'block';
+          campoData.style.display = 'none';
+          inputJogos.required = true;
+          inputData.required = false;
+        } else {
+          campoJogos.style.display = 'none';
+          campoData.style.display = 'block';
+          inputJogos.required = false;
+          inputData.required = true;
+        }
+      }
+    </script>
+    <% } %>
   </main>
 
     <div class="convocatoria-stats">

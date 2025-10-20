@@ -69,33 +69,51 @@ function carregarConvocatoria(req, res) {
       if (err) {
         console.error('Erro ao buscar convocatória:', err);
         return res.status(500).send('Erro ao buscar convocatória');
-      }      const convocados = convocatoria.filter(j => j.tipo === 'convocado');
-      const reservas = convocatoria.filter(j => j.tipo === 'reserva');
-      
-      console.log(`📊 Convocados: ${convocados.length}, Reservas: ${reservas.length}, Total: ${convocatoria.length}`);
-      
-      // Validar equipas geradas
-      let equipasValidas = null;
-      if (global.equipasGeradas) {
-        try {
-          if (global.equipasGeradas.equipa1 && global.equipasGeradas.equipa2) {
-            equipasValidas = global.equipasGeradas;
-          }
-        } catch (e) {
-          console.error('Erro ao validar equipas:', e);
-          global.equipasGeradas = null;
+      }      // Buscar indisponíveis temporários
+      db.query(`
+        SELECT i.*, j.nome
+        FROM indisponiveis_temporarios i
+        JOIN jogadores j ON i.jogador_id = j.id
+        WHERE i.ativo = 1
+        ORDER BY i.created_at DESC
+      `, [], (err, indisponiveisResult) => {
+        // Se houver erro (tabela não existe), usar array vazio
+        let indisponiveis = [];
+        if (err) {
+          console.error('⚠️ Erro ao buscar indisponíveis (tabela pode não existir ainda):', err.message);
+        } else {
+          indisponiveis = indisponiveisResult || [];
         }
-      }
-      
-      res.render('convocatoria', { 
-        user: req.session.user || null,
-        activePage: 'convocatoria',
-        convocados, 
-        reservas, 
-        config,
-        equipas: equipasValidas,
-        title: 'Convocatória - Peladas das Quintas Feiras',
-        msg: req.query.msg || null
+
+        const convocados = convocatoria.filter(j => j.tipo === 'convocado');
+        const reservas = convocatoria.filter(j => j.tipo === 'reserva');
+        
+        console.log(`📊 Convocados: ${convocados.length}, Reservas: ${reservas.length}, Indisponíveis: ${indisponiveis.length}`);
+        
+        // Validar equipas geradas
+        let equipasValidas = null;
+        if (global.equipasGeradas) {
+          try {
+            if (global.equipasGeradas.equipa1 && global.equipasGeradas.equipa2) {
+              equipasValidas = global.equipasGeradas;
+            }
+          } catch (e) {
+            console.error('Erro ao validar equipas:', e);
+            global.equipasGeradas = null;
+          }
+        }
+        
+        res.render('convocatoria', { 
+          user: req.session.user || null,
+          activePage: 'convocatoria',
+          convocados, 
+          reservas,
+          indisponiveis: indisponiveis,
+          config,
+          equipas: equipasValidas,
+          title: 'Convocatória - Peladas das Quintas Feiras',
+          msg: req.query.msg || null
+        });
       });
     });
   });
@@ -127,6 +145,161 @@ router.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
             res.redirect('/convocatoria');
           }
         });
+      });
+    });
+  });
+});
+
+// Mover jogador de convocados para reservas (SEM falta)
+router.post('/convocatoria/mover-para-reservas/:id', requireAdmin, (req, res) => {
+  const jogadorId = req.params.id;
+  
+  console.log(`⬇️ Movendo jogador ${jogadorId} para reservas (sem falta)...`);
+  
+  // Verificar se é convocado
+  db.query('SELECT * FROM convocatoria WHERE jogador_id = ? AND tipo = "convocado"', [jogadorId], (err, result) => {
+    if (err || !result || result.length === 0) {
+      return res.status(400).send('Jogador não é convocado');
+    }
+    
+    const convocado = result[0];
+    const posicaoVaga = convocado.posicao;
+    
+    // Buscar última posição de reserva
+    db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', [], (err, result) => {
+      if (err) return res.status(500).send('Erro interno');
+      
+      const novaPosicaoReserva = (result[0].max_pos || 0) + 1;
+      
+      // Mover jogador para reservas
+      db.query('UPDATE convocatoria SET tipo = "reserva", posicao = ?, confirmado = 0 WHERE jogador_id = ?', 
+        [novaPosicaoReserva, jogadorId], (err) => {
+        if (err) {
+          console.error('Erro ao mover para reservas:', err);
+          return res.status(500).send('Erro ao mover para reservas');
+        }
+        
+        console.log(`✅ Jogador ${jogadorId} movido para reservas (posição ${novaPosicaoReserva})`);
+        
+        // Promover primeiro reserva para a posição vaga
+        db.query('SELECT * FROM convocatoria WHERE tipo = "reserva" AND jogador_id != ? ORDER BY posicao LIMIT 1', 
+          [jogadorId], (err, primeiroReserva) => {
+          if (err) return res.status(500).send('Erro interno');
+          
+          if (primeiroReserva && primeiroReserva.length > 0) {
+            db.query('UPDATE convocatoria SET tipo = "convocado", posicao = ? WHERE jogador_id = ?', 
+              [posicaoVaga, primeiroReserva[0].jogador_id], (err) => {
+              if (err) {
+                console.error('Erro ao promover reserva:', err);
+                return res.status(500).send('Erro ao promover reserva');
+              }
+              
+              console.log(`✅ Jogador ${primeiroReserva[0].jogador_id} promovido para convocado (posição ${posicaoVaga})`);
+              
+              // Reorganizar reservas
+              reorganizarReservas(() => {
+                res.redirect('/convocatoria?msg=jogador_movido_reservas');
+              });
+            });
+          } else {
+            // Não há reservas para promover
+            res.redirect('/convocatoria?msg=jogador_movido_reservas');
+          }
+        });
+      });
+    });
+  });
+});
+
+// Mover jogador de reservas para convocados
+router.post('/convocatoria/mover-para-convocados/:id', requireAdmin, (req, res) => {
+  const jogadorId = req.params.id;
+  
+  console.log(`⬆️ Movendo jogador ${jogadorId} para convocados...`);
+  
+  // Verificar se é reserva
+  db.query('SELECT * FROM convocatoria WHERE jogador_id = ? AND tipo = "reserva"', [jogadorId], (err, result) => {
+    if (err || !result || result.length === 0) {
+      return res.status(400).send('Jogador não é reserva');
+    }
+    
+    // Verificar número de convocados atual
+    db.query('SELECT COUNT(*) as total FROM convocatoria WHERE tipo = "convocado"', [], (err, countResult) => {
+      if (err) return res.status(500).send('Erro interno');
+      
+      const totalConvocados = countResult[0].total;
+      
+      // Buscar config de max_convocados
+      db.query('SELECT * FROM convocatoria_config LIMIT 1', [], (err, configResult) => {
+        const config = (configResult && configResult[0]) || { max_convocados: 10 };
+        
+        if (totalConvocados >= config.max_convocados) {
+          // Precisa descer o último convocado para reservas
+          db.query('SELECT * FROM convocatoria WHERE tipo = "convocado" ORDER BY posicao DESC LIMIT 1', 
+            [], (err, ultimoConvocado) => {
+            if (err || !ultimoConvocado || ultimoConvocado.length === 0) {
+              return res.status(500).send('Erro ao buscar último convocado');
+            }
+            
+            const posicaoVagaConvocado = ultimoConvocado[0].posicao;
+            
+            // Buscar última posição de reserva
+            db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', [], (err, result) => {
+              if (err) return res.status(500).send('Erro interno');
+              
+              const novaPosicaoReserva = (result[0].max_pos || 0) + 1;
+              
+              // Mover último convocado para reservas
+              db.query('UPDATE convocatoria SET tipo = "reserva", posicao = ?, confirmado = 0 WHERE jogador_id = ?', 
+                [novaPosicaoReserva, ultimoConvocado[0].jogador_id], (err) => {
+                if (err) {
+                  console.error('Erro ao mover último convocado para reservas:', err);
+                  return res.status(500).send('Erro ao mover último convocado');
+                }
+                
+                console.log(`✅ Último convocado ${ultimoConvocado[0].jogador_id} movido para reservas`);
+                
+                // Promover reserva selecionada
+                db.query('UPDATE convocatoria SET tipo = "convocado", posicao = ? WHERE jogador_id = ?', 
+                  [posicaoVagaConvocado, jogadorId], (err) => {
+                  if (err) {
+                    console.error('Erro ao promover reserva:', err);
+                    return res.status(500).send('Erro ao promover reserva');
+                  }
+                  
+                  console.log(`✅ Reserva ${jogadorId} promovida para convocado (posição ${posicaoVagaConvocado})`);
+                  
+                  // Reorganizar reservas
+                  reorganizarReservas(() => {
+                    res.redirect('/convocatoria?msg=jogador_movido_convocados');
+                  });
+                });
+              });
+            });
+          });
+        } else {
+          // Há espaço livre, apenas promover
+          db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "convocado"', [], (err, result) => {
+            if (err) return res.status(500).send('Erro interno');
+            
+            const novaPosicaoConvocado = (result[0].max_pos || 0) + 1;
+            
+            db.query('UPDATE convocatoria SET tipo = "convocado", posicao = ? WHERE jogador_id = ?', 
+              [novaPosicaoConvocado, jogadorId], (err) => {
+              if (err) {
+                console.error('Erro ao promover reserva:', err);
+                return res.status(500).send('Erro ao promover reserva');
+              }
+              
+              console.log(`✅ Reserva ${jogadorId} promovida para convocado (posição ${novaPosicaoConvocado})`);
+              
+              // Reorganizar reservas
+              reorganizarReservas(() => {
+                res.redirect('/convocatoria?msg=jogador_movido_convocados');
+              });
+            });
+          });
+        }
       });
     });
   });
@@ -648,6 +821,182 @@ router.post('/convocatoria/limpar-todas-faltas', requireAdmin, (req, res) => {
       
       // Redirecionar com mensagem de sucesso
       res.redirect('/convocatoria?msg=faltas_limpas');
+    });
+  });
+});
+
+// ============================================
+// ROTAS DE INDISPONÍVEIS TEMPORÁRIOS
+// ============================================
+
+// Adicionar jogador aos indisponíveis
+router.post('/convocatoria/adicionar-indisponivel', requireAdmin, (req, res) => {
+  const { jogador_id, tipo_periodo, numero_jogos, data_fim, motivo } = req.body;
+  
+  console.log('➕ Adicionando jogador aos indisponíveis:', { jogador_id, tipo_periodo, numero_jogos, data_fim, motivo });
+  
+  // Validações
+  if (!jogador_id) {
+    return res.status(400).send('Jogador não selecionado');
+  }
+  
+  if (!motivo || motivo.trim() === '') {
+    return res.status(400).send('Motivo é obrigatório');
+  }
+  
+  if (tipo_periodo === 'jogos' && (!numero_jogos || numero_jogos < 1)) {
+    return res.status(400).send('Número de jogos inválido');
+  }
+  
+  if (tipo_periodo === 'data' && !data_fim) {
+    return res.status(400).send('Data de fim é obrigatória');
+  }
+  
+  // Buscar posição atual do jogador
+  db.query('SELECT * FROM convocatoria WHERE jogador_id = ?', [jogador_id], (err, result) => {
+    if (err) {
+      console.error('Erro ao buscar jogador:', err);
+      return res.status(500).send('Erro ao buscar jogador');
+    }
+    
+    if (!result || result.length === 0) {
+      return res.status(400).send('Jogador não encontrado na convocatória');
+    }
+    
+    const jogador = result[0];
+    
+    // Inserir na tabela de indisponíveis
+    const dataInicio = new Date().toISOString().split('T')[0];
+    db.query(`
+      INSERT INTO indisponiveis_temporarios 
+      (jogador_id, data_inicio, data_fim, numero_jogos, motivo, posicao_original, tipo_original, ativo)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+    `, [
+      jogador_id,
+      dataInicio,
+      tipo_periodo === 'data' ? data_fim : null,
+      tipo_periodo === 'jogos' ? numero_jogos : null,
+      motivo,
+      jogador.posicao,
+      jogador.tipo
+    ], (err) => {
+      if (err) {
+        console.error('Erro ao inserir indisponível:', err);
+        return res.status(500).send('Erro ao adicionar aos indisponíveis');
+      }
+      
+      console.log('✅ Jogador adicionado aos indisponíveis');
+      res.redirect('/convocatoria?msg=indisponivel_adicionado');
+    });
+  });
+});
+
+// Remover jogador dos indisponíveis (retornar à posição original)
+router.post('/convocatoria/remover-indisponivel/:id', requireAdmin, (req, res) => {
+  const indisponivelId = req.params.id;
+  
+  console.log('🔙 Removendo jogador dos indisponíveis:', indisponivelId);
+  
+  // Buscar dados do indisponível
+  db.query('SELECT * FROM indisponiveis_temporarios WHERE id = ? AND ativo = 1', [indisponivelId], (err, result) => {
+    if (err || !result || result.length === 0) {
+      console.error('Erro ao buscar indisponível:', err);
+      return res.status(400).send('Indisponível não encontrado');
+    }
+    
+    const indisponivel = result[0];
+    
+    // Reativar jogador na convocatória
+    db.query(`
+      UPDATE convocatoria 
+      SET tipo = ?, posicao = ?
+      WHERE jogador_id = ?
+    `, [
+      indisponivel.tipo_original,
+      indisponivel.posicao_original,
+      indisponivel.jogador_id
+    ], (err) => {
+      if (err) {
+        console.error('Erro ao reativar jogador:', err);
+        return res.status(500).send('Erro ao reativar jogador');
+      }
+      
+      // Marcar como inativo
+      db.query('UPDATE indisponiveis_temporarios SET ativo = 0 WHERE id = ?', [indisponivelId], (err) => {
+        if (err) {
+          console.error('Erro ao desativar indisponível:', err);
+          return res.status(500).send('Erro ao desativar indisponível');
+        }
+        
+        console.log('✅ Jogador removido dos indisponíveis e retornou à posição original');
+        res.redirect('/convocatoria?msg=indisponivel_removido');
+      });
+    });
+  });
+});
+
+// Decrementar jogos após um jogo registado (chamado automaticamente)
+router.post('/convocatoria/decrementar-jogos-indisponiveis', requireAdmin, (req, res) => {
+  console.log('⏬ Decrementando jogos dos indisponíveis...');
+  
+  // Buscar todos os indisponíveis ativos com número de jogos
+  db.query(`
+    SELECT * FROM indisponiveis_temporarios 
+    WHERE ativo = 1 AND numero_jogos > 0
+  `, [], (err, indisponiveis) => {
+    if (err) {
+      console.error('Erro ao buscar indisponíveis:', err);
+      return res.status(500).send('Erro ao buscar indisponíveis');
+    }
+    
+    if (!indisponiveis || indisponiveis.length === 0) {
+      console.log('ℹ️ Nenhum indisponível por jogos encontrado');
+      return res.redirect('/convocatoria');
+    }
+    
+    let processados = 0;
+    
+    indisponiveis.forEach(indisponivel => {
+      const novosJogos = indisponivel.numero_jogos - 1;
+      
+      if (novosJogos <= 0) {
+        // Retornar à posição original
+        db.query(`
+          UPDATE convocatoria 
+          SET tipo = ?, posicao = ?
+          WHERE jogador_id = ?
+        `, [
+          indisponivel.tipo_original,
+          indisponivel.posicao_original,
+          indisponivel.jogador_id
+        ], (err) => {
+          if (err) {
+            console.error('Erro ao reativar jogador:', err);
+          } else {
+            db.query('UPDATE indisponiveis_temporarios SET ativo = 0, numero_jogos = 0 WHERE id = ?', [indisponivel.id]);
+            console.log(`✅ Jogador ${indisponivel.jogador_id} retornou automaticamente`);
+          }
+          
+          processados++;
+          if (processados === indisponiveis.length) {
+            res.redirect('/convocatoria?msg=jogos_decrementados');
+          }
+        });
+      } else {
+        // Apenas decrementar
+        db.query('UPDATE indisponiveis_temporarios SET numero_jogos = ? WHERE id = ?', [novosJogos, indisponivel.id], (err) => {
+          if (err) {
+            console.error('Erro ao decrementar jogos:', err);
+          } else {
+            console.log(`⏬ Jogador ${indisponivel.jogador_id}: ${indisponivel.numero_jogos} → ${novosJogos} jogos`);
+          }
+          
+          processados++;
+          if (processados === indisponiveis.length) {
+            res.redirect('/convocatoria?msg=jogos_decrementados');
+          }
+        });
+      }
     });
   });
 });
