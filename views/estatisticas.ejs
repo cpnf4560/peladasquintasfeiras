@@ -62,10 +62,12 @@
       </div>
     <% } %>    <!-- Análise de Duplas -->
     <% var duplasSafe = typeof duplas !== 'undefined' && duplas ? duplas : { melhorVitorias: [], piorVitorias: [], maisJogos: [], menosJogos: [] }; %>
-    <% if (duplasSafe.melhorVitorias && duplasSafe.melhorVitorias.length > 0) { %>
-      <div class="duplas-section-compact">
+    <% if (duplasSafe.melhorVitorias && duplasSafe.melhorVitorias.length > 0) { %>      <div class="duplas-section-compact">
         <h3 class="duplas-title">👥 Análise de Duplas</h3>
-        <p class="duplas-subtitle-small"><em>Mínimo 3 jogos juntos</em></p>
+        <p class="duplas-subtitle-small">
+          <em>Melhores e piores duplas (mínimo de 3 jogos juntos).<br>
+          Duplas com mais e menos jogos (mín. 25% de jogos realizados individualmente).</em>
+        </p>
         
         <!-- TOP 3 - Melhor % Vitórias -->
         <div class="dupla-categoria-compact">

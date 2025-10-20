@@ -52,9 +52,32 @@ body {
   gap: 1rem;
 }
 
+/* Logo como link clicável */
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.logo-link:hover {
+  opacity: 0.8;
+}
+
 .logo-image {
   width: 40px;
   height: 40px;
+  transition: transform 0.3s ease;
+}
+
+/* Animação de rotação ao passar o mouse */
+.logo-spin:hover {
+  animation: spin 0.8s ease-in-out;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .logo-text {

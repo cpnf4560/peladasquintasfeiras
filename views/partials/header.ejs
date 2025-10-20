@@ -1,8 +1,8 @@
 <header class="header">
-  <div class="logo-area">
-    <img src="/logo.svg" alt="Logo" class="logo-image">
+  <a href="/" class="logo-area logo-link">
+    <img src="/logo.svg" alt="Logo" class="logo-image logo-spin">
     <span class="logo-text">Peladas das<br>Quintas Feiras</span>
-  </div>  <nav class="navbar">
+  </a><nav class="navbar">
     <a href="/convocatoria" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'convocatoria' ? 'active' : '' %>">Convocatória</a>
     <a href="/coletes" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'coletes' ? 'active' : '' %>">Coletes</a>
     <a href="/" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'resultados' ? 'active' : '' %>">Resultados</a>
