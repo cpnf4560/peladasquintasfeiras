@@ -247,20 +247,23 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
       queryParams = [anoAtual.toString(), ...idsConvocados];
     }
 
-    db.query(queryEstatisticas, queryParams, (err, estatisticas) => {
-      if (err) {
+    db.query(queryEstatisticas, queryParams, (err, estatisticas) => {      if (err) {
         console.error('Erro ao buscar estatísticas:', err);
         console.error('Query:', queryEstatisticas);
         console.error('Params:', queryParams);
         global.equipasGeradas = null;
         return res.status(500).send('Erro ao buscar estatísticas: ' + err.message);
-      }// 3. Criar mapa de estatísticas
+      }
+
+      console.log(`📊 Estatísticas recebidas: ${estatisticas ? estatisticas.length : 0}`);
+
+      // 3. Criar mapa de estatísticas (converter strings para números)
       const statsMap = {};
       (estatisticas || []).forEach(stat => {
         statsMap[stat.id] = {
-          jogos: stat.jogos || 0,
-          pontos_totais: stat.pontos_totais || 0,
-          media_pontos: stat.media_pontos || 0
+          jogos: parseInt(stat.jogos) || 0,
+          pontos_totais: parseInt(stat.pontos_totais) || 0,
+          media_pontos: parseFloat(stat.media_pontos) || 0
         };
       });
 
