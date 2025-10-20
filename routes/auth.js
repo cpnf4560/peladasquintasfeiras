@@ -16,23 +16,42 @@ router.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.render('login', { error: 'Por favor, preencha todos os campos' });
 
-  db.query('SELECT * FROM users WHERE username = ?', [username], (err, result) => {
+  // O db wrapper já converte ? para $1 automaticamente
+  db.query('SELECT * FROM users WHERE username = $1', [username], (err, result) => {
     if (err) {
-      console.error('Erro na base de dados:', err);
+      console.error('❌ Erro na base de dados:', err);
       return res.render('login', { error: 'Erro interno do servidor' });
     }
+
+    console.log('🔍 Resultado da query:', result);
 
     let rows = [];
     if (Array.isArray(result)) rows = result;
     else if (result && Array.isArray(result.rows)) rows = result.rows;
     else if (result && result[0]) rows = result;
 
+    console.log('👥 Rows encontradas:', rows.length);
+
     const user = rows.length > 0 ? rows[0] : null;
-    if (!user) return res.render('login', { error: 'Utilizador não encontrado' });
+    if (!user) {
+      console.log('❌ Utilizador não encontrado:', username);
+      return res.render('login', { error: 'Utilizador não encontrado' });
+    }
+
+    console.log('✅ Utilizador encontrado:', user.username);
 
     bcrypt.compare(password, user.password, (err, isMatch) => {
-      if (err) return res.render('login', { error: 'Erro interno do servidor' });
-      if (!isMatch) return res.render('login', { error: 'Password incorreta' });
+      if (err) {
+        console.error('❌ Erro ao comparar password:', err);
+        return res.render('login', { error: 'Erro interno do servidor' });
+      }
+      
+      if (!isMatch) {
+        console.log('❌ Password incorreta para:', username);
+        return res.render('login', { error: 'Password incorreta' });
+      }
+
+      console.log('✅ Login bem-sucedido:', username);
 
       req.session.user = { id: user.id, username: user.username, role: user.role };
       req.session.save((err) => {

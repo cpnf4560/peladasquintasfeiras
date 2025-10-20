@@ -199,12 +199,11 @@ const initDatabase = async () => {
       }
     });
   });
-
   // Criar utilizadores padrão se não existirem
   const checkUsers = 'SELECT COUNT(*) as count FROM users';
   db.query(checkUsers, [], async (err, result) => {
     if (err) {
-      console.error('Erro ao verificar utilizadores:', err);
+      console.error('❌ Erro ao verificar utilizadores:', err);
       return;
     }
 
@@ -223,8 +222,12 @@ const initDatabase = async () => {
       firstRow = result[0] || null;
     }
 
-    const count = firstRow ? parseInt(firstRow.count || firstRow.COUNT || 0, 10) : 0;    if (count === 0) {
-      console.log('Criando utilizadores padrão...');
+    const count = firstRow ? parseInt(firstRow.count || firstRow.COUNT || 0, 10) : 0;
+    
+    console.log(`👥 Utilizadores existentes na BD: ${count}`);
+
+    if (count === 0) {
+      console.log('🔧 Criando utilizadores padrão...');
 
       // Novos utilizadores com credenciais específicas
       const presidentePasswordHash = bcrypt.hashSync('Bodelos123*', 10);
@@ -232,11 +235,40 @@ const initDatabase = async () => {
 
       const insertUser = 'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)';
 
-      // Criar apenas os 2 utilizadores admin
-      db.query(insertUser, ['presidente', presidentePasswordHash, 'admin'], () => {});
-      db.query(insertUser, ['admin', adminPasswordHash, 'admin'], () => {});
+      // Criar presidente
+      db.query(insertUser, ['presidente', presidentePasswordHash, 'admin'], (err) => {
+        if (err) {
+          console.error('❌ Erro ao criar presidente:', err);
+        } else {
+          console.log('✅ Utilizador criado: presidente (admin)');
+        }
+      });
+      
+      // Criar admin
+      db.query(insertUser, ['admin', adminPasswordHash, 'admin'], (err) => {
+        if (err) {
+          console.error('❌ Erro ao criar admin:', err);
+        } else {
+          console.log('✅ Utilizador criado: admin (admin)');
+        }
+      });
 
-      console.log('✅ Utilizadores admin criados: presidente, admin');
+      console.log('🔐 Credenciais configuradas:');
+      console.log('   • presidente / Bodelos123*');
+      console.log('   • admin / rzq7xgq8');
+    } else {
+      console.log('✅ Utilizadores já existem na base de dados');
+      
+      // Verificar quais utilizadores existem
+      db.query('SELECT username, role FROM users ORDER BY username', [], (err, users) => {
+        if (!err) {
+          console.log('👥 Utilizadores ativos:');
+          const userList = Array.isArray(users) ? users : (users.rows || []);
+          userList.forEach(u => {
+            console.log(`   • ${u.username} (${u.role})`);
+          });
+        }
+      });
     }
   });
   
