@@ -154,34 +154,32 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
       if (!convocados || convocados.length < 2) {
         global.equipasGeradas = null;
         return res.status(400).send('Não há convocados suficientes confirmados (mínimo 2)');
-      }console.log(`📋 ${convocados.length} convocados encontrados`);
+      }    console.log(`📋 ${convocados.length} convocados encontrados`);
 
     // 2. Buscar estatísticas do ano atual para cada jogador
-    const anoAtual = new Date().getFullYear().toString();
-    const idsConvocados = convocados.map(c => c.id).join(',');
+    const anoAtual = new Date().getFullYear();
+    const idsConvocados = convocados.map(c => c.id);
     
     // Se não houver IDs, usar estatísticas vazias
-    if (!idsConvocados) {
+    if (!idsConvocados || idsConvocados.length === 0) {
       console.log('⚠️ Nenhum convocado confirmado');
+      global.equipasGeradas = null;
       return res.status(400).send('Não há convocados confirmados suficientes');
     }
 
-    const queryEstatisticas = `
-      SELECT 
-        jog.id,
-        jog.nome,
-        COUNT(DISTINCT j.id) as jogos,
-        COALESCE(SUM(CASE 
-          WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
-               (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
-          THEN 3
-          WHEN (p.equipa = 1 AND j.equipa1_golos = j.equipa2_golos) OR 
-               (p.equipa = 2 AND j.equipa2_golos = j.equipa1_golos)
-          THEN 1
-          ELSE 0 
-        END), 0) as pontos_totais,
-        COALESCE(ROUND(
-          (SUM(CASE 
+    // Detectar PostgreSQL vs SQLite
+    const isPostgres = !!process.env.DATABASE_URL;
+    
+    let queryEstatisticas, queryParams;
+    
+    if (isPostgres) {
+      // PostgreSQL: usar placeholders $1, $2 e ANY para array
+      queryEstatisticas = `
+        SELECT 
+          jog.id,
+          jog.nome,
+          COUNT(DISTINCT j.id) as jogos,
+          COALESCE(SUM(CASE 
             WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
                  (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
             THEN 3
@@ -189,21 +187,73 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
                  (p.equipa = 2 AND j.equipa2_golos = j.equipa1_golos)
             THEN 1
             ELSE 0 
-          END) * 1.0) / NULLIF(COUNT(DISTINCT j.id), 0), 2
-        ), 0) as media_pontos
-      FROM jogadores jog
-      LEFT JOIN presencas p ON jog.id = p.jogador_id
-      LEFT JOIN jogos j ON p.jogo_id = j.id AND j.data LIKE '${anoAtual}-%'
-      WHERE jog.suspenso = 0 
-        AND jog.id IN (${idsConvocados})
-      GROUP BY jog.id, jog.nome
-    `;
+          END), 0) as pontos_totais,
+          COALESCE(CAST(
+            (SUM(CASE 
+              WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
+                   (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
+              THEN 3
+              WHEN (p.equipa = 1 AND j.equipa1_golos = j.equipa2_golos) OR 
+                   (p.equipa = 2 AND j.equipa2_golos = j.equipa1_golos)
+              THEN 1
+              ELSE 0 
+            END) * 1.0) / NULLIF(COUNT(DISTINCT j.id), 0) AS DECIMAL(10,2)
+          ), 0) as media_pontos
+        FROM jogadores jog
+        LEFT JOIN presencas p ON jog.id = p.jogador_id
+        LEFT JOIN jogos j ON p.jogo_id = j.id 
+          AND EXTRACT(YEAR FROM CAST(j.data AS DATE)) = $1
+        WHERE jog.suspenso = 0 
+          AND jog.id = ANY($2::int[])
+        GROUP BY jog.id, jog.nome
+      `;
+      queryParams = [anoAtual, idsConvocados];
+    } else {
+      // SQLite: usar placeholders ? e IN
+      const placeholders = idsConvocados.map(() => '?').join(',');
+      queryEstatisticas = `
+        SELECT 
+          jog.id,
+          jog.nome,
+          COUNT(DISTINCT j.id) as jogos,
+          COALESCE(SUM(CASE 
+            WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
+                 (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
+            THEN 3
+            WHEN (p.equipa = 1 AND j.equipa1_golos = j.equipa2_golos) OR 
+                 (p.equipa = 2 AND j.equipa2_golos = j.equipa1_golos)
+            THEN 1
+            ELSE 0 
+          END), 0) as pontos_totais,
+          COALESCE(ROUND(
+            (SUM(CASE 
+              WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
+                   (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
+              THEN 3
+              WHEN (p.equipa = 1 AND j.equipa1_golos = j.equipa2_golos) OR 
+                   (p.equipa = 2 AND j.equipa2_golos = j.equipa1_golos)
+              THEN 1
+              ELSE 0 
+            END) * 1.0) / NULLIF(COUNT(DISTINCT j.id), 0), 2
+          ), 0) as media_pontos
+        FROM jogadores jog
+        LEFT JOIN presencas p ON jog.id = p.jogador_id
+        LEFT JOIN jogos j ON p.jogo_id = j.id 
+          AND substr(j.data, 1, 4) = ?
+        WHERE jog.suspenso = 0 
+          AND jog.id IN (${placeholders})
+        GROUP BY jog.id, jog.nome
+      `;
+      queryParams = [anoAtual.toString(), ...idsConvocados];
+    }
 
-    db.query(queryEstatisticas, [], (err, estatisticas) => {
+    db.query(queryEstatisticas, queryParams, (err, estatisticas) => {
       if (err) {
         console.error('Erro ao buscar estatísticas:', err);
         console.error('Query:', queryEstatisticas);
-        return res.status(500).send('Erro ao buscar estatísticas');
+        console.error('Params:', queryParams);
+        global.equipasGeradas = null;
+        return res.status(500).send('Erro ao buscar estatísticas: ' + err.message);
       }// 3. Criar mapa de estatísticas
       const statsMap = {};
       (estatisticas || []).forEach(stat => {
