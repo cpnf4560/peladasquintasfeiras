@@ -2,10 +2,34 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Gestão de Coletes - Peladas das Quintas Feiras</title>
-  <link rel="stylesheet" href="/style.css?v=20250101">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Coletes - Peladas das Quintas Feiras</title>
+  <link rel="stylesheet" href="/style.css?v=<%= Date.now() %>">
+  <link rel="stylesheet" href="/mobile.css?v=<%= Date.now() %>">
+  <link rel="stylesheet" href="/mobile-fix.css?v=<%= Date.now() %>">
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <link rel="shortcut icon" href="/logo.svg">
+  <style>
+    @media (max-width: 768px) {
+      body { padding-top: 65px !important; }
+      header.header { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; background: #2c3e50 !important; z-index: 999 !important; }
+      #mobileMenuToggle { display: flex !important; z-index: 1002 !important; }
+      #navbarMenu { position: fixed !important; top: 0 !important; left: -100% !important; height: 100vh !important; z-index: 1001 !important; padding-top: 60px !important; }
+      #navbarMenu.active { left: 0 !important; }
+      #mobileMenuOverlay { display: none; }
+      #mobileMenuOverlay.active { display: block !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; background: rgba(0,0,0,0.6) !important; z-index: 1000 !important; }
+    }
+  </style>
+  <script>
+    (function(){
+      try {
+        var isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        var narrow = window.innerWidth <= 900;
+        if (isCoarse || isTouch || narrow) { document.documentElement.classList.add('mobile-real'); }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="main-bg">  <%- include('partials/header', { user: user }) %>
   <main class="container">    <div class="coletes-header-modern">
