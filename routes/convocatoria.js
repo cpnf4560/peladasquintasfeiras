@@ -69,19 +69,31 @@ function carregarConvocatoria(req, res) {
       if (err) {
         console.error('Erro ao buscar convocatória:', err);
         return res.status(500).send('Erro ao buscar convocatória');
-      }
-
-      const convocados = convocatoria.filter(j => j.tipo === 'convocado');
+      }      const convocados = convocatoria.filter(j => j.tipo === 'convocado');
       const reservas = convocatoria.filter(j => j.tipo === 'reserva');
       
       console.log(`📊 Convocados: ${convocados.length}, Reservas: ${reservas.length}, Total: ${convocatoria.length}`);
-        res.render('convocatoria', { 
+      
+      // Validar equipas geradas
+      let equipasValidas = null;
+      if (global.equipasGeradas) {
+        try {
+          if (global.equipasGeradas.equipa1 && global.equipasGeradas.equipa2) {
+            equipasValidas = global.equipasGeradas;
+          }
+        } catch (e) {
+          console.error('Erro ao validar equipas:', e);
+          global.equipasGeradas = null;
+        }
+      }
+      
+      res.render('convocatoria', { 
         user: req.session.user || null,
         activePage: 'convocatoria',
         convocados, 
         reservas, 
         config,
-        equipas: global.equipasGeradas || null,
+        equipas: equipasValidas,
         title: 'Convocatória - Peladas das Quintas Feiras',
         msg: req.query.msg || null
       });
@@ -124,31 +136,42 @@ router.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
 router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
   console.log('=== GERANDO EQUIPAS EQUILIBRADAS ===');
   
-  // 1. Buscar todos os convocados confirmados
-  db.query(`
-    SELECT j.*, c.posicao
-    FROM jogadores j
-    JOIN convocatoria c ON j.id = c.jogador_id
-    WHERE c.tipo = 'convocado' AND c.confirmado = 1 AND j.suspenso = 0
-    ORDER BY c.posicao
-  `, [], (err, convocados) => {
-    if (err) {
-      console.error('Erro ao buscar convocados:', err);
-      return res.status(500).send('Erro ao buscar convocados');
-    }
+  try {
+    // 1. Buscar todos os convocados confirmados
+    db.query(`
+      SELECT j.*, c.posicao
+      FROM jogadores j
+      JOIN convocatoria c ON j.id = c.jogador_id
+      WHERE c.tipo = 'convocado' AND c.confirmado = 1 AND j.suspenso = 0
+      ORDER BY c.posicao
+    `, [], (err, convocados) => {
+      if (err) {
+        console.error('Erro ao buscar convocados:', err);
+        global.equipasGeradas = null;
+        return res.status(500).send('Erro ao buscar convocados');
+      }
 
-    if (!convocados || convocados.length < 2) {
-      return res.status(400).send('Não há convocados suficientes confirmados');
-    }
+      if (!convocados || convocados.length < 2) {
+        global.equipasGeradas = null;
+        return res.status(400).send('Não há convocados suficientes confirmados (mínimo 2)');
+      }console.log(`📋 ${convocados.length} convocados encontrados`);
 
-    console.log(`📋 ${convocados.length} convocados encontrados`);    // 2. Buscar estatísticas do ano atual para cada jogador
+    // 2. Buscar estatísticas do ano atual para cada jogador
     const anoAtual = new Date().getFullYear().toString();
+    const idsConvocados = convocados.map(c => c.id).join(',');
+    
+    // Se não houver IDs, usar estatísticas vazias
+    if (!idsConvocados) {
+      console.log('⚠️ Nenhum convocado confirmado');
+      return res.status(400).send('Não há convocados confirmados suficientes');
+    }
+
     const queryEstatisticas = `
       SELECT 
         jog.id,
         jog.nome,
         COUNT(DISTINCT j.id) as jogos,
-        SUM(CASE 
+        COALESCE(SUM(CASE 
           WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
                (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
           THEN 3
@@ -156,8 +179,8 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
                (p.equipa = 2 AND j.equipa2_golos = j.equipa1_golos)
           THEN 1
           ELSE 0 
-        END) as pontos_totais,
-        ROUND(
+        END), 0) as pontos_totais,
+        COALESCE(ROUND(
           (SUM(CASE 
             WHEN (p.equipa = 1 AND j.equipa1_golos > j.equipa2_golos) OR 
                  (p.equipa = 2 AND j.equipa2_golos > j.equipa1_golos) 
@@ -167,20 +190,21 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
             THEN 1
             ELSE 0 
           END) * 1.0) / NULLIF(COUNT(DISTINCT j.id), 0), 2
-        ) as media_pontos
+        ), 0) as media_pontos
       FROM jogadores jog
       LEFT JOIN presencas p ON jog.id = p.jogador_id
-      LEFT JOIN jogos j ON p.jogo_id = j.id
-      WHERE jog.suspenso = 0 AND j.data LIKE '${anoAtual}-%'
-        AND jog.id IN (${convocados.map(c => c.id).join(',')})
+      LEFT JOIN jogos j ON p.jogo_id = j.id AND j.data LIKE '${anoAtual}-%'
+      WHERE jog.suspenso = 0 
+        AND jog.id IN (${idsConvocados})
       GROUP BY jog.id, jog.nome
     `;
 
     db.query(queryEstatisticas, [], (err, estatisticas) => {
       if (err) {
         console.error('Erro ao buscar estatísticas:', err);
+        console.error('Query:', queryEstatisticas);
         return res.status(500).send('Erro ao buscar estatísticas');
-      }      // 3. Criar mapa de estatísticas
+      }// 3. Criar mapa de estatísticas
       const statsMap = {};
       (estatisticas || []).forEach(stat => {
         statsMap[stat.id] = {
@@ -243,9 +267,7 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
       };
 
       // 7. Armazenar equipas geradas globalmente
-      global.equipasGeradas = equipasGeradas;
-
-      console.log('✅ Equipas geradas com sucesso');
+      global.equipasGeradas = equipasGeradas;      console.log('✅ Equipas geradas com sucesso');
       console.log(`Equipa 1: ${equipa1.length} jogadores, média ${mediaPontosEquipa1.toFixed(2)} pontos`);
       console.log(`Equipa 2: ${equipa2.length} jogadores, média ${mediaPontosEquipa2.toFixed(2)} pontos`);
 
@@ -253,6 +275,11 @@ router.post('/convocatoria/confirmar-equipas', requireAdmin, (req, res) => {
       res.redirect('/convocatoria');
     });
   });
+  } catch (error) {
+    console.error('❌ Erro crítico ao gerar equipas:', error);
+    global.equipasGeradas = null;
+    return res.status(500).send('Erro ao gerar equipas: ' + error.message);
+  }
 });
 
 // Confirmar/Desconfirmar presença
