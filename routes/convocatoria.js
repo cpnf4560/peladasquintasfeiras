@@ -715,13 +715,12 @@ router.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
       }
 
       const updates = [];
-      let posicaoReserva = 1;
-
-      jogadores.forEach((jogador) => {
+      let posicaoReserva = 1;      jogadores.forEach((jogador) => {
         const indexConvocado = ordemConvocados.indexOf(jogador.nome);
         
         if (indexConvocado >= 0) {
-          // É convocado - aplicar posição específica        updates.push(
+          // É convocado - aplicar posição específica
+          updates.push(
             new Promise((resolve) => {
               db.query(
                 'UPDATE convocatoria SET tipo = ?, posicao = ?, confirmado = 0 WHERE jogador_id = ?',
