@@ -198,78 +198,69 @@ const initDatabase = async () => {
         });
       }
     });
-  });
-  // Criar utilizadores padrão se não existirem
-  const checkUsers = 'SELECT COUNT(*) as count FROM users';
-  db.query(checkUsers, [], async (err, result) => {
-    if (err) {
-      console.error('❌ Erro ao verificar utilizadores:', err);
-      return;
+  });  // 🚨 FORÇAR criação de utilizadores (REMOVER TODOS e RECRIAR)
+  console.log('🔧 FORÇANDO RECRIAÇÃO DE UTILIZADORES...');
+  
+  // PASSO 1: Deletar TODOS os utilizadores existentes
+  db.query('DELETE FROM users', [], (deleteErr) => {
+    if (deleteErr) {
+      console.error('❌ Erro ao limpar utilizadores:', deleteErr);
+      console.log('⚠️ Tentando criar utilizadores mesmo assim...');
+    } else {
+      console.log('✅ Utilizadores antigos removidos');
     }
-
-    // O wrapper db pode retornar várias shapes:
-    // - um array de rows (SQLite wrapper)
-    // - um objeto { rows: [...] } (pg wrapper)
-    // - ou outros formatos em casos inesperados
-    // Normalizar e extrair a primeira linha com segurança
-    let firstRow = null;
-
-    if (Array.isArray(result)) {
-      firstRow = result[0] || null;
-    } else if (result && Array.isArray(result.rows)) {
-      firstRow = result.rows[0] || null;
-    } else if (result && result[0]) {
-      firstRow = result[0] || null;
-    }
-
-    const count = firstRow ? parseInt(firstRow.count || firstRow.COUNT || 0, 10) : 0;
     
-    console.log(`👥 Utilizadores existentes na BD: ${count}`);
-
-    if (count === 0) {
-      console.log('🔧 Criando utilizadores padrão...');
-
-      // Novos utilizadores com credenciais específicas
-      const presidentePasswordHash = bcrypt.hashSync('Bodelos123*', 10);
-      const adminPasswordHash = bcrypt.hashSync('rzq7xgq8', 10);
-
-      const insertUser = 'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)';
-
-      // Criar presidente
-      db.query(insertUser, ['presidente', presidentePasswordHash, 'admin'], (err) => {
-        if (err) {
-          console.error('❌ Erro ao criar presidente:', err);
-        } else {
-          console.log('✅ Utilizador criado: presidente (admin)');
-        }
-      });
-      
-      // Criar admin
+    // PASSO 2: Criar utilizadores com as novas credenciais
+    console.log('🔧 Criando utilizadores com novas credenciais...');
+    
+    const presidentePasswordHash = bcrypt.hashSync('Bodelos123*', 10);
+    const adminPasswordHash = bcrypt.hashSync('rzq7xgq8', 10);
+    
+    const insertUser = 'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)';
+    
+    // Criar presidente
+    db.query(insertUser, ['presidente', presidentePasswordHash, 'admin'], (err) => {
+      if (err) {
+        console.error('❌ Erro ao criar presidente:', err);
+      } else {
+        console.log('✅ CRIADO: presidente (admin) - Password: Bodelos123*');
+      }
+    });
+    
+    // Criar admin (com delay para evitar conflitos)
+    setTimeout(() => {
       db.query(insertUser, ['admin', adminPasswordHash, 'admin'], (err) => {
         if (err) {
           console.error('❌ Erro ao criar admin:', err);
         } else {
-          console.log('✅ Utilizador criado: admin (admin)');
+          console.log('✅ CRIADO: admin (admin) - Password: rzq7xgq8');
         }
-      });
-
-      console.log('🔐 Credenciais configuradas:');
-      console.log('   • presidente / Bodelos123*');
-      console.log('   • admin / rzq7xgq8');
-    } else {
-      console.log('✅ Utilizadores já existem na base de dados');
-      
-      // Verificar quais utilizadores existem
-      db.query('SELECT username, role FROM users ORDER BY username', [], (err, users) => {
-        if (!err) {
-          console.log('👥 Utilizadores ativos:');
-          const userList = Array.isArray(users) ? users : (users.rows || []);
-          userList.forEach(u => {
-            console.log(`   • ${u.username} (${u.role})`);
+        
+        // PASSO 3: Verificar utilizadores criados
+        setTimeout(() => {
+          db.query('SELECT username, role FROM users ORDER BY username', [], (err, users) => {
+            if (!err) {
+              const userList = Array.isArray(users) ? users : (users.rows || []);
+              console.log('\n═══════════════════════════════════════');
+              console.log('📋 UTILIZADORES ATIVOS NO SISTEMA:');
+              console.log('═══════════════════════════════════════');
+              if (userList.length === 0) {
+                console.log('⚠️ NENHUM UTILIZADOR ENCONTRADO!');
+              } else {
+                userList.forEach(u => {
+                  console.log(`   👤 ${u.username} (${u.role})`);
+                });
+              }
+              console.log('═══════════════════════════════════════');
+              console.log('🔑 CREDENCIAIS DE LOGIN:');
+              console.log('   • presidente / Bodelos123*');
+              console.log('   • admin / rzq7xgq8');
+              console.log('═══════════════════════════════════════\n');
+            }
           });
-        }
+        }, 500);
       });
-    }
+    }, 500);
   });
   
   console.log('✅ Database initialized');
