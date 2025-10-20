@@ -4161,3 +4161,335 @@ main.container {
 /* ============================================
    FIM CONVOCATÓRIA
    ============================================ */
+
+/* ============================================
+   EQUIPAS GERADAS - MODERNO
+   ============================================ */
+
+.equipas-section {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 1200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.equipas-section h3 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin: 0 0 0.75rem 0;
+  text-align: center;
+}
+
+.equipas-info {
+  text-align: center;
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+}
+
+.equipas-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .equipas-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Cards das Equipas */
+.equipa-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.equipa-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Equipa Verde */
+.equipa-verde {
+  border-color: #16a34a;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.equipa-verde .equipa-header {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+}
+
+/* Equipa Vermelha */
+.equipa-vermelha {
+  border-color: #dc2626;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.equipa-vermelha .equipa-header {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+}
+
+/* Header da Equipa */
+.equipa-header {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.equipa-header h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.equipa-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  opacity: 0.95;
+}
+
+.equipa-stats span {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+}
+
+/* Lista de Jogadores */
+.jogadores-equipa {
+  padding: 1rem;
+}
+
+.jogador-equipa-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.5rem;
+  background: white;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.jogador-equipa-item:hover {
+  background: #f9fafb;
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.jogador-equipa-item:last-child {
+  margin-bottom: 0;
+}
+
+.jogador-posicao {
+  font-weight: 700;
+  color: #6b7280;
+  font-size: 1rem;
+  min-width: 30px;
+}
+
+.jogador-nome {
+  flex: 1;
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+.jogador-pontos {
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #374151;
+  border: 1px solid #d1d5db;
+  white-space: nowrap;
+}
+
+/* Botão Trocar */
+.btn-trocar {
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.btn-trocar:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+/* Ações das Equipas */
+.equipas-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 2px solid #e5e7eb;
+}
+
+.equipas-actions button {
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.equipas-actions .btn-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+.equipas-actions .btn-secondary:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(75, 85, 99, 0.3);
+}
+
+.equipas-actions .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.equipas-actions .btn-success:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* Animação de entrada */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.equipas-section {
+  animation: slideInUp 0.5s ease;
+}
+
+.equipa-card {
+  animation: slideInUp 0.6s ease;
+}
+
+.equipa-verde {
+  animation-delay: 0.1s;
+}
+
+.equipa-vermelha {
+  animation-delay: 0.2s;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .equipas-section {
+    padding: 1.5rem;
+    margin: 1.5rem 1rem;
+  }
+
+  .equipas-section h3 {
+    font-size: 1.5rem;
+  }
+
+  .equipa-header h4 {
+    font-size: 1.125rem;
+  }
+
+  .equipa-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .jogador-equipa-item {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .jogador-nome {
+    font-size: 0.875rem;
+  }
+
+  .jogador-pontos {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .btn-trocar {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.875rem;
+  }
+
+  .equipas-actions {
+    flex-direction: column;
+  }
+
+  .equipas-actions button {
+    width: 100%;
+  }
+}
+
+/* Card Visual Enhancement */
+.card-visual {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-visual::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================
+   FIM EQUIPAS GERADAS
+   ============================================ */
