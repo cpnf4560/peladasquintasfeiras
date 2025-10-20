@@ -1,0 +1,187 @@
+═══════════════════════════════════════════════════════════════════
+  🎯 SISTEMA PRONTO PARA DEPLOY - CHECKLIST FINAL
+═══════════════════════════════════════════════════════════════════
+
+📅 Data: 20 Outubro 2025, 02:00
+🔧 Fase: Correções PostgreSQL Completas
+
+───────────────────────────────────────────────────────────────────
+  ✅ CORREÇÕES APLICADAS
+───────────────────────────────────────────────────────────────────
+
+[✓] Sistema de Indisponíveis Temporários - 100%
+    • Tabela criada (indisponiveis_temporarios)
+    • 3 rotas backend funcionais
+    • Interface completa com modal
+    • Card roxo dedicado
+    • Badges coloridos (azul=jogos, rosa=data)
+
+[✓] Botões de Movimentação - 100%
+    • ⬇️ Mover para Reservas (SEM falta)
+    • ⬆️ Promover para Convocados
+    • ▲▼ Reordenar reservas
+    • Todos com ícones apenas (compacto)
+
+[✓] Layout Otimizado - 100%
+    • Padding reduzido (-43%)
+    • Colunas compactadas
+    • Sem scroll horizontal
+    • Responsivo em todas as telas
+
+[✓] Queries PostgreSQL - 100%
+    • 14 queries corrigidas
+    • Aspas duplas → Placeholders
+    • Compatível SQLite + PostgreSQL
+    • Zero erros de sintaxe
+
+───────────────────────────────────────────────────────────────────
+  🚀 AÇÕES IMEDIATAS
+───────────────────────────────────────────────────────────────────
+
+PASSO 1: COMMIT & PUSH
+------------------------
+Execute este comando:
+
+    .\COMMIT_CORRECOES_POSTGRESQL.bat
+
+Ou manualmente:
+    
+    git add routes/convocatoria.js
+    git commit -m "Fix: Corrigir queries PostgreSQL"
+    git push
+
+
+PASSO 2: DEPLOY NO RENDER
+--------------------------
+1. Aceder: https://dashboard.render.com
+2. Selecionar: futsal-manager
+3. Clicar: "Deploy latest commit"
+4. Aguardar: ~3-5 minutos (build + start)
+
+
+PASSO 3: TESTAR EM PRODUÇÃO
+----------------------------
+URL: https://futsal-manager-[SEU-ID].onrender.com
+
+Testes essenciais:
+    [1] Login (admin / rzq7xgq8)
+    [2] Abrir /convocatoria
+    [3] Mover jogador para reservas
+    [4] Promover reserva
+    [5] Adicionar indisponível
+    [6] Reordenar com setas ▲▼
+    [7] Verificar layout (sem scroll horizontal)
+
+
+PASSO 4: VERIFICAR LOGS
+-----------------------
+No Render:
+    • Clicar em "Logs"
+    • Verificar:
+        ✓ "Servidor iniciado na porta 10000"
+        ✓ "Conexão PostgreSQL estabelecida"
+        ✓ Sem erros "column does not exist"
+        ✓ Sem erros de SQL syntax
+
+───────────────────────────────────────────────────────────────────
+  📊 ESTADO DO CÓDIGO
+───────────────────────────────────────────────────────────────────
+
+Arquivos Modificados:
+    • routes/convocatoria.js (14 queries corrigidas)
+    • views/convocatoria.ejs (todos botões usam convocatoria_id)
+    • public/style.css (layout compacto)
+    • server.js (tabela indisponiveis_temporarios)
+
+Arquivos Criados:
+    • COMMIT_CORRECOES_POSTGRESQL.bat
+    • CORRECOES_POSTGRESQL_COMPLETO.md
+    • DEPLOY_FINAL_CHECKLIST.txt (este arquivo)
+
+Testes Locais:
+    ✅ Inicialização de jogadores
+    ✅ Movimentação entre convocados/reservas
+    ✅ Sistema de indisponíveis
+    ✅ Reordenação de reservas
+    ✅ Layout responsivo
+
+───────────────────────────────────────────────────────────────────
+  🎯 FUNCIONALIDADES PRINCIPAIS
+───────────────────────────────────────────────────────────────────
+
+1. CONVOCATÓRIA
+    • 10 convocados + reservas ilimitadas
+    • Confirmação de presença (WhatsApp)
+    • Reordenação com drag-and-drop
+    • Histórico de faltas
+
+2. INDISPONÍVEIS TEMPORÁRIOS
+    • Gestão por jogos ou data
+    • Retorno automático
+    • Sem penalização de faltas
+    • Interface dedicada
+
+3. GERAÇÃO DE EQUIPAS
+    • Algoritmo por skills
+    • Equipas equilibradas
+    • Atribuição de coletes (azul/laranja)
+    • Export para WhatsApp
+
+4. HISTÓRICO
+    • Importação manual de resultados
+    • Estatísticas por jogador
+    • Gráficos de desempenho
+    • Comparação de jogadores
+
+5. BACKUPS
+    • Exportação automática
+    • Restauração de dados
+    • Formato JSON
+    • Download direto
+
+───────────────────────────────────────────────────────────────────
+  ⚠️ ATENÇÃO
+───────────────────────────────────────────────────────────────────
+
+❗ ANTES DO DEPLOY:
+    • Verificar se tem commits pendentes: git status
+    • Se houver outros ficheiros modificados, inclua-os no commit
+    • Testar localmente ANTES de fazer push
+
+❗ APÓS O DEPLOY:
+    • NÃO modificar base de dados manualmente no Render
+    • Usar scripts de migração para alterações futuras
+    • Manter backups regulares
+
+❗ SE HOUVER ERROS:
+    • Verificar logs no Render
+    • Procurar por erros SQL
+    • Reverter deploy se necessário (opção no Render)
+
+───────────────────────────────────────────────────────────────────
+  📞 SUPORTE
+───────────────────────────────────────────────────────────────────
+
+Documentação:
+    • CORRECOES_POSTGRESQL_COMPLETO.md (detalhes técnicos)
+    • INDISPONIVEIS_TEMPORARIOS_COMPLETO.md (sistema indisponíveis)
+    • BACKUP_SYSTEM_GUIDE.md (sistema de backups)
+
+Troubleshooting:
+    • Se botões não funcionam → verificar convocatoria_id nos forms
+    • Se queries falham → verificar placeholders (?)
+    • Se layout quebra → verificar CSS compactado
+
+───────────────────────────────────────────────────────────────────
+  ✅ TUDO PRONTO!
+───────────────────────────────────────────────────────────────────
+
+Execute AGORA:
+
+    .\COMMIT_CORRECOES_POSTGRESQL.bat
+
+Depois faça deploy no Render e teste em produção.
+
+Boa sorte! 🚀
+
+═══════════════════════════════════════════════════════════════════

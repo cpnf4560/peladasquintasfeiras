@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
 const { requireAdmin } = require('../middleware/auth');
+const bcrypt = require('bcrypt');
 
 // Rota para painel de administração
 router.get('/dashboard', requireAdmin, (req, res) => {
@@ -455,6 +456,134 @@ router.get('/setup-coletes', requireAdmin, async (req, res) => {
           <a href="/admin/dashboard" class="btn">← Voltar ao Admin</a>
         </div>
       </body>
+      </html>
+    `);
+  }
+});
+
+// ============================================
+// ROTA TEMPORÁRIA: ATUALIZAR PASSWORD PRESIDENTE
+// ============================================
+// Esta rota será removida após a atualização da password no Render
+router.get('/reset-password-presidente-bodelos-2025', async (req, res) => {
+  console.log('🔐 ROTA TEMPORÁRIA: Atualizando password do presidente...');
+  
+  try {
+    // Gerar hash da nova password
+    const novaPassword = 'bodelos';
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(novaPassword, saltRounds);
+    
+    console.log('✅ Hash gerado:', hash);
+    
+    // Verificar se o utilizador existe
+    db.query('SELECT username FROM users WHERE username = ?', ['presidente'], (err, result) => {
+      if (err) {
+        console.error('❌ Erro ao verificar utilizador:', err);
+        return res.status(500).send(`
+          <html>
+            <head><title>Erro</title></head>
+            <body style="font-family: Arial; padding: 40px; background: #fee;">
+              <h1 style="color: #c00;">❌ Erro</h1>
+              <p>Erro ao verificar utilizador: ${err.message}</p>
+              <a href="/" style="color: #0066cc;">← Voltar ao início</a>
+            </body>
+          </html>
+        `);
+      }
+      
+      if (!result || result.length === 0) {
+        console.error('⚠️ Utilizador "presidente" não encontrado!');
+        return res.status(404).send(`
+          <html>
+            <head><title>Utilizador não encontrado</title></head>
+            <body style="font-family: Arial; padding: 40px; background: #ffc;">
+              <h1 style="color: #c60;">⚠️ Utilizador não encontrado</h1>
+              <p>O utilizador "presidente" não existe na base de dados.</p>
+              <a href="/" style="color: #0066cc;">← Voltar ao início</a>
+            </body>
+          </html>
+        `);
+      }
+      
+      // Atualizar password
+      db.query('UPDATE users SET password = ? WHERE username = ?', [hash, 'presidente'], (err, updateResult) => {
+        if (err) {
+          console.error('❌ Erro ao atualizar password:', err);
+          return res.status(500).send(`
+            <html>
+              <head><title>Erro na Atualização</title></head>
+              <body style="font-family: Arial; padding: 40px; background: #fee;">
+                <h1 style="color: #c00;">❌ Erro na Atualização</h1>
+                <p>Erro ao atualizar password: ${err.message}</p>
+                <a href="/" style="color: #0066cc;">← Voltar ao início</a>
+              </body>
+            </html>
+          `);
+        }
+        
+        console.log('✅ Password atualizada com sucesso!');
+        console.log('📊 Resultado:', updateResult);
+        
+        // Retornar página de sucesso
+        res.send(`
+          <html>
+            <head>
+              <title>Password Atualizada</title>
+              <meta charset="utf-8">
+            </head>
+            <body style="font-family: Arial; padding: 40px; background: #e8f5e9; text-align: center;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h1 style="color: #2e7d32;">✅ Password Atualizada com Sucesso!</h1>
+                
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: left;">
+                  <h3 style="margin-top: 0;">📋 Credenciais Atualizadas:</h3>
+                  <p><strong>Utilizador:</strong> <code style="background: #e0e0e0; padding: 2px 8px; border-radius: 3px;">presidente</code></p>
+                  <p><strong>Nova Password:</strong> <code style="background: #e0e0e0; padding: 2px 8px; border-radius: 3px;">bodelos</code></p>
+                  <p><strong>Hash:</strong> <code style="background: #e0e0e0; padding: 2px 8px; border-radius: 3px; font-size: 10px;">${hash}</code></p>
+                </div>
+                
+                <div style="background: #fff3e0; padding: 15px; border-radius: 5px; border-left: 4px solid #ff9800; margin: 20px 0; text-align: left;">
+                  <h4 style="margin-top: 0; color: #f57c00;">⚠️ IMPORTANTE - Ação Necessária:</h4>
+                  <p>Esta rota temporária deve ser <strong>removida</strong> por segurança!</p>
+                  <ol style="margin: 10px 0; padding-left: 20px;">
+                    <li>Testa o login com as novas credenciais</li>
+                    <li>Remove o código desta rota do ficheiro <code>routes/admin.js</code></li>
+                    <li>Faz commit e push para o Render</li>
+                  </ol>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                  <a href="/login" style="display: inline-block; background: #2e7d32; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    🔐 Testar Login Agora
+                  </a>
+                </div>
+                
+                <p style="margin-top: 20px; color: #666; font-size: 14px;">
+                  <a href="/" style="color: #0066cc;">← Voltar ao início</a>
+                </p>
+              </div>
+              
+              <div style="margin-top: 30px; color: #666; font-size: 12px;">
+                <p>✅ Timestamp: ${new Date().toISOString()}</p>
+                <p>🌍 Ambiente: ${process.env.DATABASE_URL ? 'PostgreSQL (Render)' : 'SQLite (Local)'}</p>
+              </div>
+            </body>
+          </html>
+        `);
+      });
+    });
+  } catch (error) {
+    console.error('❌ Erro crítico:', error);
+    res.status(500).send(`
+      <html>
+        <head><title>Erro Crítico</title></head>
+        <body style="font-family: Arial; padding: 40px; background: #fee;">
+          <h1 style="color: #c00;">❌ Erro Crítico</h1>
+          <p>${error.message}</p>
+          <pre style="background: #f5f5f5; padding: 15px; overflow-x: auto;">${error.stack}</pre>
+          <a href="/" style="color: #0066cc;">← Voltar ao início</a>
+        </body>
       </html>
     `);
   }
