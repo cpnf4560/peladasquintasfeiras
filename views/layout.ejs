@@ -11,6 +11,20 @@
   <link rel="stylesheet" href="/share-button.css?v=<%= Date.now() %>">
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <link rel="shortcut icon" href="/logo.svg">
+  
+  <!-- Force mobile mode on real touch devices or narrow screens -->
+  <script>
+    (function(){
+      try {
+        var isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        var narrow = window.innerWidth <= 900; // a bit higher to be safe
+        if (isCoarse || isTouch || narrow) {
+          document.documentElement.classList.add('mobile-real');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="main-bg">
   <%- include('partials/header') %>
