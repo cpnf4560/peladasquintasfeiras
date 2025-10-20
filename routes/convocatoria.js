@@ -23,16 +23,15 @@ router.get('/convocatoria', optionalAuth, (req, res) => {
 
       if (jogadoresFaltantes.length > 0) {
         console.log(`📋 Adicionando ${jogadoresFaltantes.length} jogadores à convocatória...`);
-        
-        // Buscar a última posição de reserva
-        db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', [], (err, result) => {
+          // Buscar a última posição de reserva
+        db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = ?', ['reserva'], (err, result) => {
           let proximaPosicao = (result && result[0] && result[0].max_pos) ? result[0].max_pos + 1 : 1;
           
           const inserts = jogadoresFaltantes.map(jogador => {
             return new Promise((resolve) => {
               db.query(
-                'INSERT INTO convocatoria (jogador_id, tipo, posicao, confirmado) VALUES (?, "reserva", ?, 0)',
-                [jogador.id, proximaPosicao++],
+                'INSERT INTO convocatoria (jogador_id, tipo, posicao, confirmado) VALUES (?, ?, ?, 0)',
+                [jogador.id, 'reserva', proximaPosicao++],
                 (err) => {
                   if (err) console.error('Erro ao inserir jogador na convocatória:', err);
                   resolve();
@@ -122,7 +121,7 @@ function carregarConvocatoria(req, res) {
 router.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
   const convocatoriaId = req.params.id;
   
-  db.query('SELECT * FROM convocatoria WHERE id = ? AND tipo = "convocado"', [convocatoriaId], (err, result) => {
+  db.query('SELECT * FROM convocatoria WHERE id = ? AND tipo = ?', [convocatoriaId, 'convocado'], (err, result) => {
     if (err || !result || result.length === 0) {
       console.error('❌ Erro ao buscar convocado:', err);
       return res.status(400).send('Jogador não é convocado');
@@ -132,13 +131,13 @@ router.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
     const jogadorId = convocado.jogador_id;
     const posicaoVaga = convocado.posicao;
 
-    db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', [], (err, result) => {
+    db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = ?', ['reserva'], (err, result) => {
       if (err) return res.status(500).send('Erro interno');
       
       const novaPosicaoReserva = (result[0].max_pos || 0) + 1;
       
       // Mover para reservas
-      db.query('UPDATE convocatoria SET tipo = "reserva", posicao = ? WHERE id = ?', [novaPosicaoReserva, convocatoriaId], (err) => {
+      db.query('UPDATE convocatoria SET tipo = ?, posicao = ? WHERE id = ?', ['reserva', novaPosicaoReserva, convocatoriaId], (err) => {
         if (err) {
           console.error('Erro ao mover para reservas:', err);
           return res.status(500).send('Erro ao marcar falta');
@@ -152,11 +151,11 @@ router.post('/convocatoria/marcar-falta/:id', requireAdmin, (req, res) => {
         console.log(`✅ Falta registada para jogador ${jogadorId}`);
         
         // Promover primeiro reserva
-        db.query('SELECT * FROM convocatoria WHERE tipo = "reserva" AND id != ? ORDER BY posicao LIMIT 1', [convocatoriaId], (err, primeiroReserva) => {
+        db.query('SELECT * FROM convocatoria WHERE tipo = ? AND id != ? ORDER BY posicao LIMIT 1', ['reserva', convocatoriaId], (err, primeiroReserva) => {
           if (err) return res.status(500).send('Erro interno');
           
           if (primeiroReserva && primeiroReserva.length > 0) {
-            db.query('UPDATE convocatoria SET tipo = "convocado", posicao = ? WHERE id = ?', [posicaoVaga, primeiroReserva[0].id], (err) => {
+            db.query('UPDATE convocatoria SET tipo = ?, posicao = ? WHERE id = ?', ['convocado', posicaoVaga, primeiroReserva[0].id], (err) => {
               if (err) {
                 console.error('Erro ao promover reserva:', err);
                 return res.status(500).send('Erro ao promover reserva');
@@ -185,7 +184,7 @@ router.post('/convocatoria/mover-para-reservas/:id', requireAdmin, (req, res) =>
   console.log(`⬇️ Movendo convocatória ID ${convocatoriaId} para reservas (sem falta)...`);
   
   // Verificar se é convocado
-  db.query('SELECT * FROM convocatoria WHERE id = ? AND tipo = "convocado"', [convocatoriaId], (err, result) => {
+  db.query('SELECT * FROM convocatoria WHERE id = ? AND tipo = ?', [convocatoriaId, 'convocado'], (err, result) => {
     if (err || !result || result.length === 0) {
       console.error('❌ Erro ao buscar convocado:', err);
       return res.status(400).send('Jogador não é convocado');
@@ -196,14 +195,14 @@ router.post('/convocatoria/mover-para-reservas/:id', requireAdmin, (req, res) =>
     const posicaoVaga = convocado.posicao;
     
     // Buscar última posição de reserva
-    db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', [], (err, result) => {
+    db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = ?', ['reserva'], (err, result) => {
       if (err) return res.status(500).send('Erro interno');
       
       const novaPosicaoReserva = (result[0].max_pos || 0) + 1;
       
       // Mover jogador para reservas
-      db.query('UPDATE convocatoria SET tipo = "reserva", posicao = ?, confirmado = 0 WHERE id = ?', 
-        [novaPosicaoReserva, convocatoriaId], (err) => {
+      db.query('UPDATE convocatoria SET tipo = ?, posicao = ?, confirmado = 0 WHERE id = ?', 
+        ['reserva', novaPosicaoReserva, convocatoriaId], (err) => {
         if (err) {
           console.error('Erro ao mover para reservas:', err);
           return res.status(500).send('Erro ao mover para reservas');
@@ -212,13 +211,13 @@ router.post('/convocatoria/mover-para-reservas/:id', requireAdmin, (req, res) =>
         console.log(`✅ Jogador ${jogadorId} movido para reservas (posição ${novaPosicaoReserva})`);
         
         // Promover primeiro reserva para a posição vaga
-        db.query('SELECT * FROM convocatoria WHERE tipo = "reserva" AND id != ? ORDER BY posicao LIMIT 1', 
-          [convocatoriaId], (err, primeiroReserva) => {
+        db.query('SELECT * FROM convocatoria WHERE tipo = ? AND id != ? ORDER BY posicao LIMIT 1', 
+          ['reserva', convocatoriaId], (err, primeiroReserva) => {
           if (err) return res.status(500).send('Erro interno');
           
           if (primeiroReserva && primeiroReserva.length > 0) {
-            db.query('UPDATE convocatoria SET tipo = "convocado", posicao = ? WHERE id = ?', 
-              [posicaoVaga, primeiroReserva[0].id], (err) => {
+            db.query('UPDATE convocatoria SET tipo = ?, posicao = ? WHERE id = ?', 
+              ['convocado', posicaoVaga, primeiroReserva[0].id], (err) => {
               if (err) {
                 console.error('Erro ao promover reserva:', err);
                 return res.status(500).send('Erro ao promover reserva');
@@ -248,7 +247,7 @@ router.post('/convocatoria/mover-para-convocados/:id', requireAdmin, (req, res) 
   console.log(`⬆️ Movendo convocatória ID ${convocatoriaId} para convocados...`);
   
   // Verificar se é reserva
-  db.query('SELECT * FROM convocatoria WHERE id = ? AND tipo = "reserva"', [convocatoriaId], (err, result) => {
+  db.query('SELECT * FROM convocatoria WHERE id = ? AND tipo = ?', [convocatoriaId, 'reserva'], (err, result) => {
     if (err || !result || result.length === 0) {
       console.error('❌ Erro ao buscar reserva:', err);
       return res.status(400).send('Jogador não é reserva');
@@ -258,7 +257,7 @@ router.post('/convocatoria/mover-para-convocados/:id', requireAdmin, (req, res) 
     const jogadorId = reserva.jogador_id;
     
     // Verificar número de convocados atual
-    db.query('SELECT COUNT(*) as total FROM convocatoria WHERE tipo = "convocado"', [], (err, countResult) => {
+    db.query('SELECT COUNT(*) as total FROM convocatoria WHERE tipo = ?', ['convocado'], (err, countResult) => {
       if (err) return res.status(500).send('Erro interno');
       
       const totalConvocados = countResult[0].total;
@@ -266,35 +265,32 @@ router.post('/convocatoria/mover-para-convocados/:id', requireAdmin, (req, res) 
       // Buscar config de max_convocados
       db.query('SELECT * FROM convocatoria_config LIMIT 1', [], (err, configResult) => {
         const config = (configResult && configResult[0]) || { max_convocados: 10 };
-        
-        if (totalConvocados >= config.max_convocados) {
+          if (totalConvocados >= config.max_convocados) {
           // Precisa descer o último convocado para reservas
-          db.query('SELECT * FROM convocatoria WHERE tipo = "convocado" ORDER BY posicao DESC LIMIT 1', 
-            [], (err, ultimoConvocado) => {
+          db.query('SELECT * FROM convocatoria WHERE tipo = ? ORDER BY posicao DESC LIMIT 1', 
+            ['convocado'], (err, ultimoConvocado) => {
             if (err || !ultimoConvocado || ultimoConvocado.length === 0) {
               return res.status(500).send('Erro ao buscar último convocado');
             }
             
             const posicaoVagaConvocado = ultimoConvocado[0].posicao;
-            
-            // Buscar última posição de reserva
-            db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', [], (err, result) => {
+              // Buscar última posição de reserva
+            db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = ?', ['reserva'], (err, result) => {
               if (err) return res.status(500).send('Erro interno');
               
               const novaPosicaoReserva = (result[0].max_pos || 0) + 1;
                 // Mover último convocado para reservas
-              db.query('UPDATE convocatoria SET tipo = "reserva", posicao = ?, confirmado = 0 WHERE id = ?', 
-                [novaPosicaoReserva, ultimoConvocado[0].id], (err) => {
+              db.query('UPDATE convocatoria SET tipo = ?, posicao = ?, confirmado = 0 WHERE id = ?', 
+                ['reserva', novaPosicaoReserva, ultimoConvocado[0].id], (err) => {
                 if (err) {
                   console.error('Erro ao mover último convocado para reservas:', err);
                   return res.status(500).send('Erro ao mover último convocado');
                 }
                 
                 console.log(`✅ Último convocado ${ultimoConvocado[0].jogador_id} movido para reservas`);
-                
-                // Promover reserva selecionada
-                db.query('UPDATE convocatoria SET tipo = "convocado", posicao = ? WHERE id = ?', 
-                  [posicaoVagaConvocado, convocatoriaId], (err) => {
+                  // Promover reserva selecionada
+                db.query('UPDATE convocatoria SET tipo = ?, posicao = ? WHERE id = ?', 
+                  ['convocado', posicaoVagaConvocado, convocatoriaId], (err) => {
                   if (err) {
                     console.error('Erro ao promover reserva:', err);
                     return res.status(500).send('Erro ao promover reserva');
@@ -309,15 +305,13 @@ router.post('/convocatoria/mover-para-convocados/:id', requireAdmin, (req, res) 
                 });
               });
             });
-          });
-        } else {          // Há espaço livre, apenas promover
-          db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "convocado"', [], (err, result) => {
+          });        } else {          // Há espaço livre, apenas promover
+          db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = ?', ['convocado'], (err, result) => {
             if (err) return res.status(500).send('Erro interno');
+              const novaPosicaoConvocado = (result[0].max_pos || 0) + 1;
             
-            const novaPosicaoConvocado = (result[0].max_pos || 0) + 1;
-            
-            db.query('UPDATE convocatoria SET tipo = "convocado", posicao = ? WHERE id = ?', 
-              [novaPosicaoConvocado, convocatoriaId], (err) => {
+            db.query('UPDATE convocatoria SET tipo = ?, posicao = ? WHERE id = ?', 
+              ['convocado', novaPosicaoConvocado, convocatoriaId], (err) => {
               if (err) {
                 console.error('Erro ao promover reserva:', err);
                 return res.status(500).send('Erro ao promover reserva');
@@ -727,12 +721,11 @@ router.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
         const indexConvocado = ordemConvocados.indexOf(jogador.nome);
         
         if (indexConvocado >= 0) {
-          // É convocado - aplicar posição específica
-          updates.push(
+          // É convocado - aplicar posição específica        updates.push(
             new Promise((resolve) => {
               db.query(
-                'UPDATE convocatoria SET tipo = "convocado", posicao = ?, confirmado = 0 WHERE jogador_id = ?',
-                [indexConvocado + 1, jogador.id],
+                'UPDATE convocatoria SET tipo = ?, posicao = ?, confirmado = 0 WHERE jogador_id = ?',
+                ['convocado', indexConvocado + 1, jogador.id],
                 (err) => {
                   if (err) console.error('Erro ao atualizar convocado:', err);
                   resolve();
@@ -745,8 +738,8 @@ router.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
           updates.push(
             new Promise((resolve) => {
               db.query(
-                'UPDATE convocatoria SET tipo = "reserva", posicao = ?, confirmado = 0 WHERE jogador_id = ?',
-                [posicaoReserva++, jogador.id],
+                'UPDATE convocatoria SET tipo = ?, posicao = ?, confirmado = 0 WHERE jogador_id = ?',
+                ['reserva', posicaoReserva++, jogador.id],
                 (err) => {
                   if (err) console.error('Erro ao atualizar reserva:', err);
                   resolve();
@@ -769,8 +762,7 @@ router.post('/convocatoria/configuracao-final', requireAdmin, (req, res) => {
 router.post('/convocatoria/mover-reserva/:id/:direction', requireAdmin, (req, res) => {
   const convocatoriaId = req.params.id;
   const direction = req.params.direction; // 'up' ou 'down'
-
-  db.query('SELECT posicao FROM convocatoria WHERE id = ? AND tipo = "reserva"', [convocatoriaId], (err, result) => {
+  db.query('SELECT posicao FROM convocatoria WHERE id = ? AND tipo = ?', [convocatoriaId, 'reserva'], (err, result) => {
     if (err || !result || result.length === 0) {
       console.error('❌ Erro ao buscar reserva:', err);
       return res.status(400).send('Reserva não encontrada');
@@ -782,10 +774,9 @@ router.post('/convocatoria/mover-reserva/:id/:direction', requireAdmin, (req, re
     // Trocar posições
     db.query('UPDATE convocatoria SET posicao = ? WHERE id = ?', [novaPosicao, convocatoriaId], (err) => {
       if (err) return res.status(500).send('Erro ao mover');
-
-      db.query(
-        'UPDATE convocatoria SET posicao = ? WHERE posicao = ? AND tipo = "reserva" AND id != ?',
-        [posicaoAtual, novaPosicao, convocatoriaId],
+    db.query(
+        'UPDATE convocatoria SET posicao = ? WHERE posicao = ? AND tipo = ? AND id != ?',
+        [posicaoAtual, novaPosicao, 'reserva', convocatoriaId],
         (err) => {
           if (err) return res.status(500).send('Erro ao trocar posições');
           res.redirect('/convocatoria');
@@ -798,22 +789,19 @@ router.post('/convocatoria/mover-reserva/:id/:direction', requireAdmin, (req, re
 // Migrar para 10 convocados
 router.post('/convocatoria/migrar-para-10', requireAdmin, (req, res) => {
   console.log('⚡ Migrando para 10 convocados...');
-
   // Mover convocados acima de 10 para reservas
-  db.query('SELECT jogador_id FROM convocatoria WHERE tipo = "convocado" AND posicao > 10 ORDER BY posicao', [], (err, convocadosExtra) => {
+  db.query('SELECT jogador_id FROM convocatoria WHERE tipo = ? AND posicao > 10 ORDER BY posicao', ['convocado'], (err, convocadosExtra) => {
     if (err || !convocadosExtra || convocadosExtra.length === 0) {
       return res.redirect('/convocatoria');
-    }
-
-    // Buscar última posição de reserva
-    db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = "reserva"', [], (err, result) => {
+    }// Buscar última posição de reserva
+    db.query('SELECT MAX(posicao) as max_pos FROM convocatoria WHERE tipo = ?', ['reserva'], (err, result) => {
       let proximaPosicaoReserva = (result && result[0] && result[0].max_pos) ? result[0].max_pos + 1 : 1;
 
       const updates = convocadosExtra.map((conv) => {
         return new Promise((resolve) => {
           db.query(
-            'UPDATE convocatoria SET tipo = "reserva", posicao = ? WHERE jogador_id = ?',
-            [proximaPosicaoReserva++, conv.jogador_id],
+            'UPDATE convocatoria SET tipo = ?, posicao = ? WHERE jogador_id = ?',
+            ['reserva', proximaPosicaoReserva++, conv.jogador_id],
             (err) => {
               if (err) console.error('Erro ao mover para reservas:', err);
               resolve();
