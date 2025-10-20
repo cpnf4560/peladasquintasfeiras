@@ -362,3 +362,12 @@
     padding: 6px 4px !important;
   }
 }
+
+/* ============================================
+   BOTÃO DE PARTILHA - Garantir visibilidade
+   ============================================ */
+.share-button-floating {
+  display: flex !important;
+  position: fixed !important;
+  z-index: 99999 !important;
+}
