@@ -208,20 +208,20 @@
                         <span class="status-pending">⏳ Pendente</span>
                       <% } %>                    </td>                    <td class="actions-cell">                      <% if (user && user.role === 'admin') { %>
                       <div class="action-buttons-modern">
-                        <form method="POST" action="/convocatoria/confirmar-presenca/<%= jogador.id %>" style="display: inline;">
+                        <form method="POST" action="/convocatoria/confirmar-presenca/<%= jogador.convocatoria_id %>" style="display: inline;">
                           <button type="submit" class="btn-mini <%= jogador.confirmado ? 'btn-mini-danger' : 'btn-mini-success' %>" 
                                   title="<%= jogador.confirmado ? 'Desconfirmar' : 'Confirmar' %>">
                             <%= jogador.confirmado ? '✖️' : '✔️' %>
                           </button>
                         </form>
-                        <form method="POST" action="/convocatoria/mover-para-reservas/<%= jogador.id %>" 
+                        <form method="POST" action="/convocatoria/mover-para-reservas/<%= jogador.convocatoria_id %>" 
                               style="display: inline;" 
                               onsubmit="return confirm('Mover <%= jogador.nome %> para reservas (sem falta)?')">
                           <button type="submit" class="btn-mini btn-mini-info" title="Mover para Reservas">
                             ⬇️
                           </button>
                         </form>
-                        <form method="POST" action="/convocatoria/marcar-falta/<%= jogador.id %>" 
+                        <form method="POST" action="/convocatoria/marcar-falta/<%= jogador.convocatoria_id %>" 
                               style="display: inline;" 
                               onsubmit="return confirm('Marcar <%= jogador.nome %> como faltoso?')">
                           <button type="submit" class="btn-mini btn-mini-warning" title="Marcar Falta">
@@ -279,17 +279,16 @@
                     <td class="faltas-cell">
                       <span class="badge-faltas-modern <%= jogador.total_faltas > 2 ? 'high-faltas' : '' %>">
                         🚫 <%= jogador.total_faltas || 0 %>
-                      </span>                    </td>
-                    <td class="reorder-cell">
+                      </span>                    </td>                    <td class="reorder-cell">
                       <% if (user && user.role === 'admin') { %>
                       <div class="reorder-buttons">
                         <% if (jogador.posicao > 1) { %>
-                          <form method="POST" action="/convocatoria/mover-reserva/<%= jogador.id %>/up" style="display: inline;">
+                          <form method="POST" action="/convocatoria/mover-reserva/<%= jogador.convocatoria_id %>/up" style="display: inline;">
                             <button type="submit" class="btn-arrow btn-arrow-up" title="Mover para cima">▲</button>
                           </form>
                         <% } %>
                         <% if (index < reservas.length - 1) { %>
-                          <form method="POST" action="/convocatoria/mover-reserva/<%= jogador.id %>/down" style="display: inline;">
+                          <form method="POST" action="/convocatoria/mover-reserva/<%= jogador.convocatoria_id %>/down" style="display: inline;">
                             <button type="submit" class="btn-arrow btn-arrow-down" title="Mover para baixo">▼</button>
                           </form>
                         <% } %>
@@ -301,7 +300,7 @@
                       </span>
                     </td>                    <% if (user && user.role === 'admin') { %>
                     <td class="actions-cell">
-                      <form method="POST" action="/convocatoria/mover-para-convocados/<%= jogador.id %>" 
+                      <form method="POST" action="/convocatoria/mover-para-convocados/<%= jogador.convocatoria_id %>" 
                             style="display: inline;" 
                             onsubmit="return confirm('Promover <%= jogador.nome %> para convocados?')">
                         <button type="submit" class="btn-mini btn-mini-success" title="Mover para Convocados">
