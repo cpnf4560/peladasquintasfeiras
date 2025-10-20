@@ -27,11 +27,15 @@
         </div>
       </div>
     <% } %>
-    
-    <div class="convocatoria-header-modern">
+      <div class="convocatoria-header-modern">
       <div class="header-content">
         <h2 class="section-title">📋 Convocatória</h2>
-        <p class="section-subtitle">Gestão de convocados e reservas</p>      </div>
+        <p class="section-subtitle">Gestão de convocados e reservas</p>
+        <div class="info-badge-modern">
+          <span class="badge-icon">📅</span>
+          <span class="badge-text">Em vigor desde 21/10/2025</span>
+        </div>
+      </div>
       <% if (user && user.role === 'admin') { %>
       <div class="convocatoria-actions-modern">
         <% if (convocados.length > 10) { %>

@@ -42,6 +42,10 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
 
+.header-content {
+  flex: 1;
+}
+
 .logo-area {
   display: flex;
   align-items: center;
@@ -2083,13 +2087,17 @@ button:hover {
 }
 
 .actions-cell {
-  width: 140px;
+  width: 180px; /* Aumentado para acomodar botões lado a lado */
+  min-width: 180px;
+  white-space: nowrap;
 }
 
 .action-buttons-modern {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Mantém botões lado a lado */
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .btn-mini {
@@ -4493,3 +4501,38 @@ main.container {
 /* ============================================
    FIM EQUIPAS GERADAS
    ============================================ */
+
+/* Informative Badge */
+.info-badge-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  animation: fadeInUp 0.5s ease;
+}
+
+.badge-icon {
+  font-size: 1rem;
+}
+
+.badge-text {
+  letter-spacing: 0.3px;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

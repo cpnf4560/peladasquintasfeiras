@@ -223,25 +223,20 @@ const initDatabase = async () => {
       firstRow = result[0] || null;
     }
 
-    const count = firstRow ? parseInt(firstRow.count || firstRow.COUNT || 0, 10) : 0;
-
-    if (count === 0) {
+    const count = firstRow ? parseInt(firstRow.count || firstRow.COUNT || 0, 10) : 0;    if (count === 0) {
       console.log('Criando utilizadores padrão...');
 
-      const adminPasswordHash1 = bcrypt.hashSync('admin123', 10);
-      const adminPasswordHash2 = bcrypt.hashSync('admin', 10);
-      const userPasswordHash = bcrypt.hashSync('user', 10);
+      // Novos utilizadores com credenciais específicas
+      const presidentePasswordHash = bcrypt.hashSync('Bodelos123*', 10);
+      const adminPasswordHash = bcrypt.hashSync('rzq7xgq8', 10);
 
       const insertUser = 'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)';
 
-      db.query(insertUser, ['admin1', adminPasswordHash1, 'admin'], () => {});
-      db.query(insertUser, ['admin2', adminPasswordHash2, 'admin'], () => {});
+      // Criar apenas os 2 utilizadores admin
+      db.query(insertUser, ['presidente', presidentePasswordHash, 'admin'], () => {});
+      db.query(insertUser, ['admin', adminPasswordHash, 'admin'], () => {});
 
-      for (let i = 1; i <= 19; i++) {
-        db.query(insertUser, [`user${i}`, userPasswordHash, 'user'], () => {});
-      }
-
-      console.log('✅ Utilizadores criados com sucesso!');
+      console.log('✅ Utilizadores admin criados: presidente, admin');
     }
   });
   
