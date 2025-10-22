@@ -635,6 +635,112 @@ router.post('/convocatoria/salvar-equipas', requireAdmin, (req, res) => {
   res.redirect('/convocatoria?msg=equipas_salvas');
 });
 
+// Trocar jogadores entre equipas
+router.post('/convocatoria/trocar-jogadores', requireAdmin, (req, res) => {
+  const { jogador1, jogador2 } = req.body;
+  
+  console.log('🔄 TROCANDO JOGADORES ENTRE EQUIPAS...');
+  console.log(`Jogador 1 ID: ${jogador1}`);
+  console.log(`Jogador 2 ID: ${jogador2}`);
+  
+  if (!jogador1 || !jogador2) {
+    console.log('❌ IDs de jogadores não fornecidos');
+    return res.status(400).send('IDs de jogadores inválidos');
+  }
+  
+  if (!global.equipasGeradas) {
+    console.log('⚠️ Nenhuma equipa gerada para trocar jogadores');
+    return res.redirect('/convocatoria');
+  }
+  
+  // Encontrar os jogadores nas equipas
+  let jogador1Obj = null;
+  let jogador2Obj = null;
+  let equipa1Index = -1;
+  let equipa2Index = -1;
+  let jogador1Equipa = null;
+  let jogador2Equipa = null;
+  
+  // Buscar jogador1 na equipa 1
+  equipa1Index = global.equipasGeradas.equipa1.jogadores.findIndex(j => j.id == jogador1);
+  if (equipa1Index !== -1) {
+    jogador1Obj = global.equipasGeradas.equipa1.jogadores[equipa1Index];
+    jogador1Equipa = 1;
+  } else {
+    // Buscar na equipa 2
+    equipa1Index = global.equipasGeradas.equipa2.jogadores.findIndex(j => j.id == jogador1);
+    if (equipa1Index !== -1) {
+      jogador1Obj = global.equipasGeradas.equipa2.jogadores[equipa1Index];
+      jogador1Equipa = 2;
+    }
+  }
+  
+  // Buscar jogador2 na equipa 1
+  equipa2Index = global.equipasGeradas.equipa1.jogadores.findIndex(j => j.id == jogador2);
+  if (equipa2Index !== -1) {
+    jogador2Obj = global.equipasGeradas.equipa1.jogadores[equipa2Index];
+    jogador2Equipa = 1;
+  } else {
+    // Buscar na equipa 2
+    equipa2Index = global.equipasGeradas.equipa2.jogadores.findIndex(j => j.id == jogador2);
+    if (equipa2Index !== -1) {
+      jogador2Obj = global.equipasGeradas.equipa2.jogadores[equipa2Index];
+      jogador2Equipa = 2;
+    }
+  }
+  
+  if (!jogador1Obj || !jogador2Obj) {
+    console.log('❌ Jogadores não encontrados nas equipas');
+    return res.status(400).send('Jogadores não encontrados nas equipas');
+  }
+  
+  if (jogador1Equipa === jogador2Equipa) {
+    console.log('⚠️ Jogadores estão na mesma equipa');
+    return res.status(400).send('Jogadores estão na mesma equipa - não é possível trocar');
+  }
+  
+  // Realizar a troca
+  if (jogador1Equipa === 1 && jogador2Equipa === 2) {
+    // Jogador1 está na equipa1, Jogador2 na equipa2
+    const indexJ1 = global.equipasGeradas.equipa1.jogadores.findIndex(j => j.id == jogador1);
+    const indexJ2 = global.equipasGeradas.equipa2.jogadores.findIndex(j => j.id == jogador2);
+    
+    const temp = global.equipasGeradas.equipa1.jogadores[indexJ1];
+    global.equipasGeradas.equipa1.jogadores[indexJ1] = global.equipasGeradas.equipa2.jogadores[indexJ2];
+    global.equipasGeradas.equipa2.jogadores[indexJ2] = temp;
+  } else if (jogador1Equipa === 2 && jogador2Equipa === 1) {
+    // Jogador1 está na equipa2, Jogador2 na equipa1
+    const indexJ1 = global.equipasGeradas.equipa2.jogadores.findIndex(j => j.id == jogador1);
+    const indexJ2 = global.equipasGeradas.equipa1.jogadores.findIndex(j => j.id == jogador2);
+    
+    const temp = global.equipasGeradas.equipa2.jogadores[indexJ1];
+    global.equipasGeradas.equipa2.jogadores[indexJ1] = global.equipasGeradas.equipa1.jogadores[indexJ2];
+    global.equipasGeradas.equipa1.jogadores[indexJ2] = temp;
+  }
+  
+  // Recalcular médias após a troca
+  const equipa1 = global.equipasGeradas.equipa1.jogadores;
+  const equipa2 = global.equipasGeradas.equipa2.jogadores;
+  
+  const somaPontosEquipa1 = equipa1.reduce((sum, j) => sum + (parseFloat(j.media_pontos) || 0), 0);
+  const somaPontosEquipa2 = equipa2.reduce((sum, j) => sum + (parseFloat(j.media_pontos) || 0), 0);
+  
+  const mediaPontosEquipa1 = equipa1.length > 0 ? somaPontosEquipa1 / equipa1.length : 0;
+  const mediaPontosEquipa2 = equipa2.length > 0 ? somaPontosEquipa2 / equipa2.length : 0;
+  
+  global.equipasGeradas.equipa1.media_pontos = mediaPontosEquipa1;
+  global.equipasGeradas.equipa1.pontos_totais = equipa1.reduce((sum, j) => sum + (parseInt(j.pontos_totais) || 0), 0);
+  
+  global.equipasGeradas.equipa2.media_pontos = mediaPontosEquipa2;
+  global.equipasGeradas.equipa2.pontos_totais = equipa2.reduce((sum, j) => sum + (parseInt(j.pontos_totais) || 0), 0);
+  
+  console.log('✅ Troca realizada com sucesso');
+  console.log(`Equipa 1: ${jogador2Obj.nome} → nova média: ${mediaPontosEquipa1.toFixed(2)} pts`);
+  console.log(`Equipa 2: ${jogador1Obj.nome} → nova média: ${mediaPontosEquipa2.toFixed(2)} pts`);
+  
+  res.redirect('/convocatoria?msg=jogadores_trocados');
+});
+
 // Resetar convocatória
 router.post('/convocatoria/reset', requireAdmin, (req, res) => {
   console.log('🔄 Resetando convocatória...');
