@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=5.0, user-scalable=yes">
   <meta name="description" content="Gestão de Coletes - Peladas das Quintas Feiras">
   <meta name="theme-color" content="#2c3e50">
   <title>Gestão de Coletes - Peladas das Quintas Feiras</title>
@@ -223,6 +223,72 @@
         </form>
         <% } %>
       </div><% } %>
+
+    <% if (user && user.role === 'admin') { %>
+      <!-- Formulário: Inserção Manual de Histórico de Coletes -->
+      <div class="manual-history-card" style="margin-top:20px; padding:15px; border-radius:8px; background:#fff; border:1px solid #e6eefc;">
+        <h3 style="margin-top:0;">✏️ Inserir Histórico Manual</h3>
+        <p style="margin-top:0.25rem; margin-bottom:10px; color:#334155;">Se na semana passada esqueceu de registar quem levou os coletes, insira aqui o registo com a data.</p>
+
+        <form method="POST" action="/coletes/manual" id="manualColetesForm">
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:220px;">
+              <label for="manual_jogador">Jogador</label>
+              <select name="jogador_id" id="manual_jogador" required style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+                <option value="">Selecione um jogador...</option>
+                <% (estatisticas || []).forEach(p => { %>
+                  <option value="<%= p.id %>"><%= p.nome %> <% if (p.vezes_levou) { %> (levou <%= p.vezes_levou %>x) <% } %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div style="min-width:160px;">
+              <label for="data_levou">Data Levou</label>
+              <input type="date" name="data_levou" id="data_levou" required style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+            </div>
+
+            <div style="min-width:160px;">
+              <label for="data_devolveu">Data Devolveu (opcional)</label>
+              <input type="date" name="data_devolveu" id="data_devolveu" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+            </div>
+
+            <div style="flex:1; min-width:220px;">
+              <label for="devolveu_por">Quem devolveu (opcional)</label>
+              <input type="text" name="devolveu_por" id="devolveu_por" maxlength="100" placeholder="Nome de quem devolveu" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <button type="submit" class="btn btn-primary">💾 Inserir Histórico</button>
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('manualColetesForm').reset();">✖ Limpar</button>
+          </div>
+        </form>
+
+        <script>
+          (function(){
+            var form = document.getElementById('manualColetesForm');
+            if (!form) return;
+            form.addEventListener('submit', function(e){
+              var jogador = document.getElementById('manual_jogador').value;
+              var levou = document.getElementById('data_levou').value;
+              if (!jogador || !levou) {
+                e.preventDefault();
+                alert('Por favor selecione o jogador e a data em que levou os coletes.');
+                return false;
+              }
+
+              // Opcional: impedir inserir data_devolveu anterior a data_levou
+              var devolveu = document.getElementById('data_devolveu').value;
+              if (devolveu && levou && devolveu < levou) {
+                e.preventDefault();
+                alert('A data de devolução não pode ser anterior à data em que levou.');
+                return false;
+              }
+            });
+          })();
+        </script>
+      </div>
+    <% } %>
   </main>
 
   <%- include('partials/footer') %>

@@ -143,4 +143,41 @@ router.post('/coletes/confirmar', requireAdmin, (req, res) => {
   });
 });
 
+// Rota para inserir manualmente histórico de coletes (data, quem levou, data devolveu, quem devolveu)
+router.post('/coletes/manual', requireAdmin, (req, res) => {
+  const { jogador_id, data_levou, data_devolveu, devolveu_por } = req.body;
+  if (!jogador_id || !data_levou) {
+    return res.status(400).send('Dados incompletos: é necessário data e jogador que levou');
+  }
+
+  // Tentar adicionar coluna opcional devolveu_por (se já existir, ignora o erro)
+  db.query('ALTER TABLE coletes ADD COLUMN devolveu_por TEXT', (err) => {
+    if (err && !err.message.toLowerCase().includes('duplicate')) {
+      console.error('Erro ao adicionar coluna devolveu_por:', err);
+    }
+
+    // Tentar inserir incluindo a coluna devolveu_por (se existir)
+    db.query(`
+      INSERT INTO coletes (jogador_id, data_levou, data_devolveu, devolveu_por)
+      VALUES (?, ?, ?, ?)
+    `, [jogador_id, data_levou || null, data_devolveu || null, devolveu_por || null], (err2) => {
+      if (err2) {
+        // Se falhar (por ex. coluna não existe), tentar inserir sem devolveu_por
+        db.query(`
+          INSERT INTO coletes (jogador_id, data_levou, data_devolveu)
+          VALUES (?, ?, ?)
+        `, [jogador_id, data_levou, data_devolveu || null], (err3) => {
+          if (err3) {
+            console.error('Erro ao inserir histórico manual:', err2, err3);
+            return res.status(500).send('Erro ao inserir histórico de coletes');
+          }
+          return res.redirect('/coletes');
+        });
+      } else {
+        return res.redirect('/coletes');
+      }
+    });
+  });
+});
+
 module.exports = router;
